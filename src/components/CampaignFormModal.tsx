@@ -47,7 +47,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
   );
   const [themeId, setThemeId] = useState<ThemeId>(campaignToEdit?.theme_id || 'honda-red');
   const [selectedGames, setSelectedGames] = useState<string[]>(
-    campaignToEdit?.selected_games || GAMES_CATALOG.map((g) => g.id)
+    campaignToEdit?.selected_games || []
   );
   const [gamesConfig, setGamesConfig] = useState<Record<string, any>>(
     campaignToEdit?.games_config || {}
@@ -874,9 +874,32 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                   <Play className="w-4 h-4" />
                   <span>4. Lista de Jogos do Totem (Selecione &amp; Alimente Conteúdo)</span>
                 </div>
-                <span className="text-xs text-slate-500 font-bold">
-                  {selectedGames.length} de {GAMES_CATALOG.length} jogos selecionados
-                </span>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setSelectedGames(GAMES_CATALOG.map((g) => g.id));
+                    }}
+                    className="text-xs font-bold text-red-600 hover:text-red-700 hover:underline active:scale-95 transition-all"
+                  >
+                    Marcar Todos
+                  </button>
+                  <span className="text-slate-300">•</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setSelectedGames([]);
+                    }}
+                    className="text-xs font-bold text-slate-500 hover:text-slate-700 hover:underline active:scale-95 transition-all"
+                  >
+                    Desmarcar Todos
+                  </button>
+                  <span className="text-xs font-black text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
+                    {selectedGames.length} de {GAMES_CATALOG.length} selecionados
+                  </span>
+                </div>
               </div>
 
               {/* Games Grid */}
