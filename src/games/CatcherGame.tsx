@@ -2,11 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 
-interface CatcherGameProps {
-  onExit: () => void;
-  rankingEnabled?: boolean;
-  onSubmitScore?: (playerName: string, score: number) => void;
-  themePrimary?: string;
+import { BaseGameProps } from '../types';
+
+interface CatcherGameProps extends BaseGameProps {
   customContent?: any;
 }
 
@@ -23,6 +21,11 @@ export const CatcherGame: React.FC<CatcherGameProps> = ({
   rankingEnabled,
   onSubmitScore,
   themePrimary = '#7C3AED',
+  theme,
+  customBgStyle,
+  campaignName,
+  clientName,
+  splashImageUrl,
   customContent,
 }) => {
   const [basketX, setBasketX] = useState(50); // percentage 10 - 90
@@ -138,12 +141,17 @@ export const CatcherGame: React.FC<CatcherGameProps> = ({
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       themePrimary={themePrimary}
+      theme={theme}
+      customBgStyle={customBgStyle}
+      campaignName={campaignName}
+      clientName={clientName}
+      splashImageUrl={splashImageUrl}
     >
       <div
         ref={containerRef}
         onPointerMove={(e) => handleTouchMove(e.clientX)}
         onPointerDown={(e) => handleTouchMove(e.clientX)}
-        className="relative w-full max-w-md h-[440px] max-h-[62vh] min-h-[320px] my-auto bg-slate-900/80 rounded-3xl border-2 border-white/10 overflow-hidden select-none touch-none"
+        className="relative w-full max-w-2xl sm:max-w-3xl flex-1 max-h-[72vh] min-h-[440px] my-auto bg-slate-900/85 backdrop-blur-xl rounded-3xl border-2 border-white/20 overflow-hidden select-none touch-none shadow-2xl"
       >
         <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs font-bold text-slate-400 pointer-events-none">
           Arraste o veículo para coletar os brindes! 🎁

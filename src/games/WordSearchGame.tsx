@@ -2,13 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 import { Check, Sparkles } from 'lucide-react';
+import { BaseGameProps } from '../types';
 import { WordSearchCustomConfig } from '../types/gameContent';
 
-interface WordSearchGameProps {
-  onExit: () => void;
-  rankingEnabled?: boolean;
-  onSubmitScore?: (playerName: string, score: number) => void;
-  themePrimary?: string;
+interface WordSearchGameProps extends BaseGameProps {
   customContent?: WordSearchCustomConfig;
 }
 
@@ -20,6 +17,11 @@ export const WordSearchGame: React.FC<WordSearchGameProps> = ({
   rankingEnabled,
   onSubmitScore,
   themePrimary = '#D97706',
+  theme,
+  customBgStyle,
+  campaignName,
+  clientName,
+  splashImageUrl,
   customContent,
 }) => {
   const targetWords = useMemo(() => {
@@ -178,8 +180,13 @@ export const WordSearchGame: React.FC<WordSearchGameProps> = ({
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       themePrimary={themePrimary}
+      theme={theme}
+      customBgStyle={customBgStyle}
+      campaignName={campaignName}
+      clientName={clientName}
+      splashImageUrl={splashImageUrl}
     >
-      <div className="flex flex-col h-full max-w-xl mx-auto justify-between select-none">
+      <div className="flex flex-col flex-1 w-full max-w-2xl sm:max-w-3xl mx-auto justify-between py-2 select-none">
         {/* Words Checklist */}
         <div className="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-3 shadow-sm backdrop-blur-sm">
           <div className="flex items-center justify-between mb-2">

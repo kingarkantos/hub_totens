@@ -2,11 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 
-interface PuzzleGameProps {
-  onExit: () => void;
-  rankingEnabled?: boolean;
-  onSubmitScore?: (playerName: string, score: number) => void;
-  themePrimary?: string;
+import { BaseGameProps } from '../types';
+
+interface PuzzleGameProps extends BaseGameProps {
   customContent?: any;
 }
 
@@ -15,6 +13,11 @@ export const PuzzleGame: React.FC<PuzzleGameProps> = ({
   rankingEnabled,
   onSubmitScore,
   themePrimary = '#059669',
+  theme,
+  customBgStyle,
+  campaignName,
+  clientName,
+  splashImageUrl,
   customContent,
 }) => {
   // 3x3 sliding puzzle where 0 is the empty tile
@@ -110,15 +113,20 @@ export const PuzzleGame: React.FC<PuzzleGameProps> = ({
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       themePrimary={themePrimary}
+      theme={theme}
+      customBgStyle={customBgStyle}
+      campaignName={campaignName}
+      clientName={clientName}
+      splashImageUrl={splashImageUrl}
     >
-      <div className="w-full max-w-[280px] sm:max-w-sm flex flex-col items-center gap-3 my-auto">
-        <div className="flex justify-between w-full text-xs font-bold text-slate-400 px-2">
+      <div className="w-full max-w-md sm:max-w-lg flex-1 flex flex-col items-center justify-between py-6 my-auto gap-6">
+        <div className="flex justify-between w-full text-xs sm:text-sm font-black text-slate-300 px-3">
           <span>Movimentos: <strong className="text-white font-mono">{moves}</strong></span>
           <span className="text-amber-400 font-bold">Ordene de 1 a 8</span>
         </div>
 
         {/* 3x3 Grid */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full aspect-square p-2.5 sm:p-3 bg-slate-900 rounded-3xl border-2 border-white/15 shadow-2xl">
+        <div className="grid grid-cols-3 gap-3 sm:gap-4 w-full aspect-square p-4 sm:p-6 bg-slate-900/85 backdrop-blur-xl rounded-3xl border-2 border-white/20 shadow-2xl">
           {tiles.map((tile, idx) => {
             if (tile === 0) {
               return (

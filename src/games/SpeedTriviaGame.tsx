@@ -2,13 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 import { Zap, CheckCircle2, XCircle, Flame } from 'lucide-react';
+import { BaseGameProps } from '../types';
 import { SpeedTriviaCustomItem } from '../types/gameContent';
 
-interface SpeedTriviaGameProps {
-  onExit: () => void;
-  rankingEnabled?: boolean;
-  onSubmitScore?: (playerName: string, score: number) => void;
-  themePrimary?: string;
+interface SpeedTriviaGameProps extends BaseGameProps {
   customContent?: SpeedTriviaCustomItem[];
 }
 
@@ -47,6 +44,11 @@ export const SpeedTriviaGame: React.FC<SpeedTriviaGameProps> = ({
   rankingEnabled,
   onSubmitScore,
   themePrimary = '#EAB308',
+  theme,
+  customBgStyle,
+  campaignName,
+  clientName,
+  splashImageUrl,
   customContent,
 }) => {
   const questions = useMemo(() => {
@@ -139,13 +141,18 @@ export const SpeedTriviaGame: React.FC<SpeedTriviaGameProps> = ({
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       themePrimary={themePrimary}
+      theme={theme}
+      customBgStyle={customBgStyle}
+      campaignName={campaignName}
+      clientName={clientName}
+      splashImageUrl={splashImageUrl}
     >
-      <div className="flex flex-col h-full max-w-xl mx-auto justify-between select-none">
+      <div className="flex flex-col flex-1 w-full max-w-2xl sm:max-w-3xl mx-auto justify-between py-2 sm:py-4 select-none">
         {/* Speed Bar & Multiplier Header */}
         <div className="space-y-2">
           <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-black uppercase text-amber-700 flex items-center gap-1">
-              <Zap className="w-4 h-4 fill-amber-500 text-amber-500" />
+            <span className="text-xs font-black uppercase text-amber-300 flex items-center gap-1">
+              <Zap className="w-4 h-4 fill-amber-400 text-amber-400" />
               Pergunta {currentIdx + 1} de {questions.length}
             </span>
 
@@ -158,12 +165,12 @@ export const SpeedTriviaGame: React.FC<SpeedTriviaGameProps> = ({
           </div>
 
           {/* High voltage animated progress bar */}
-          <div className="h-3 w-full bg-slate-200 rounded-full overflow-hidden p-0.5 border border-slate-300">
+          <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden p-0.5 border border-white/20">
             <div
               className={`h-full rounded-full transition-all duration-1000 ${
                 questionTime > 4
                   ? 'bg-gradient-to-r from-emerald-500 to-amber-500'
-                  : 'bg-gradient-to-r from-amber-500 to-rose-600 animate-pulse'
+                  : 'bg-rose-500 animate-pulse'
               }`}
               style={{ width: `${progressPercent}%` }}
             />
@@ -172,27 +179,27 @@ export const SpeedTriviaGame: React.FC<SpeedTriviaGameProps> = ({
 
         {/* Question Card */}
         <div className="my-auto py-2">
-          <div className="bg-white/95 rounded-3xl p-6 sm:p-8 border-2 border-slate-200 shadow-xl backdrop-blur-sm text-center">
-            <h3 className="text-xl sm:text-2xl font-black text-slate-800 leading-snug">
+          <div className="bg-slate-900/85 backdrop-blur-xl rounded-3xl p-6 sm:p-10 border-2 border-white/20 shadow-2xl text-center">
+            <h3 className="text-xl sm:text-3xl font-black text-white leading-snug">
               {activeQ.question}
             </h3>
           </div>
         </div>
 
-        {/* 4 Lightning Options */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+        {/* 4 Lightning Options - Large Touch Friendly Buttons */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-2">
           {activeQ.options.map((opt, i) => {
             const isChosen = selectedOpt === i;
             const isCorrectAnswer = i === activeQ.correct;
 
-            let btnClass = 'bg-white text-slate-800 border-2 border-slate-200 hover:border-amber-400';
+            let btnClass = 'bg-slate-900/80 text-white border-2 border-white/20 hover:border-amber-400';
             if (answered) {
               if (isCorrectAnswer) {
-                btnClass = 'bg-emerald-600 text-white border-emerald-700 shadow-md scale-102';
+                btnClass = 'bg-emerald-600 text-white border-emerald-400 shadow-lg scale-102';
               } else if (isChosen && !isCorrectAnswer) {
-                btnClass = 'bg-rose-600 text-white border-rose-700';
+                btnClass = 'bg-rose-600 text-white border-rose-400';
               } else {
-                btnClass = 'bg-slate-100 text-slate-400 opacity-50';
+                btnClass = 'bg-slate-950/40 text-slate-500 border-white/5 opacity-40';
               }
             }
 
@@ -202,11 +209,11 @@ export const SpeedTriviaGame: React.FC<SpeedTriviaGameProps> = ({
                 type="button"
                 disabled={answered}
                 onClick={() => handleAnswer(i)}
-                className={`p-4 sm:p-5 rounded-2xl font-black text-sm sm:text-base text-left flex items-center justify-between transition-all active:scale-95 shadow-sm ${btnClass}`}
+                className={`p-5 sm:p-6 min-h-[75px] sm:min-h-[85px] rounded-2xl sm:rounded-3xl font-black text-base sm:text-xl text-left flex items-center justify-between transition-all active:scale-95 shadow-md ${btnClass}`}
               >
                 <span>{opt}</span>
-                {answered && isCorrectAnswer && <CheckCircle2 className="w-5 h-5 text-white flex-shrink-0" />}
-                {answered && isChosen && !isCorrectAnswer && <XCircle className="w-5 h-5 text-white flex-shrink-0" />}
+                {answered && isCorrectAnswer && <CheckCircle2 className="w-6 h-6 text-white flex-shrink-0" />}
+                {answered && isChosen && !isCorrectAnswer && <XCircle className="w-6 h-6 text-white flex-shrink-0" />}
               </button>
             );
           })}

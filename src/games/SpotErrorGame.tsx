@@ -2,13 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 import { AlertTriangle, Check, ShieldAlert, Sparkles } from 'lucide-react';
+import { BaseGameProps } from '../types';
 import { SpotErrorCustomItem } from '../types/gameContent';
 
-interface SpotErrorGameProps {
-  onExit: () => void;
-  rankingEnabled?: boolean;
-  onSubmitScore?: (playerName: string, score: number) => void;
-  themePrimary?: string;
+interface SpotErrorGameProps extends BaseGameProps {
   customContent?: SpotErrorCustomItem;
 }
 
@@ -43,6 +40,11 @@ export const SpotErrorGame: React.FC<SpotErrorGameProps> = ({
   rankingEnabled,
   onSubmitScore,
   themePrimary = '#EA580C',
+  theme,
+  customBgStyle,
+  campaignName,
+  clientName,
+  splashImageUrl,
   customContent,
 }) => {
   const scenario = customContent || DEFAULT_SCENARIO;
@@ -118,8 +120,13 @@ export const SpotErrorGame: React.FC<SpotErrorGameProps> = ({
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       themePrimary={themePrimary}
+      theme={theme}
+      customBgStyle={customBgStyle}
+      campaignName={campaignName}
+      clientName={clientName}
+      splashImageUrl={splashImageUrl}
     >
-      <div className="flex flex-col h-full max-w-xl mx-auto justify-between select-none">
+      <div className="flex flex-col flex-1 w-full max-w-2xl sm:max-w-3xl mx-auto justify-between py-2 select-none">
         {/* Header with Title and Count */}
         <div className="bg-orange-50 border border-orange-200/80 rounded-2xl px-4 py-2.5 shadow-sm flex items-center justify-between">
           <div>

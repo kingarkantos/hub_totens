@@ -233,6 +233,11 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
       onSubmitScore: (name: string, score: number) =>
         handleScoreSubmit(name, score),
       themePrimary: theme.primary,
+      theme,
+      customBgStyle,
+      campaignName: campaign.name,
+      clientName: campaign.client_name,
+      splashImageUrl: campaign.splash_image_url,
       customContent: campaign.games_config?.[activeGame.id],
     };
 

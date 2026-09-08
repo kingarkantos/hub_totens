@@ -2,13 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 import { Heart, HelpCircle, Lightbulb } from 'lucide-react';
+import { BaseGameProps } from '../types';
 import { HangmanCustomItem } from '../types/gameContent';
 
-interface HangmanGameProps {
-  onExit: () => void;
-  rankingEnabled?: boolean;
-  onSubmitScore?: (playerName: string, score: number) => void;
-  themePrimary?: string;
+interface HangmanGameProps extends BaseGameProps {
   customContent?: HangmanCustomItem[];
 }
 
@@ -28,6 +25,11 @@ export const HangmanGame: React.FC<HangmanGameProps> = ({
   rankingEnabled,
   onSubmitScore,
   themePrimary = '#10B981',
+  theme,
+  customBgStyle,
+  campaignName,
+  clientName,
+  splashImageUrl,
   customContent,
 }) => {
   const wordsList = useMemo(() => {
@@ -119,8 +121,13 @@ export const HangmanGame: React.FC<HangmanGameProps> = ({
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       themePrimary={themePrimary}
+      theme={theme}
+      customBgStyle={customBgStyle}
+      campaignName={campaignName}
+      clientName={clientName}
+      splashImageUrl={splashImageUrl}
     >
-      <div className="flex flex-col h-full max-w-xl mx-auto justify-between select-none">
+      <div className="flex flex-col flex-1 w-full max-w-2xl sm:max-w-3xl mx-auto justify-between py-2 select-none">
         {/* Header with Category and Lives */}
         <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200/80 rounded-2xl px-4 py-2.5 shadow-sm">
           <div className="flex items-center gap-2">

@@ -2,13 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 import { CheckCircle2, XCircle, ArrowRight, HelpCircle } from 'lucide-react';
+import { BaseGameProps } from '../types';
 import { CompletePhraseCustomItem } from '../types/gameContent';
 
-interface CompletePhraseGameProps {
-  onExit: () => void;
-  rankingEnabled?: boolean;
-  onSubmitScore?: (playerName: string, score: number) => void;
-  themePrimary?: string;
+interface CompletePhraseGameProps extends BaseGameProps {
   customContent?: CompletePhraseCustomItem[];
 }
 
@@ -40,6 +37,11 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = ({
   rankingEnabled,
   onSubmitScore,
   themePrimary = '#A21CAF',
+  theme,
+  customBgStyle,
+  campaignName,
+  clientName,
+  splashImageUrl,
   customContent,
 }) => {
   const phrases = useMemo(() => {
@@ -126,34 +128,39 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = ({
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       themePrimary={themePrimary}
+      theme={theme}
+      customBgStyle={customBgStyle}
+      campaignName={campaignName}
+      clientName={clientName}
+      splashImageUrl={splashImageUrl}
     >
-      <div className="flex flex-col h-full max-w-xl mx-auto justify-between select-none">
+      <div className="flex flex-col flex-1 w-full max-w-2xl sm:max-w-3xl mx-auto justify-between py-2 sm:py-4 select-none">
         {/* Step indicator */}
-        <div className="flex items-center justify-between bg-fuchsia-50 border border-fuchsia-200/80 rounded-2xl px-4 py-2.5 shadow-sm">
-          <span className="text-xs font-black uppercase text-fuchsia-800">
+        <div className="flex items-center justify-between bg-black/40 border border-white/20 rounded-2xl px-4 py-2.5 shadow-sm backdrop-blur-md">
+          <span className="text-xs font-black uppercase text-amber-300">
             Frase {currentIdx + 1} de {phrases.length}
           </span>
-          <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
-            <HelpCircle className="w-3.5 h-3.5 text-fuchsia-600" />
+          <span className="text-xs font-bold text-slate-300 flex items-center gap-1">
+            <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
             Selecione o termo correto
           </span>
         </div>
 
         {/* Phrase Sentence Box */}
         <div className="my-auto py-3">
-          <div className="bg-white/95 rounded-3xl p-6 sm:p-8 border-2 border-slate-200 shadow-xl backdrop-blur-sm text-center">
-            <span className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2 block">
+          <div className="bg-slate-900/85 backdrop-blur-xl rounded-3xl p-6 sm:p-10 border-2 border-white/20 shadow-2xl text-center">
+            <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-300 mb-3 block">
               Complete a lacuna com a opção ideal:
             </span>
-            <p className="text-lg sm:text-2xl font-extrabold text-slate-800 leading-relaxed">
+            <p className="text-xl sm:text-3xl font-extrabold text-white leading-relaxed">
               {parts[0]}
               <span
-                className={`inline-block px-3 py-1 mx-1.5 rounded-xl border-b-2 font-black transition-all ${
+                className={`inline-block px-4 py-1.5 mx-2 rounded-2xl border-b-4 font-black transition-all ${
                   answered
                     ? selectedOpt === activePhrase.missingWord
-                      ? 'bg-emerald-100 text-emerald-800 border-emerald-500 scale-105'
-                      : 'bg-rose-100 text-rose-800 border-rose-500'
-                    : 'bg-amber-100 text-amber-900 border-amber-400 animate-pulse'
+                      ? 'bg-emerald-600 text-white border-emerald-400 scale-105'
+                      : 'bg-rose-600 text-white border-rose-400'
+                    : 'bg-amber-400 text-slate-950 border-amber-600 animate-pulse'
                 }`}
               >
                 {selectedOpt || '[ ____________ ]'}
@@ -164,19 +171,19 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = ({
         </div>
 
         {/* 4 Large Choice Chips */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-2">
           {activePhrase.options.map((opt) => {
             const isChosen = selectedOpt === opt;
             const isCorrectAnswer = opt === activePhrase.missingWord;
 
-            let btnStyle = 'bg-white text-slate-800 border-2 border-slate-200 hover:border-fuchsia-400';
+            let btnStyle = 'bg-slate-900/80 text-white border-2 border-white/20 hover:border-amber-400';
             if (answered) {
               if (isCorrectAnswer) {
-                btnStyle = 'bg-emerald-600 text-white border-2 border-emerald-700 shadow-md shadow-emerald-600/30';
+                btnStyle = 'bg-emerald-600 text-white border-emerald-400 shadow-lg scale-102';
               } else if (isChosen && !isCorrectAnswer) {
-                btnStyle = 'bg-rose-600 text-white border-2 border-rose-700';
+                btnStyle = 'bg-rose-600 text-white border-rose-400';
               } else {
-                btnStyle = 'bg-slate-100 text-slate-400 border-slate-200 opacity-50';
+                btnStyle = 'bg-slate-950/40 text-slate-500 border-white/5 opacity-40';
               }
             }
 
@@ -186,11 +193,11 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = ({
                 type="button"
                 disabled={answered}
                 onClick={() => handleSelectOption(opt)}
-                className={`p-4 sm:p-5 rounded-2xl font-black text-sm sm:text-base text-left flex items-center justify-between transition-all active:scale-98 shadow-sm ${btnStyle}`}
+                className={`p-5 sm:p-6 min-h-[75px] sm:min-h-[85px] rounded-2xl sm:rounded-3xl font-black text-base sm:text-xl text-left flex items-center justify-between transition-all active:scale-95 shadow-md ${btnStyle}`}
               >
                 <span>{opt}</span>
-                {answered && isCorrectAnswer && <CheckCircle2 className="w-5 h-5 text-white flex-shrink-0" />}
-                {answered && isChosen && !isCorrectAnswer && <XCircle className="w-5 h-5 text-white flex-shrink-0" />}
+                {answered && isCorrectAnswer && <CheckCircle2 className="w-6 h-6 text-white flex-shrink-0" />}
+                {answered && isChosen && !isCorrectAnswer && <XCircle className="w-6 h-6 text-white flex-shrink-0" />}
               </button>
             );
           })}

@@ -2,11 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 
-interface TargetGameProps {
-  onExit: () => void;
-  rankingEnabled?: boolean;
-  onSubmitScore?: (playerName: string, score: number) => void;
-  themePrimary?: string;
+import { BaseGameProps } from '../types';
+
+interface TargetGameProps extends BaseGameProps {
   customContent?: any;
 }
 
@@ -24,6 +22,11 @@ export const TargetGame: React.FC<TargetGameProps> = ({
   rankingEnabled,
   onSubmitScore,
   themePrimary = '#E11D48',
+  theme,
+  customBgStyle,
+  campaignName,
+  clientName,
+  splashImageUrl,
   customContent,
 }) => {
   const [score, setScore] = useState(0);
@@ -99,10 +102,15 @@ export const TargetGame: React.FC<TargetGameProps> = ({
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       themePrimary={themePrimary}
+      theme={theme}
+      customBgStyle={customBgStyle}
+      campaignName={campaignName}
+      clientName={clientName}
+      splashImageUrl={splashImageUrl}
     >
-      <div className="relative w-full h-[62vh] max-h-[500px] min-h-[320px] max-w-xl my-auto bg-slate-900/60 rounded-3xl border-2 border-white/10 overflow-hidden select-none touch-none">
+      <div className="relative w-full flex-1 max-h-[72vh] min-h-[420px] max-w-2xl sm:max-w-3xl my-auto bg-slate-900/75 backdrop-blur-xl rounded-3xl border-2 border-white/20 overflow-hidden select-none touch-none shadow-2xl">
         {/* Helper prompt */}
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-slate-950/80 border border-white/10 text-xs font-bold text-slate-300 pointer-events-none z-10">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full bg-black/60 border border-white/20 text-xs sm:text-sm font-black text-amber-300 pointer-events-none z-10 shadow-lg">
           Toque nos alvos o mais rápido possível! 🎯
         </div>
 

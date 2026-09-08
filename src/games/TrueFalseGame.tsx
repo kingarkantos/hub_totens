@@ -2,13 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 import { Check, X, ThumbsUp, ThumbsDown, Zap, ArrowRight } from 'lucide-react';
+import { BaseGameProps } from '../types';
 import { TrueFalseCustomItem } from '../types/gameContent';
 
-interface TrueFalseGameProps {
-  onExit: () => void;
-  rankingEnabled?: boolean;
-  onSubmitScore?: (playerName: string, score: number) => void;
-  themePrimary?: string;
+interface TrueFalseGameProps extends BaseGameProps {
   customContent?: TrueFalseCustomItem[];
 }
 
@@ -45,6 +42,11 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
   rankingEnabled,
   onSubmitScore,
   themePrimary = '#3B82F6',
+  theme,
+  customBgStyle,
+  campaignName,
+  clientName,
+  splashImageUrl,
   customContent,
 }) => {
   const statements = useMemo(() => {
@@ -133,8 +135,13 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       themePrimary={themePrimary}
+      theme={theme}
+      customBgStyle={customBgStyle}
+      campaignName={campaignName}
+      clientName={clientName}
+      splashImageUrl={splashImageUrl}
     >
-      <div className="flex flex-col h-full max-w-xl mx-auto justify-between select-none">
+      <div className="flex flex-col flex-1 w-full max-w-2xl sm:max-w-3xl mx-auto justify-between py-2 sm:py-4 select-none">
         {/* Progress & Streak Header */}
         <div className="flex items-center justify-between bg-blue-50 border border-blue-200/80 rounded-2xl px-4 py-2.5 shadow-sm">
           <span className="text-xs font-black uppercase text-blue-800">

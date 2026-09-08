@@ -2,13 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 import { Link, Check, Sparkles } from 'lucide-react';
+import { BaseGameProps } from '../types';
 import { ConnectPairCustomItem } from '../types/gameContent';
 
-interface ConnectPairsGameProps {
-  onExit: () => void;
-  rankingEnabled?: boolean;
-  onSubmitScore?: (playerName: string, score: number) => void;
-  themePrimary?: string;
+interface ConnectPairsGameProps extends BaseGameProps {
   customContent?: ConnectPairCustomItem[];
 }
 
@@ -24,6 +21,11 @@ export const ConnectPairsGame: React.FC<ConnectPairsGameProps> = ({
   rankingEnabled,
   onSubmitScore,
   themePrimary = '#0284C7',
+  theme,
+  customBgStyle,
+  campaignName,
+  clientName,
+  splashImageUrl,
   customContent,
 }) => {
   const basePairs = useMemo(() => {
@@ -140,8 +142,13 @@ export const ConnectPairsGame: React.FC<ConnectPairsGameProps> = ({
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       themePrimary={themePrimary}
+      theme={theme}
+      customBgStyle={customBgStyle}
+      campaignName={campaignName}
+      clientName={clientName}
+      splashImageUrl={splashImageUrl}
     >
-      <div className="flex flex-col h-full max-w-xl mx-auto justify-between select-none">
+      <div className="flex flex-col flex-1 w-full max-w-2xl sm:max-w-4xl mx-auto justify-between py-2 select-none">
         {/* Instruction Header */}
         <div className="bg-sky-50 border border-sky-200/80 rounded-2xl px-4 py-2.5 shadow-sm text-center">
           <span className="text-xs font-black uppercase text-sky-800 flex items-center justify-center gap-1.5">

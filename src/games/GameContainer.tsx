@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
-import { ArrowLeft, Volume2, VolumeX, Trophy, RotateCcw, Keyboard } from 'lucide-react';
+import { ArrowLeft, Volume2, VolumeX, Trophy, RotateCcw, Keyboard, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '../lib/audio';
 import { TouchVirtualKeyboard } from '../components/TouchVirtualKeyboard';
+import { ThemeDefinition } from '../types';
 
 interface GameContainerProps {
   title: string;
@@ -18,6 +19,11 @@ interface GameContainerProps {
   onSubmitScore?: (playerName: string) => void;
   customScoreLabel?: string;
   themePrimary?: string;
+  theme?: ThemeDefinition;
+  customBgStyle?: React.CSSProperties;
+  campaignName?: string;
+  clientName?: string;
+  splashImageUrl?: string;
 }
 
 export const GameContainer: React.FC<GameContainerProps> = ({
@@ -34,6 +40,11 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   onSubmitScore,
   customScoreLabel = 'Pontos',
   themePrimary = '#DC2626',
+  theme,
+  customBgStyle,
+  campaignName,
+  clientName,
+  splashImageUrl,
 }) => {
   const [soundOn, setSoundOn] = React.useState(sound.enabled);
   const [playerName, setPlayerName] = React.useState('');
@@ -66,9 +77,59 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 w-full h-full flex flex-col bg-slate-950 text-white select-none overflow-hidden z-40">
+    <div
+      style={{
+        '--glow-color': theme?.glowColor || themePrimary,
+        ...customBgStyle,
+      } as React.CSSProperties}
+      className={`fixed inset-0 w-full h-full flex flex-col bg-gradient-to-b ${theme?.bgGradient || 'from-slate-950 via-slate-900 to-black'} ${theme?.textColor || 'text-white'} ${theme?.fontClass || ''} select-none overflow-hidden z-40`}
+    >
+      {/* Dynamic Ambient Background Glows with Project Design System Colors */}
+      <div
+        className="absolute -top-32 -left-32 w-80 h-80 sm:w-96 sm:h-96 rounded-full blur-3xl opacity-30 pointer-events-none transition-all duration-700"
+        style={{ background: themePrimary || theme?.primary || '#DC2626' }}
+      />
+      <div
+        className="absolute -bottom-32 -right-32 w-80 h-80 sm:w-96 sm:h-96 rounded-full blur-3xl opacity-25 pointer-events-none transition-all duration-700"
+        style={{ background: theme?.secondary || '#F59E0B' }}
+      />
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[120px] opacity-10 pointer-events-none"
+        style={{ background: theme?.glowColor || themePrimary || '#DC2626' }}
+      />
+
+      {/* Top Campaign Brand Ribbon with Logo and Client Name */}
+      {(splashImageUrl || clientName || campaignName) && (
+        <div className="w-full flex items-center justify-center py-2 px-4 flex-shrink-0 z-30 bg-black/40 border-b border-white/10 backdrop-blur-md">
+          <div className="flex items-center gap-3 px-4 sm:px-6 py-1.5 rounded-full bg-white/10 border border-white/20 shadow-lg backdrop-blur-md">
+            {splashImageUrl && (
+              <img
+                src={splashImageUrl}
+                alt={clientName || 'Logo da Campanha'}
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border-2 border-white/40 shadow-sm flex-shrink-0"
+              />
+            )}
+            <div className="flex items-center gap-2">
+              {clientName && (
+                <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
+                  {clientName}
+                </span>
+              )}
+              {campaignName && (
+                <>
+                  <span className="text-white/40 text-xs">•</span>
+                  <span className="text-xs sm:text-sm font-bold text-amber-300 truncate max-w-[200px] sm:max-w-[320px]">
+                    {campaignName}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top Bar */}
-      <header className="flex-shrink-0 flex items-center justify-between px-4 sm:px-6 py-3 bg-slate-900/95 border-b border-white/10 backdrop-blur-md z-30">
+      <header className="flex-shrink-0 flex items-center justify-between px-4 sm:px-6 py-3 bg-black/30 border-b border-white/10 backdrop-blur-md z-30">
         <button
           onClick={() => {
             sound.playClick();
@@ -81,7 +142,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         </button>
 
         <div className="flex flex-col items-center">
-          <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">{category}</span>
+          <span className="text-[10px] uppercase tracking-widest text-slate-300/80 font-bold">{category}</span>
           <h2 className="text-base sm:text-xl font-black tracking-tight">{title}</h2>
         </div>
 
@@ -96,7 +157,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           <div className="px-2.5 sm:px-3.5 py-1 rounded-xl bg-white/10 border border-white/15 flex items-center gap-1 font-bold text-xs sm:text-base">
             <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
             <span>{score}</span>
-            <span className="text-[10px] text-slate-400 hidden sm:inline">{customScoreLabel}</span>
+            <span className="text-[10px] text-slate-300/80 hidden sm:inline">{customScoreLabel}</span>
           </div>
 
           <button

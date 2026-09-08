@@ -81,3 +81,15 @@ export interface SystemSettings {
   idle_timeout_seconds: number;
   sound_enabled_default: boolean;
 }
+
+export interface BaseGameProps {
+  onExit: () => void;
+  rankingEnabled?: boolean;
+  onSubmitScore?: (playerName: string, score: number) => void;
+  themePrimary?: string;
+  theme?: ThemeDefinition;
+  customBgStyle?: React.CSSProperties;
+  campaignName?: string;
+  clientName?: string;
+  splashImageUrl?: string;
+}

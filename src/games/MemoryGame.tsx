@@ -2,13 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 
+import { BaseGameProps } from '../types';
 import { MemoryCustomPair } from '../types/gameContent';
 
-interface MemoryGameProps {
-  onExit: () => void;
-  rankingEnabled?: boolean;
-  onSubmitScore?: (playerName: string, score: number) => void;
-  themePrimary?: string;
+interface MemoryGameProps extends BaseGameProps {
   customContent?: MemoryCustomPair[];
 }
 
@@ -33,6 +30,11 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({
   rankingEnabled,
   onSubmitScore,
   themePrimary = '#059669',
+  theme,
+  customBgStyle,
+  campaignName,
+  clientName,
+  splashImageUrl,
   customContent,
 }) => {
   const ICONS = customContent && customContent.length >= 4 ? customContent : DEFAULT_ICONS;
@@ -131,15 +133,20 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       themePrimary={themePrimary}
+      theme={theme}
+      customBgStyle={customBgStyle}
+      campaignName={campaignName}
+      clientName={clientName}
+      splashImageUrl={splashImageUrl}
     >
-      <div className="w-full max-w-md flex flex-col items-center gap-3 my-auto">
-        <div className="w-full flex justify-between text-xs font-bold text-slate-400 px-2">
+      <div className="w-full max-w-xl sm:max-w-2xl flex-1 flex flex-col items-center justify-center gap-4 py-2 my-auto">
+        <div className="w-full flex justify-between text-xs sm:text-sm font-black text-slate-300 px-3">
           <span>Movimentos: <strong className="text-white font-mono">{moves}</strong></span>
           <span>Pares Encontrados: <strong className="text-emerald-400 font-mono">{cards.filter(c => c.matched).length / 2} / {ICONS.length}</strong></span>
         </div>
 
-        {/* 4x3 Grid */}
-        <div className="grid grid-cols-4 gap-2 sm:gap-2.5 w-full p-2.5 sm:p-3 bg-slate-900/80 rounded-3xl border-2 border-white/10 shadow-2xl">
+        {/* 4x3 Grid - Larger cards for totem kiosks */}
+        <div className="grid grid-cols-4 gap-3 sm:gap-4 w-full p-4 sm:p-6 bg-slate-900/85 backdrop-blur-xl rounded-3xl border-2 border-white/20 shadow-2xl">
           {cards.map((card) => {
             const isFlipped = flipped.includes(card.id) || card.matched;
             return (

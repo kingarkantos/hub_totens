@@ -2,11 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 
-interface SpeedGameProps {
-  onExit: () => void;
-  rankingEnabled?: boolean;
-  onSubmitScore?: (playerName: string, score: number) => void;
-  themePrimary?: string;
+import { BaseGameProps } from '../types';
+
+interface SpeedGameProps extends BaseGameProps {
   customContent?: any;
 }
 
@@ -15,6 +13,11 @@ export const SpeedGame: React.FC<SpeedGameProps> = ({
   rankingEnabled,
   onSubmitScore,
   themePrimary = '#DC2626',
+  theme,
+  customBgStyle,
+  campaignName,
+  clientName,
+  splashImageUrl,
   customContent,
 }) => {
   const [stage, setStage] = useState<'countdown' | 'racing' | 'finished'>('countdown');
@@ -98,40 +101,45 @@ export const SpeedGame: React.FC<SpeedGameProps> = ({
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       customScoreLabel="Pts"
       themePrimary={themePrimary}
+      theme={theme}
+      customBgStyle={customBgStyle}
+      campaignName={campaignName}
+      clientName={clientName}
+      splashImageUrl={splashImageUrl}
     >
-      <div className="w-full max-w-sm flex flex-col items-center gap-3 sm:gap-5 my-auto">
+      <div className="w-full max-w-md sm:max-w-lg flex-1 flex flex-col items-center justify-between py-6 my-auto gap-6">
         {/* Traffic Light */}
-        <div className="flex items-center gap-3 p-2 sm:p-2.5 bg-slate-900 border-2 border-white/20 rounded-2xl shadow-xl">
+        <div className="flex items-center gap-4 p-3 sm:p-4 bg-slate-900/90 border-2 border-white/20 rounded-3xl shadow-xl backdrop-blur-md">
           <div
-            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 transition-all ${
+            className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full border-2 transition-all ${
               trafficLights === 1 ? 'bg-rose-600 border-rose-400 shadow-lg shadow-rose-600/60 scale-110' : 'bg-rose-950 border-rose-900 opacity-40'
             }`}
           />
           <div
-            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 transition-all ${
+            className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full border-2 transition-all ${
               trafficLights === 2 ? 'bg-amber-500 border-amber-300 shadow-lg shadow-amber-500/60 scale-110' : 'bg-amber-950 border-amber-900 opacity-40'
             }`}
           />
           <div
-            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 transition-all ${
+            className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full border-2 transition-all ${
               trafficLights === 3 ? 'bg-emerald-500 border-emerald-300 shadow-lg shadow-emerald-500/60 scale-110' : 'bg-emerald-950 border-emerald-900 opacity-40'
             }`}
           />
         </div>
 
         {/* Speedometer Gauge Display */}
-        <div className="relative w-48 h-48 sm:w-56 sm:h-56 rounded-full bg-slate-900 border-4 border-slate-700 shadow-2xl flex flex-col items-center justify-center">
+        <div className="relative w-56 h-56 sm:w-72 sm:h-72 rounded-full bg-slate-900/90 border-4 border-white/20 shadow-2xl flex flex-col items-center justify-center backdrop-blur-md">
           {/* Progress circle */}
           <div
-            className="absolute inset-2 rounded-full border-4 border-dashed border-red-500/30 animate-spin-slow pointer-events-none"
+            className="absolute inset-2 rounded-full border-4 border-dashed border-red-500/40 animate-spin-slow pointer-events-none"
           />
-          <span className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-widest">Velocímetro</span>
-          <div className="text-4xl sm:text-5xl font-black text-white font-mono tracking-tighter my-0.5">
+          <span className="text-xs sm:text-sm text-slate-300 font-bold uppercase tracking-widest">Velocímetro</span>
+          <div className="text-5xl sm:text-7xl font-black text-white font-mono tracking-tighter my-1">
             {speed}
           </div>
-          <span className="text-xs sm:text-sm font-bold text-red-400">KM/H</span>
+          <span className="text-sm sm:text-base font-bold text-red-400">KM/H</span>
 
-          <div className="mt-2 px-2.5 py-0.5 rounded-full bg-slate-800 text-[11px] font-mono text-amber-400 font-bold">
+          <div className="mt-2 px-3.5 py-1 rounded-full bg-slate-800 text-xs sm:text-sm font-mono text-amber-400 font-bold border border-white/10">
             ⏱️ {elapsedTime}s
           </div>
         </div>
@@ -141,10 +149,10 @@ export const SpeedGame: React.FC<SpeedGameProps> = ({
           onClick={handlePedalTap}
           disabled={stage !== 'racing'}
           style={{ backgroundColor: stage === 'racing' ? themePrimary : '#334155' }}
-          className="w-full h-20 sm:h-26 rounded-2xl border-2 sm:border-4 border-white/20 flex flex-col items-center justify-center font-black text-lg sm:text-xl uppercase tracking-wider text-white shadow-2xl active:scale-90 transition-all disabled:opacity-40 select-none animate-totem-pulse"
+          className="w-full h-24 sm:h-32 rounded-3xl border-2 sm:border-4 border-white/25 flex flex-col items-center justify-center font-black text-xl sm:text-3xl uppercase tracking-wider text-white shadow-2xl active:scale-95 transition-all disabled:opacity-40 select-none animate-totem-pulse"
         >
           <span>🏎️ ACELERAR!</span>
-          <span className="text-[11px] font-normal tracking-normal text-slate-200 mt-0.5">Toque freneticamente!</span>
+          <span className="text-xs sm:text-sm font-normal tracking-normal text-slate-200 mt-0.5">Toque freneticamente no totem!</span>
         </button>
       </div>
     </GameContainer>

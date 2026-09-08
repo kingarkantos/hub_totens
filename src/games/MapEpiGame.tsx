@@ -3,12 +3,9 @@ import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 import { MapPin, Check, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 
-interface MapEpiGameProps {
-  onExit: () => void;
-  rankingEnabled?: boolean;
-  onSubmitScore?: (playerName: string, score: number) => void;
-  themePrimary?: string;
-}
+import { BaseGameProps } from '../types';
+
+interface MapEpiGameProps extends BaseGameProps {}
 
 interface SectorMatch {
   id: string;
@@ -30,6 +27,11 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = ({
   rankingEnabled,
   onSubmitScore,
   themePrimary = '#E11D48',
+  theme,
+  customBgStyle,
+  campaignName,
+  clientName,
+  splashImageUrl,
 }) => {
   const [selectedEpiId, setSelectedEpiId] = useState<string | null>(null);
   const [matchedIds, setMatchedIds] = useState<string[]>([]);
@@ -116,8 +118,13 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = ({
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       themePrimary={themePrimary}
+      theme={theme}
+      customBgStyle={customBgStyle}
+      campaignName={campaignName}
+      clientName={clientName}
+      splashImageUrl={splashImageUrl}
     >
-      <div className="flex flex-col h-full max-w-xl mx-auto justify-between select-none">
+      <div className="flex flex-col flex-1 w-full max-w-2xl sm:max-w-3xl mx-auto justify-between py-2 select-none">
         {/* Instruction Header */}
         <div className="bg-rose-50 border border-rose-200/80 rounded-2xl px-4 py-2.5 shadow-sm text-center">
           <span className="text-xs font-black uppercase text-rose-800 flex items-center justify-center gap-1.5">

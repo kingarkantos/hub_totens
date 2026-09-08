@@ -2,13 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 import { ArrowUp, ArrowDown, Check, ListOrdered, Sparkles, CheckCircle2 } from 'lucide-react';
+import { BaseGameProps } from '../types';
 import { CorrectOrderCustomItem } from '../types/gameContent';
 
-interface CorrectOrderGameProps {
-  onExit: () => void;
-  rankingEnabled?: boolean;
-  onSubmitScore?: (playerName: string, score: number) => void;
-  themePrimary?: string;
+interface CorrectOrderGameProps extends BaseGameProps {
   customContent?: CorrectOrderCustomItem;
 }
 
@@ -27,6 +24,11 @@ export const CorrectOrderGame: React.FC<CorrectOrderGameProps> = ({
   rankingEnabled,
   onSubmitScore,
   themePrimary = '#0D9488',
+  theme,
+  customBgStyle,
+  campaignName,
+  clientName,
+  splashImageUrl,
   customContent,
 }) => {
   const procedure = useMemo(() => {
@@ -133,8 +135,13 @@ export const CorrectOrderGame: React.FC<CorrectOrderGameProps> = ({
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       themePrimary={themePrimary}
+      theme={theme}
+      customBgStyle={customBgStyle}
+      campaignName={campaignName}
+      clientName={clientName}
+      splashImageUrl={splashImageUrl}
     >
-      <div className="flex flex-col h-full max-w-xl mx-auto justify-between select-none">
+      <div className="flex flex-col flex-1 w-full max-w-2xl sm:max-w-3xl mx-auto justify-between py-2 select-none">
         {/* Procedure Title */}
         <div className="bg-teal-50 border border-teal-200/80 rounded-2xl p-3 text-center shadow-sm">
           <span className="text-xs font-black uppercase text-teal-800 flex items-center justify-center gap-1.5 mb-0.5">

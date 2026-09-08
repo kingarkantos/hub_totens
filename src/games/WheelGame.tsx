@@ -2,13 +2,10 @@ import React, { useRef, useState, useEffect } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 
+import { BaseGameProps } from '../types';
 import { WheelItem } from '../types/gameContent';
 
-interface WheelGameProps {
-  onExit: () => void;
-  rankingEnabled?: boolean;
-  onSubmitScore?: (playerName: string, score: number) => void;
-  themePrimary?: string;
+interface WheelGameProps extends BaseGameProps {
   customContent?: WheelItem[];
 }
 
@@ -28,6 +25,11 @@ export const WheelGame: React.FC<WheelGameProps> = ({
   rankingEnabled,
   onSubmitScore,
   themePrimary = '#DC2626',
+  theme,
+  customBgStyle,
+  campaignName,
+  clientName,
+  splashImageUrl,
   customContent,
 }) => {
   const PRIZES = customContent && customContent.length >= 3 ? customContent : DEFAULT_PRIZES;
@@ -196,37 +198,42 @@ export const WheelGame: React.FC<WheelGameProps> = ({
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       customScoreLabel="Pts"
       themePrimary={themePrimary}
+      theme={theme}
+      customBgStyle={customBgStyle}
+      campaignName={campaignName}
+      clientName={clientName}
+      splashImageUrl={splashImageUrl}
     >
-      <div className="flex flex-col items-center justify-center gap-4 sm:gap-6 w-full max-w-md my-auto">
+      <div className="flex flex-col items-center justify-center gap-6 sm:gap-8 w-full max-w-lg my-auto">
         {/* Pointer indicator */}
         <div className="relative flex flex-col items-center">
-          <div className="w-0 h-0 border-x-[14px] sm:border-x-[16px] border-x-transparent border-t-[24px] sm:border-t-[28px] border-t-amber-400 drop-shadow-lg z-20 -mb-4 sm:-mb-5" />
+          <div className="w-0 h-0 border-x-[16px] sm:border-x-[20px] border-x-transparent border-t-[28px] sm:border-t-[34px] border-t-amber-400 drop-shadow-xl z-20 -mb-5 sm:-mb-6" />
           
-          <div className="relative rounded-full p-1.5 sm:p-2 bg-slate-900 border-4 border-slate-700 shadow-2xl">
+          <div className="relative rounded-full p-2 sm:p-3 bg-slate-900/90 border-4 border-white/20 shadow-2xl backdrop-blur-md">
             <canvas
               ref={canvasRef}
               width={380}
               height={380}
-              className="w-[260px] h-[260px] sm:w-[340px] sm:h-[340px] max-w-[45vh] max-h-[45vh] cursor-pointer touch-none"
+              className="w-[280px] h-[280px] sm:w-[380px] sm:h-[380px] max-w-[50vh] max-h-[50vh] cursor-pointer touch-none"
               onClick={spin}
             />
           </div>
         </div>
 
-        {/* Spin button */}
+        {/* Big Spin button for totem */}
         <button
           onClick={spin}
           disabled={spinning || gameOver}
           style={{ backgroundColor: themePrimary }}
-          className="w-full py-3.5 sm:py-4 px-6 rounded-2xl text-white font-black text-lg sm:text-xl tracking-wider uppercase shadow-2xl active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none hover:brightness-110 flex items-center justify-center gap-3 animate-totem-pulse"
+          className="w-full py-5 sm:py-6 px-8 rounded-3xl text-white font-black text-xl sm:text-2xl tracking-wider uppercase shadow-2xl active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none hover:brightness-110 flex items-center justify-center gap-3 animate-totem-pulse border-2 border-white/20"
         >
           <span>🎯</span>
           <span>{spinning ? 'GIRANDO...' : 'TOQUE PARA GIRAR!'}</span>
         </button>
 
         {wonPrize && !gameOver && (
-          <div className="text-center font-bold text-amber-300 text-sm sm:text-base">
-            Você ganhou: <span className="text-white text-base sm:text-lg">{wonPrize.label}</span>!
+          <div className="text-center font-bold text-amber-300 text-base sm:text-lg">
+            Você ganhou: <span className="text-white text-lg sm:text-xl">{wonPrize.label}</span>!
           </div>
         )}
       </div>

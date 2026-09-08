@@ -2,11 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 
-interface GeniusGameProps {
-  onExit: () => void;
-  rankingEnabled?: boolean;
-  onSubmitScore?: (playerName: string, score: number) => void;
-  themePrimary?: string;
+import { BaseGameProps } from '../types';
+
+interface GeniusGameProps extends BaseGameProps {
   customContent?: any;
 }
 
@@ -22,6 +20,11 @@ export const GeniusGame: React.FC<GeniusGameProps> = ({
   rankingEnabled,
   onSubmitScore,
   themePrimary = '#06B6D4',
+  theme,
+  customBgStyle,
+  campaignName,
+  clientName,
+  splashImageUrl,
   customContent,
 }) => {
   const [sequence, setSequence] = useState<number[]>([]);
@@ -112,17 +115,22 @@ export const GeniusGame: React.FC<GeniusGameProps> = ({
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       themePrimary={themePrimary}
+      theme={theme}
+      customBgStyle={customBgStyle}
+      campaignName={campaignName}
+      clientName={clientName}
+      splashImageUrl={splashImageUrl}
     >
-      <div className="w-full max-w-[290px] sm:max-w-sm flex flex-col items-center gap-3 sm:gap-4 my-auto">
-        <div className="flex items-center justify-between w-full text-xs font-bold text-slate-400 px-2">
-          <span>Rodada: <strong className="text-white text-sm">{round}</strong></span>
+      <div className="w-full max-w-md sm:max-w-xl flex-1 flex flex-col items-center justify-between py-6 my-auto gap-6">
+        <div className="flex items-center justify-between w-full text-xs sm:text-sm font-black text-slate-300 px-3">
+          <span>Rodada: <strong className="text-white text-base">{round}</strong></span>
           <span className={isPlayingSeq ? 'text-amber-400 animate-pulse' : 'text-emerald-400'}>
             {isPlayingSeq ? 'Observe a sequência...' : 'Sua vez de repetir!'}
           </span>
         </div>
 
-        {/* 2x2 Genius Grid */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full aspect-square p-3 sm:p-4 bg-slate-900 rounded-3xl border-4 border-slate-700 shadow-2xl">
+        {/* 2x2 Genius Grid - Large Touch Pads */}
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 w-full aspect-square p-4 sm:p-6 bg-slate-900/85 backdrop-blur-xl rounded-3xl border-4 border-white/20 shadow-2xl">
           {PADS.map((pad) => {
             const isActive = activePad === pad.id;
             return (

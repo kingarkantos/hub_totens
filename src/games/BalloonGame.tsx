@@ -2,11 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 
-interface BalloonGameProps {
-  onExit: () => void;
-  rankingEnabled?: boolean;
-  onSubmitScore?: (playerName: string, score: number) => void;
-  themePrimary?: string;
+import { BaseGameProps } from '../types';
+
+interface BalloonGameProps extends BaseGameProps {
   customContent?: any;
 }
 
@@ -27,6 +25,11 @@ export const BalloonGame: React.FC<BalloonGameProps> = ({
   rankingEnabled,
   onSubmitScore,
   themePrimary = '#F97316',
+  theme,
+  customBgStyle,
+  campaignName,
+  clientName,
+  splashImageUrl,
   customContent,
 }) => {
   const [score, setScore] = useState(0);
@@ -116,12 +119,17 @@ export const BalloonGame: React.FC<BalloonGameProps> = ({
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       themePrimary={themePrimary}
+      theme={theme}
+      customBgStyle={customBgStyle}
+      campaignName={campaignName}
+      clientName={clientName}
+      splashImageUrl={splashImageUrl}
     >
       <div
         ref={containerRef}
-        className="relative w-full max-w-md h-[440px] max-h-[62vh] min-h-[320px] my-auto bg-slate-900/70 rounded-3xl border-2 border-white/10 overflow-hidden select-none touch-none"
+        className="relative w-full max-w-2xl sm:max-w-3xl flex-1 max-h-[72vh] min-h-[440px] my-auto bg-slate-900/85 backdrop-blur-xl rounded-3xl border-2 border-white/20 overflow-hidden select-none touch-none shadow-2xl"
       >
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs font-bold text-slate-400 pointer-events-none">
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full bg-black/60 border border-white/20 text-xs sm:text-sm font-black text-amber-300 pointer-events-none z-10 shadow-lg">
           Toque para estourar os balões! Balões dourados valem mais! 🎈
         </div>
 
