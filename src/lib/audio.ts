@@ -33,6 +33,10 @@ class SoundManager {
     osc.stop(ctx.currentTime + 0.06);
   }
 
+  playTap() {
+    this.playClick();
+  }
+
   playSuccess() {
     const ctx = this.getContext();
     if (!ctx) return;

@@ -104,6 +104,82 @@ Retorne um array JSON no formato:
   { "name": "Balão Oficial", "color": "#DC2626", "points": 100, "isGold": false },
   { "name": "Balão Ouro Bônus", "color": "#F59E0B", "points": 250, "isGold": true }
 ]`,
+
+    wordsearch: `Gere um tema e 5 palavras-chave curtas (máximo 8 letras, apenas A-Z sem espaços ou acentos) para o jogo de caça-palavras.
+Retorne um objeto JSON no formato:
+{
+  "theme": "Tema do Caça-Palavras",
+  "words": ["PALAVRA1", "PALAVRA2", "PALAVRA3", "PALAVRA4", "PALAVRA5"]
+}`,
+
+    hangman: `Gere de 4 a 5 palavras secretas desafiadoras e suas dicas para o jogo da forca.
+Retorne um array JSON no formato:
+[
+  { "word": "EXTINTOR", "clue": "Dica objetiva e clara", "category": "Segurança" },
+  ...
+]`,
+
+    truefalse: `Gere 5 afirmações sobre o tema da campanha para os participantes julgarem se é Verdadeiro ou Falso.
+Retorne um array JSON no formato:
+[
+  {
+    "statement": "Texto da afirmação",
+    "isTrue": true,
+    "explanation": "Explicação instrutiva e concisa de 1 frase justificando o porquê."
+  },
+  ...
+]`,
+
+    complete_phrase: `Gere 4 frases com lacuna (use exatamente ___ para a lacuna) e 4 opções de resposta para cada frase.
+Retorne um array JSON no formato:
+[
+  {
+    "sentence": "Frase com a lacuna ___ no meio ou no fim.",
+    "missingWord": "Palavra Correta",
+    "options": ["Palavra Correta", "Opção Errada 1", "Opção Errada 2", "Opção Errada 3"]
+  },
+  ...
+]`,
+
+    correct_order: `Gere um procedimento ou sequência de 4 passos na ordem correta para os participantes organizarem.
+Retorne um objeto JSON no formato:
+{
+  "title": "Título do Procedimento ou Processo",
+  "steps": [
+    "Passo 1 inicial",
+    "Passo 2 subsequente",
+    "Passo 3 seguinte",
+    "Passo 4 finalização"
+  ]
+}`,
+
+    connect_pairs: `Gere 4 pares de associação entre duas colunas (ex: Situação/Risco e Solução/Proteção).
+Retorne um array JSON no formato:
+[
+  { "left": "Item da Esquerda 1", "right": "Item Correspondente da Direita 1" },
+  ...
+]`,
+
+    speed_trivia: `Gere 5 perguntas relâmpago de agilidade com 4 opções curtas.
+Retorne um array JSON no formato:
+[
+  {
+    "question": "Pergunta rápida?",
+    "options": ["Opção A", "Opção B", "Opção C", "Opção D"],
+    "correct": 0
+  },
+  ...
+]`,
+
+    spot_error: `Gere um cenário de inspeção com 4 irregularidades/riscos identificáveis.
+Retorne um objeto JSON no formato:
+{
+  "scenarioTitle": "Título do Cenário de Inspeção",
+  "hazards": [
+    { "name": "Nome do Risco 1", "description": "Descrição sucinta do impacto" },
+    ...
+  ]
+}`,
   };
 
   const specificPrompt = gamePrompts[gameId] || 'Gere conteúdo relevante para o jogo em formato JSON.';

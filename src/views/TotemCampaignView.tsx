@@ -18,6 +18,15 @@ import { SafeGame } from '../games/SafeGame';
 import { GeniusGame } from '../games/GeniusGame';
 import { PuzzleGame } from '../games/PuzzleGame';
 import { BalloonGame } from '../games/BalloonGame';
+import { WordSearchGame } from '../games/WordSearchGame';
+import { HangmanGame } from '../games/HangmanGame';
+import { TrueFalseGame } from '../games/TrueFalseGame';
+import { CompletePhraseGame } from '../games/CompletePhraseGame';
+import { CorrectOrderGame } from '../games/CorrectOrderGame';
+import { ConnectPairsGame } from '../games/ConnectPairsGame';
+import { SpeedTriviaGame } from '../games/SpeedTriviaGame';
+import { SpotErrorGame } from '../games/SpotErrorGame';
+import { MapEpiGame } from '../games/MapEpiGame';
 
 interface TotemCampaignViewProps {
   slug: string;
@@ -202,6 +211,24 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
         return <PuzzleGame {...commonProps} />;
       case 'balloon':
         return <BalloonGame {...commonProps} />;
+      case 'wordsearch':
+        return <WordSearchGame {...commonProps} />;
+      case 'hangman':
+        return <HangmanGame {...commonProps} />;
+      case 'truefalse':
+        return <TrueFalseGame {...commonProps} />;
+      case 'complete_phrase':
+        return <CompletePhraseGame {...commonProps} />;
+      case 'correct_order':
+        return <CorrectOrderGame {...commonProps} />;
+      case 'connect_pairs':
+        return <ConnectPairsGame {...commonProps} />;
+      case 'speed_trivia':
+        return <SpeedTriviaGame {...commonProps} />;
+      case 'spot_error':
+        return <SpotErrorGame {...commonProps} />;
+      case 'map_epi':
+        return <MapEpiGame {...commonProps} />;
       default:
         return null;
     }

@@ -155,6 +155,79 @@ export function parseGameCSV(gameId: string, csvText: string): any {
         isGold: (r.is_gold || r['ouro'] || '').toLowerCase() === 'true',
       }));
 
+    case 'wordsearch':
+      return {
+        theme: rows[0]?.theme || 'Segurança e Normas',
+        words: rows.map((r) => (r.word || r['palavra'] || '').toUpperCase().trim()).filter(Boolean),
+      };
+
+    case 'hangman':
+      return rows.map((r) => ({
+        word: (r.word || r['palavra'] || 'SEGURANCA').toUpperCase().trim(),
+        clue: r.clue || r['dica'] || 'Equipamento essencial',
+        category: r.category || r['categoria'] || 'Segurança',
+      }));
+
+    case 'truefalse':
+      return rows.map((r) => ({
+        statement: r.statement || r['afirmacao'] || 'Afirmação de segurança',
+        isTrue: (r.is_true || r['verdadeiro'] || '').toLowerCase() === 'true',
+        explanation: r.explanation || r['explicacao'] || 'Explicação detalhada',
+      }));
+
+    case 'complete_phrase':
+      return rows.map((r) => ({
+        sentence: r.sentence || r['frase'] || 'Use sempre o ___ em área de risco.',
+        missingWord: r.missing_word || r['palavra_correta'] || 'EPI',
+        options: [
+          r.missing_word || r['palavra_correta'] || 'EPI',
+          r.opt_2 || r['opcao_2'] || 'Opção 2',
+          r.opt_3 || r['opcao_3'] || 'Opção 3',
+          r.opt_4 || r['opcao_4'] || 'Opção 4',
+        ],
+      }));
+
+    case 'correct_order':
+      const cRow = rows[0] || {};
+      return {
+        title: cRow.title || cRow['titulo'] || 'Procedimento de Segurança',
+        steps: [
+          cRow.step_1 || cRow['passo_1'] || 'Passo 1',
+          cRow.step_2 || cRow['passo_2'] || 'Passo 2',
+          cRow.step_3 || cRow['passo_3'] || 'Passo 3',
+          cRow.step_4 || cRow['passo_4'] || 'Passo 4',
+        ].filter(Boolean),
+      };
+
+    case 'connect_pairs':
+      return rows.map((r) => ({
+        left: r.left_item || r['esquerda'] || 'Item A',
+        right: r.right_item || r['direita'] || 'Item B',
+      }));
+
+    case 'speed_trivia':
+      return rows.map((r) => ({
+        question: r.question || r['pergunta'] || 'Pergunta relâmpago?',
+        options: [
+          r.correct_option || r['correta'] || 'Resposta Correta',
+          r.opt_2 || r['opcao_2'] || 'Opção B',
+          r.opt_3 || r['opcao_3'] || 'Opção C',
+          r.opt_4 || r['opcao_4'] || 'Opção D',
+        ],
+        correct: 0,
+      }));
+
+    case 'spot_error':
+      const sRow = rows[0] || {};
+      return {
+        scenarioTitle: sRow.scenario_title || sRow['titulo'] || 'Inspeção de Segurança',
+        hazards: [
+          { name: sRow.hazard_1 || 'Irregularidade 1', description: 'Risco de acidente operacional' },
+          { name: sRow.hazard_2 || 'Irregularidade 2', description: 'Não conformidade com norma técnica' },
+          { name: sRow.hazard_3 || 'Irregularidade 3', description: 'Avaria em equipamento ou instalação' },
+        ],
+      };
+
     default:
       return rows;
   }

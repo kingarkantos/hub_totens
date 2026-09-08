@@ -11,6 +11,15 @@ import { SafeGame } from './SafeGame';
 import { GeniusGame } from './GeniusGame';
 import { PuzzleGame } from './PuzzleGame';
 import { BalloonGame } from './BalloonGame';
+import { WordSearchGame } from './WordSearchGame';
+import { HangmanGame } from './HangmanGame';
+import { TrueFalseGame } from './TrueFalseGame';
+import { CompletePhraseGame } from './CompletePhraseGame';
+import { CorrectOrderGame } from './CorrectOrderGame';
+import { ConnectPairsGame } from './ConnectPairsGame';
+import { SpeedTriviaGame } from './SpeedTriviaGame';
+import { SpotErrorGame } from './SpotErrorGame';
+import { MapEpiGame } from './MapEpiGame';
 
 interface GamePreviewModalProps {
   game: GameDefinition | null;
@@ -43,6 +52,24 @@ export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({ game, onClos
         return <PuzzleGame onExit={onClose} customContent={customContent} />;
       case 'balloon':
         return <BalloonGame onExit={onClose} customContent={customContent} />;
+      case 'wordsearch':
+        return <WordSearchGame onExit={onClose} customContent={customContent} />;
+      case 'hangman':
+        return <HangmanGame onExit={onClose} customContent={customContent} />;
+      case 'truefalse':
+        return <TrueFalseGame onExit={onClose} customContent={customContent} />;
+      case 'complete_phrase':
+        return <CompletePhraseGame onExit={onClose} customContent={customContent} />;
+      case 'correct_order':
+        return <CorrectOrderGame onExit={onClose} customContent={customContent} />;
+      case 'connect_pairs':
+        return <ConnectPairsGame onExit={onClose} customContent={customContent} />;
+      case 'speed_trivia':
+        return <SpeedTriviaGame onExit={onClose} customContent={customContent} />;
+      case 'spot_error':
+        return <SpotErrorGame onExit={onClose} customContent={customContent} />;
+      case 'map_epi':
+        return <MapEpiGame onExit={onClose} />;
       default:
         return (
           <div className="p-12 text-center text-slate-400">
