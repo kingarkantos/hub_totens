@@ -4,6 +4,7 @@ export interface CampaignAIContext {
   description?: string;
   themeName?: string;
   userPrompt?: string;
+  itemCount?: number;
 }
 
 const DEFAULT_GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
@@ -15,8 +16,10 @@ export async function generateGameContentWithAI(
 ): Promise<any> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
+  const count = context.itemCount && context.itemCount > 0 ? context.itemCount : undefined;
+
   const gamePrompts: Record<string, string> = {
-    wheel: `Gere exatamente 8 itens de prêmios/fatias para uma roleta da sorte interativa de totem.
+    wheel: `Gere exatamente ${count || 8} itens de prêmios/fatias para uma roleta da sorte interativa de totem.
 Retorne um array JSON no formato:
 [
   { "label": "Nome Curto do Prêmio", "score": 500, "color": "#DC2626" },
@@ -24,7 +27,7 @@ Retorne um array JSON no formato:
 ]
 As cores devem ser hexadecimais vibrantes combinando com a marca. Os scores devem variar entre 150 e 800.`,
 
-    quiz: `Gere exatamente 5 perguntas envolventes e desafiadoras de múltipla escolha sobre a marca ou produtos da campanha.
+    quiz: `Gere exatamente ${count || 5} perguntas envolventes e desafiadoras de múltipla escolha sobre a marca, produtos, segurança ou contexto da campanha.
 Retorne um array JSON no formato:
 [
   {
@@ -34,9 +37,9 @@ Retorne um array JSON no formato:
   },
   ...
 ]
-O campo "correct" deve ser o índice da alternativa correta (0 para A, 1 para B, 2 para C, 3 para D).`,
+O campo "correct" deve ser o índice da alternativa correta (0 para A, 1 para B, 2 para C, 3 para D). Certifique-se de gerar exatamente ${count || 5} perguntas.`,
 
-    target: `Gere de 4 a 6 tipos de alvos para um jogo de reflexo rápido no totem.
+    target: `Gere exatamente ${count || 5} tipos de alvos para um jogo de reflexo rápido no totem.
 Retorne um array JSON no formato:
 [
   { "name": "Nome do Alvo", "symbol": "★", "points": 100, "isBonus": false },
@@ -44,7 +47,7 @@ Retorne um array JSON no formato:
 ]
 O símbolo deve ser um emoji ou caractere visual atraente.`,
 
-    memory: `Gere exatamente 6 pares de cartas para o jogo da memória temática.
+    memory: `Gere exatamente ${count || 6} pares de cartas para o jogo da memória temática.
 Retorne um array JSON no formato:
 [
   { "symbol": "🚗", "label": "Sedan Esportivo" },
@@ -52,7 +55,7 @@ Retorne um array JSON no formato:
 ]
 Cada item deve ter um emoji temático e um rótulo curto de 1 a 3 palavras.`,
 
-    catcher: `Gere de 4 a 6 itens que caem da tela para um jogo de coletar brindes.
+    catcher: `Gere exatamente ${count || 5} itens que caem da tela para um jogo de coletar brindes.
 Retorne um array JSON no formato:
 [
   { "name": "Kit Exclusivo", "symbol": "🎁", "points": 150, "type": "gift" },
@@ -98,28 +101,28 @@ Retorne um objeto JSON no formato:
   "pieceLabels": ["Palavra1", "Palavra2", "Palavra3", "Palavra4", "Palavra5", "Palavra6", "Palavra7", "Palavra8"]
 }`,
 
-    balloon: `Gere de 4 a 6 tipos de balões com cores temáticas da marca.
+    balloon: `Gere exatamente ${count || 5} tipos de balões com cores temáticas da marca.
 Retorne um array JSON no formato:
 [
   { "name": "Balão Oficial", "color": "#DC2626", "points": 100, "isGold": false },
   { "name": "Balão Ouro Bônus", "color": "#F59E0B", "points": 250, "isGold": true }
 ]`,
 
-    wordsearch: `Gere um tema e 5 palavras-chave curtas (máximo 8 letras, apenas A-Z sem espaços ou acentos) para o jogo de caça-palavras.
+    wordsearch: `Gere um tema e exatamente ${count || 5} palavras-chave curtas (máximo 8 letras, apenas A-Z sem espaços ou acentos) para o jogo de caça-palavras.
 Retorne um objeto JSON no formato:
 {
   "theme": "Tema do Caça-Palavras",
   "words": ["PALAVRA1", "PALAVRA2", "PALAVRA3", "PALAVRA4", "PALAVRA5"]
 }`,
 
-    hangman: `Gere de 4 a 5 palavras secretas desafiadoras e suas dicas para o jogo da forca.
+    hangman: `Gere exatamente ${count || 5} palavras secretas desafiadoras e suas dicas para o jogo da forca.
 Retorne um array JSON no formato:
 [
   { "word": "EXTINTOR", "clue": "Dica objetiva e clara", "category": "Segurança" },
   ...
 ]`,
 
-    truefalse: `Gere 5 afirmações sobre o tema da campanha para os participantes julgarem se é Verdadeiro ou Falso.
+    truefalse: `Gere exatamente ${count || 5} afirmações sobre o tema da campanha para os participantes julgarem se é Verdadeiro ou Falso.
 Retorne um array JSON no formato:
 [
   {
@@ -130,7 +133,7 @@ Retorne um array JSON no formato:
   ...
 ]`,
 
-    complete_phrase: `Gere 4 frases com lacuna (use exatamente ___ para a lacuna) e 4 opções de resposta para cada frase.
+    complete_phrase: `Gere exatamente ${count || 4} frases com lacuna (use exatamente ___ para a lacuna) e 4 opções de resposta para cada frase.
 Retorne um array JSON no formato:
 [
   {
@@ -141,7 +144,7 @@ Retorne um array JSON no formato:
   ...
 ]`,
 
-    correct_order: `Gere um procedimento ou sequência de 4 passos na ordem correta para os participantes organizarem.
+    correct_order: `Gere um procedimento ou sequência de ${count || 4} passos na ordem correta para os participantes organizarem.
 Retorne um objeto JSON no formato:
 {
   "title": "Título do Procedimento ou Processo",
@@ -153,14 +156,14 @@ Retorne um objeto JSON no formato:
   ]
 }`,
 
-    connect_pairs: `Gere 4 pares de associação entre duas colunas (ex: Situação/Risco e Solução/Proteção).
+    connect_pairs: `Gere exatamente ${count || 4} pares de associação entre duas colunas (ex: Situação/Risco e Solução/Proteção).
 Retorne um array JSON no formato:
 [
   { "left": "Item da Esquerda 1", "right": "Item Correspondente da Direita 1" },
   ...
 ]`,
 
-    speed_trivia: `Gere 5 perguntas relâmpago de agilidade com 4 opções curtas.
+    speed_trivia: `Gere exatamente ${count || 5} perguntas relâmpago de agilidade com 4 opções curtas.
 Retorne um array JSON no formato:
 [
   {
@@ -171,7 +174,7 @@ Retorne um array JSON no formato:
   ...
 ]`,
 
-    spot_error: `Gere um cenário de inspeção com 4 irregularidades/riscos identificáveis.
+    spot_error: `Gere um cenário de inspeção com exatamente ${count || 4} irregularidades/riscos identificáveis.
 Retorne um objeto JSON no formato:
 {
   "scenarioTitle": "Título do Cenário de Inspeção",

@@ -29,6 +29,28 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiCustomPrompt, setAiCustomPrompt] = useState('');
 
+  const getDefaultCountForGame = (id: string) => {
+    switch (id) {
+      case 'wheel': return 8;
+      case 'quiz': return 5;
+      case 'truefalse': return 5;
+      case 'speed_trivia': return 5;
+      case 'hangman': return 5;
+      case 'complete_phrase': return 4;
+      case 'connect_pairs': return 4;
+      case 'memory': return 6;
+      case 'wordsearch': return 5;
+      case 'target': return 5;
+      case 'catcher': return 5;
+      case 'spot_error': return 4;
+      case 'balloon': return 5;
+      case 'correct_order': return 4;
+      default: return 5;
+    }
+  };
+
+  const [aiItemCount, setAiItemCount] = useState<number>(() => getDefaultCountForGame(game.id));
+
   // Handle CSV File Upload
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -62,6 +84,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
       const generated = await generateGameContentWithAI(game.id, {
         ...campaignContext,
         userPrompt: aiCustomPrompt.trim() || undefined,
+        itemCount: aiItemCount > 0 ? aiItemCount : undefined,
       });
 
       setContent(generated);
@@ -478,13 +501,82 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                 </div>
               </div>
 
+              {/* Quantidade de Conteúdos / Perguntas */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <label className="block text-xs font-black text-slate-800 uppercase tracking-wide">
+                      Quantidade de Conteúdos a Gerar
+                    </label>
+                    <span className="text-[11px] text-slate-500">
+                      {game.id === 'quiz' || game.id === 'speed_trivia'
+                        ? 'Quantas perguntas você quer que a IA elabore?'
+                        : game.id === 'truefalse'
+                        ? 'Quantas afirmações de verdadeiro ou falso criar?'
+                        : game.id === 'wheel'
+                        ? 'Quantas opções/prêmios na roleta?'
+                        : game.id === 'hangman'
+                        ? 'Quantas palavras secretas da forca gerar?'
+                        : 'Quantos itens ou desafios temáticos produzir?'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 self-start sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => setAiItemCount((prev) => Math.max(3, prev - 1))}
+                      className="w-8 h-8 rounded-lg bg-white border border-slate-300 font-bold text-slate-700 hover:bg-slate-100 flex items-center justify-center text-sm shadow-xs"
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      min={3}
+                      max={50}
+                      value={aiItemCount}
+                      onChange={(e) => setAiItemCount(Math.max(1, Math.min(50, parseInt(e.target.value) || 1)))}
+                      className="w-16 py-1 px-2 text-center font-black text-slate-900 bg-white border-2 border-pink-400 rounded-lg shadow-xs text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setAiItemCount((prev) => Math.min(50, prev + 1))}
+                      className="w-8 h-8 rounded-lg bg-white border border-slate-300 font-bold text-slate-700 hover:bg-slate-100 flex items-center justify-center text-sm shadow-xs"
+                    >
+                      +
+                    </button>
+                    <span className="text-xs font-bold text-slate-600">
+                      {game.id === 'quiz' || game.id === 'speed_trivia' ? 'perguntas' : 'itens'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Quick Presets Pills */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-200">
+                  <span className="text-[11px] font-bold text-slate-500 mr-1">Atalhos rápidos:</span>
+                  {[5, 10, 15, 20, 25].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setAiItemCount(preset)}
+                      className={`px-3 py-1 rounded-lg text-xs font-black transition-all ${
+                        aiItemCount === preset
+                          ? 'bg-pink-600 text-white shadow-sm scale-105'
+                          : 'bg-white text-slate-700 border border-slate-200 hover:bg-pink-50 hover:text-pink-600'
+                      }`}
+                    >
+                      {preset} {game.id === 'quiz' || game.id === 'speed_trivia' ? 'perguntas' : 'itens'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
                   Instruções Adicionais para a IA (Opcional):
                 </label>
                 <input
                   type="text"
-                  placeholder="Ex: Destaque a nova linha de carros híbridos e esportivos da Honda..."
+                  placeholder="Ex: Foque na segurança no trabalho, uso correto de EPIs e prevenção de acidentes..."
                   value={aiCustomPrompt}
                   onChange={(e) => setAiCustomPrompt(e.target.value)}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-pink-500 focus:bg-white text-xs"
