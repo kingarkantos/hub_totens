@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  
+  html, body, #root {
+    height: 100%;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0;
+    padding: 0;
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+/* Custom glow and backdrop effects */
+.glow-primary {
+  box-shadow: 0 0 35px var(--glow-color, rgba(220, 38, 38, 0.4));
+}
+
+.glow-card {
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Hide scrollbar for totem touch screens */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Pulse animation for touch prompt */
+@keyframes totem-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(220, 38, 38, 0.6);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 45px rgba(220, 38, 38, 0.9);
+  }
+}
+
+.animate-totem-pulse {
+  animation: totem-pulse 2.2s infinite ease-in-out;
+}

@@ -1,0 +1,61 @@
+{
+  "files": {
+    "code": [
+      "D:\\ProjetosGit\\apps\\hub_totens\\migrate.py",
+      "D:\\ProjetosGit\\apps\\hub_totens\\package.json",
+      "D:\\ProjetosGit\\apps\\hub_totens\\postcss.config.js",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\App.tsx",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\components\\CampaignFormModal.tsx",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\components\\LeaderboardModal.tsx",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\components\\SettingsModal.tsx",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\games\\BalloonGame.tsx",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\games\\CatcherGame.tsx",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\games\\GameContainer.tsx",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\games\\GamePreviewModal.tsx",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\games\\GeniusGame.tsx",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\games\\MemoryGame.tsx",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\games\\PuzzleGame.tsx",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\games\\QuizGame.tsx",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\games\\SafeGame.tsx",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\games\\SpeedGame.tsx",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\games\\TargetGame.tsx",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\games\\WheelGame.tsx",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\lib\\audio.ts",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\lib\\gamesCatalog.ts",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\lib\\supabase.ts",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\lib\\themes.ts",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\main.tsx",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\types\\index.ts",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\views\\AdminHubView.tsx",
+      "D:\\ProjetosGit\\apps\\hub_totens\\src\\views\\TotemCampaignView.tsx",
+      "D:\\ProjetosGit\\apps\\hub_totens\\tailwind.config.js",
+      "D:\\ProjetosGit\\apps\\hub_totens\\tsconfig.json",
+      "D:\\ProjetosGit\\apps\\hub_totens\\vercel.json",
+      "D:\\ProjetosGit\\apps\\hub_totens\\vite.config.ts"
+    ],
+    "document": [
+      "D:\\ProjetosGit\\apps\\hub_totens\\README.md",
+      "D:\\ProjetosGit\\apps\\hub_totens\\index.html"
+    ],
+    "paper": [],
+    "image": [],
+    "video": []
+  },
+  "total_files": 33,
+  "total_words": 15891,
+  "needs_graph": false,
+  "warning": "Corpus is ~15,891 words - fits in a single context window. You may not need a graph.",
+  "skipped_sensitive": [],
+  "unclassified": [
+    "D:\\ProjetosGit\\apps\\hub_totens\\.gitignore",
+    "D:\\ProjetosGit\\apps\\hub_totens\\src\\index.css"
+  ],
+  "walk_errors": [],
+  "ignored": [],
+  "pruned_noise_dirs": [
+    "D:\\ProjetosGit\\apps\\hub_totens\\dist\\",
+    "D:\\ProjetosGit\\apps\\hub_totens\\node_modules\\"
+  ],
+  "graphifyignore_patterns": 23,
+  "scan_root": "D:\\ProjetosGit\\apps\\hub_totens"
+}
