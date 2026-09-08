@@ -531,16 +531,22 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
               <div className={`mt-4 rounded-3xl border-2 transition-all p-5 ${
                 customColors.enabled
                   ? 'border-red-500/80 bg-gradient-to-br from-red-50/50 via-white to-amber-50/30 shadow-md ring-2 ring-red-500/10'
-                  : 'border-slate-200 bg-slate-50/70 hover:border-slate-300'
+                  : 'border-slate-200 bg-slate-50/70 hover:border-slate-300 hover:bg-slate-100/70'
               }`}>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-red-600 via-pink-600 to-amber-500 flex items-center justify-center text-white shadow-md shadow-red-500/20 flex-shrink-0">
+                <div
+                  onClick={() => {
+                    sound.playClick();
+                    setCustomColors((prev) => ({ ...prev, enabled: !prev.enabled }));
+                  }}
+                  className="cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none group"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-600 via-pink-600 to-amber-500 flex items-center justify-center text-white shadow-md shadow-red-500/25 flex-shrink-0 group-hover:scale-105 transition-transform">
                       <Palette className="w-6 h-6" />
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-black text-slate-900">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-sm sm:text-base font-black text-slate-900 group-hover:text-red-600 transition-colors">
                           Personalizar Cores da Campanha
                         </h4>
                         <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-xs">
@@ -559,18 +565,30 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                   </div>
 
                   {/* Toggle Switch */}
-                  <label className="relative inline-flex items-center cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={customColors.enabled}
-                      onChange={(e) => {
+                  <div className="flex items-center gap-3 self-end sm:self-auto">
+                    <span className={`text-xs font-black uppercase tracking-wider transition-colors ${
+                      customColors.enabled ? 'text-red-600' : 'text-slate-400 group-hover:text-slate-600'
+                    }`}>
+                      {customColors.enabled ? 'Ativado' : 'Clique para Ativar'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
                         sound.playClick();
-                        setCustomColors((prev) => ({ ...prev, enabled: e.target.checked }));
+                        setCustomColors((prev) => ({ ...prev, enabled: !prev.enabled }));
                       }}
-                      className="sr-only peer"
-                    />
-                    <div className="w-13 h-7 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5.5 after:w-5.5 after:transition-all peer-checked:bg-red-600 shadow-inner"></div>
-                  </label>
+                      className={`relative inline-flex h-8 w-14 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-inner ${
+                        customColors.enabled ? 'bg-red-600' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-7 w-7 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                          customColors.enabled ? 'translate-x-6' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Expanded Controls when Enabled */}
