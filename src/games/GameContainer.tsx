@@ -24,6 +24,8 @@ interface GameContainerProps {
   campaignName?: string;
   clientName?: string;
   splashImageUrl?: string;
+  isLight?: boolean;
+  themeMode?: 'light' | 'dark';
 }
 
 export const GameContainer: React.FC<GameContainerProps> = ({
@@ -45,11 +47,15 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   campaignName,
   clientName,
   splashImageUrl,
+  isLight,
+  themeMode,
 }) => {
   const [soundOn, setSoundOn] = React.useState(sound.enabled);
   const [playerName, setPlayerName] = React.useState('');
   const [showKeyboard, setShowKeyboard] = React.useState(false);
   const [scoreSubmitted, setScoreSubmitted] = React.useState(false);
+
+  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
 
   useEffect(() => {
     if (gameOver && gameWon) {
@@ -82,43 +88,46 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         '--glow-color': theme?.glowColor || themePrimary,
         ...customBgStyle,
       } as React.CSSProperties}
-      className={`fixed inset-0 w-full h-full flex flex-col bg-gradient-to-b ${theme?.bgGradient || 'from-slate-950 via-slate-900 to-black'} ${theme?.textColor || 'text-white'} ${theme?.fontClass || ''} select-none overflow-hidden z-40`}
+      className={`fixed inset-0 w-full h-full flex flex-col bg-gradient-to-b ${theme?.bgGradient || (isLightMode ? 'from-slate-100 via-slate-50 to-slate-200' : 'from-slate-950 via-slate-900 to-black')} ${theme?.textColor || (isLightMode ? 'text-slate-900' : 'text-white')} ${theme?.fontClass || ''} select-none overflow-hidden z-40`}
     >
       {/* Dynamic Ambient Background Glows with Project Design System Colors */}
       <div
-        className="absolute -top-32 -left-32 w-80 h-80 sm:w-96 sm:h-96 rounded-full blur-3xl opacity-30 pointer-events-none transition-all duration-700"
+        className={`absolute -top-32 -left-32 w-80 h-80 sm:w-96 sm:h-96 rounded-full blur-3xl ${isLightMode ? 'opacity-15' : 'opacity-30'} pointer-events-none transition-all duration-700`}
         style={{ background: themePrimary || theme?.primary || '#DC2626' }}
       />
       <div
-        className="absolute -bottom-32 -right-32 w-80 h-80 sm:w-96 sm:h-96 rounded-full blur-3xl opacity-25 pointer-events-none transition-all duration-700"
+        className={`absolute -bottom-32 -right-32 w-80 h-80 sm:w-96 sm:h-96 rounded-full blur-3xl ${isLightMode ? 'opacity-15' : 'opacity-25'} pointer-events-none transition-all duration-700`}
         style={{ background: theme?.secondary || '#F59E0B' }}
       />
       <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[120px] opacity-10 pointer-events-none"
+        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[120px] ${isLightMode ? 'opacity-5' : 'opacity-10'} pointer-events-none`}
         style={{ background: theme?.glowColor || themePrimary || '#DC2626' }}
       />
 
       {/* Top Campaign Brand Ribbon with Logo and Client Name */}
       {(splashImageUrl || clientName || campaignName) && (
-        <div className="w-full flex items-center justify-center py-2 px-4 flex-shrink-0 z-30 bg-black/40 border-b border-white/10 backdrop-blur-md">
-          <div className="flex items-center gap-3 px-4 sm:px-6 py-1.5 rounded-full bg-white/10 border border-white/20 shadow-lg backdrop-blur-md">
+        <div className={`w-full flex items-center justify-center py-2 px-4 flex-shrink-0 z-30 ${isLightMode ? 'bg-white/85 border-b border-slate-200/80 shadow-xs' : 'bg-black/40 border-b border-white/10'} backdrop-blur-md`}>
+          <div className={`flex items-center gap-3 px-4 sm:px-6 py-1.5 rounded-full ${isLightMode ? 'bg-slate-100/90 border border-slate-200 shadow-xs' : 'bg-white/10 border border-white/20 shadow-lg'} backdrop-blur-md`}>
             {splashImageUrl && (
               <img
                 src={splashImageUrl}
                 alt={clientName || 'Logo da Campanha'}
-                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border-2 border-white/40 shadow-sm flex-shrink-0"
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border-2 ${isLightMode ? 'border-slate-300' : 'border-white/40'} shadow-sm flex-shrink-0`}
               />
             )}
             <div className="flex items-center gap-2">
               {clientName && (
-                <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
+                <span className={`text-xs sm:text-sm font-black uppercase tracking-wider ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
                   {clientName}
                 </span>
               )}
               {campaignName && (
                 <>
-                  <span className="text-white/40 text-xs">•</span>
-                  <span className="text-xs sm:text-sm font-bold text-amber-300 truncate max-w-[200px] sm:max-w-[320px]">
+                  <span className={`${isLightMode ? 'text-slate-400' : 'text-white/40'} text-xs`}>•</span>
+                  <span 
+                    style={{ color: isLightMode ? (themePrimary || '#DC2626') : undefined }}
+                    className={`text-xs sm:text-sm font-bold ${!isLightMode ? 'text-amber-300' : ''} truncate max-w-[200px] sm:max-w-[320px]`}
+                  >
                     {campaignName}
                   </span>
                 </>
@@ -129,43 +138,43 @@ export const GameContainer: React.FC<GameContainerProps> = ({
       )}
 
       {/* Top Bar */}
-      <header className="flex-shrink-0 flex items-center justify-between px-4 sm:px-6 py-3 bg-black/30 border-b border-white/10 backdrop-blur-md z-30">
+      <header className={`flex-shrink-0 flex items-center justify-between px-4 sm:px-6 py-3 ${isLightMode ? 'bg-white/90 border-b border-slate-200/80 shadow-xs text-slate-900' : 'bg-black/30 border-b border-white/10 text-white'} backdrop-blur-md z-30`}>
         <button
           onClick={() => {
             sound.playClick();
             onExit();
           }}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-xs sm:text-sm font-semibold tracking-wide"
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl ${isLightMode ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 shadow-xs' : 'bg-white/10 hover:bg-white/20 text-white'} active:scale-95 transition-all text-xs sm:text-sm font-bold tracking-wide`}
         >
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           <span>Sair</span>
         </button>
 
         <div className="flex flex-col items-center">
-          <span className="text-[10px] uppercase tracking-widest text-slate-300/80 font-bold">{category}</span>
+          <span className={`text-[10px] uppercase tracking-widest ${isLightMode ? 'text-slate-500 font-bold' : 'text-slate-300/80 font-bold'}`}>{category}</span>
           <h2 className="text-base sm:text-xl font-black tracking-tight">{title}</h2>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {timeRemaining !== undefined && (
-            <div className="px-2.5 sm:px-3.5 py-1 rounded-xl bg-slate-800/90 border border-white/10 flex items-center gap-1 font-mono text-xs sm:text-base font-bold text-amber-400">
+          {timeRemaining !== undefined && timeRemaining > 0 && (
+            <div className={`px-2.5 sm:px-3.5 py-1 rounded-xl ${isLightMode ? 'bg-amber-50 border border-amber-200 text-amber-800' : 'bg-slate-800/90 border border-white/10 text-amber-400'} flex items-center gap-1 font-mono text-xs sm:text-base font-bold`}>
               <span>⏱️</span>
               <span>{timeRemaining}s</span>
             </div>
           )}
 
-          <div className="px-2.5 sm:px-3.5 py-1 rounded-xl bg-white/10 border border-white/15 flex items-center gap-1 font-bold text-xs sm:text-base">
-            <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
+          <div className={`px-2.5 sm:px-3.5 py-1 rounded-xl ${isLightMode ? 'bg-slate-100 border border-slate-200 text-slate-800' : 'bg-white/10 border border-white/15 text-white'} flex items-center gap-1 font-bold text-xs sm:text-base`}>
+            <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
             <span>{score}</span>
-            <span className="text-[10px] text-slate-300/80 hidden sm:inline">{customScoreLabel}</span>
+            <span className={`text-[10px] ${isLightMode ? 'text-slate-500' : 'text-slate-300/80'} hidden sm:inline`}>{customScoreLabel}</span>
           </div>
 
           <button
             onClick={toggleSound}
-            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-slate-300"
+            className={`p-2 rounded-xl ${isLightMode ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200' : 'bg-white/10 hover:bg-white/20 text-slate-300'} active:scale-95 transition-all`}
             title={soundOn ? 'Desativar Som' : 'Ativar Som'}
           >
-            {soundOn ? <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" /> : <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />}
+            {soundOn ? <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" /> : <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />}
           </button>
         </div>
       </header>
@@ -177,8 +186,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
       {/* Game Over / Victory Modal - Always fully scrollable & visible without clipping */}
       {gameOver && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-4 overflow-y-auto no-scrollbar animate-in fade-in duration-300">
-          <div className="w-full max-w-sm my-auto bg-slate-900 border-2 border-white/20 rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col items-center text-center max-h-[94vh] max-h-[94dvh] overflow-y-auto no-scrollbar">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overflow-y-auto no-scrollbar animate-in fade-in duration-300">
+          <div className={`w-full max-w-sm my-auto ${isLightMode ? 'bg-white border-2 border-slate-200 text-slate-900 shadow-2xl' : 'bg-slate-900 border-2 border-white/20 text-white shadow-2xl'} rounded-3xl p-4 sm:p-6 flex flex-col items-center text-center max-h-[94vh] max-h-[94dvh] overflow-y-auto no-scrollbar`}>
             <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center mb-2 shadow-lg shadow-amber-500/30 animate-bounce-subtle flex-shrink-0">
               <Trophy className="w-6 h-6 sm:w-7 sm:h-7 text-slate-950" />
             </div>
@@ -187,14 +196,14 @@ export const GameContainer: React.FC<GameContainerProps> = ({
               {gameWon ? 'Parabéns!' : 'Fim de Jogo!'}
             </h3>
             
-            <p className="text-slate-300 text-xs sm:text-sm mb-3">
-              Você completou o desafio <strong className="text-white">{title}</strong>.
+            <p className={`${isLightMode ? 'text-slate-600' : 'text-slate-300'} text-xs sm:text-sm mb-3`}>
+              Você completou o desafio <strong className={isLightMode ? 'text-slate-900' : 'text-white'}>{title}</strong>.
             </p>
 
-            <div className="w-full bg-slate-800/90 rounded-2xl p-2.5 sm:p-3 border border-white/10 mb-3 flex-shrink-0">
-              <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Pontuação Final</span>
-              <div className="text-2xl sm:text-3xl font-black text-amber-400 tracking-tight mt-0.5 font-mono">
-                {score} <span className="text-xs text-slate-400 font-normal">{customScoreLabel}</span>
+            <div className={`w-full ${isLightMode ? 'bg-slate-50 border border-slate-200' : 'bg-slate-800/90 border border-white/10'} rounded-2xl p-2.5 sm:p-3 mb-3 flex-shrink-0`}>
+              <span className={`text-[10px] ${isLightMode ? 'text-slate-500' : 'text-slate-400'} font-semibold uppercase tracking-wider`}>Pontuação Final</span>
+              <div className="text-2xl sm:text-3xl font-black text-amber-500 tracking-tight mt-0.5 font-mono">
+                {score} <span className={`text-xs ${isLightMode ? 'text-slate-500' : 'text-slate-400'} font-normal`}>{customScoreLabel}</span>
               </div>
             </div>
 

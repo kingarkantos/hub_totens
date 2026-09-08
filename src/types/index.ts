@@ -59,6 +59,7 @@ export interface Campaign {
   description?: string;
   splash_image_url?: string;
   theme_id: ThemeId;
+  theme_mode?: 'light' | 'dark';
   selected_games: string[];
   games_config?: Record<string, any>;
   ranking_enabled: boolean;
@@ -92,4 +93,10 @@ export interface BaseGameProps {
   campaignName?: string;
   clientName?: string;
   splashImageUrl?: string;
+  isLight?: boolean;
+  themeMode?: 'light' | 'dark';
+  orderMode?: 'random' | 'ordered';
+  timeLimit?: number;
 }
+
+

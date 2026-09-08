@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw } from 'lucide-react';
+import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw, Shuffle, Clock } from 'lucide-react';
 import { Campaign, GameDefinition, ThemeId, CustomColorsConfig } from '../types';
 import { THEME_LIST, THEMES } from '../lib/themes';
 import { GAMES_CATALOG } from '../lib/gamesCatalog';
@@ -52,13 +52,23 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
   const [gamesConfig, setGamesConfig] = useState<Record<string, any>>(
     campaignToEdit?.games_config || {}
   );
+  const initialThemeMode: 'light' | 'dark' = 
+    campaignToEdit?.theme_mode || 
+    campaignToEdit?.games_config?.theme_mode || 
+    (campaignToEdit?.games_config?.custom_colors?.bgType === 'light' ? 'light' : 'dark') || 
+    'dark';
+  const [themeMode, setThemeMode] = useState<'light' | 'dark'>(initialThemeMode);
+  const [orderMode, setOrderMode] = useState<'random' | 'ordered'>(
+    campaignToEdit?.games_config?.order_mode || 'random'
+  );
+
   const initialCustomColors: CustomColorsConfig = campaignToEdit?.games_config?.custom_colors || {
     enabled: false,
     primary: THEMES[campaignToEdit?.theme_id || 'honda-red']?.primary || '#DC2626',
     secondary: THEMES[campaignToEdit?.theme_id || 'honda-red']?.secondary || '#991B1B',
     accent: THEMES[campaignToEdit?.theme_id || 'honda-red']?.accent || '#F59E0B',
     glowColor: THEMES[campaignToEdit?.theme_id || 'honda-red']?.glowColor || '#DC2626',
-    bgType: 'dark',
+    bgType: initialThemeMode === 'light' ? 'light' : 'dark',
     bgFrom: '#0F172A',
     bgTo: '#020617',
   };
@@ -198,7 +208,12 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
         selected_games: selectedGames,
         games_config: {
           ...gamesConfig,
-          custom_colors: customColors,
+          theme_mode: themeMode,
+          order_mode: orderMode,
+          custom_colors: {
+            ...customColors,
+            bgType: customColors.enabled ? customColors.bgType : (themeMode === 'light' ? 'light' : 'dark'),
+          },
         },
         ranking_enabled: rankingEnabled,
         active: true,
@@ -458,14 +473,76 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
 
             {/* Design System Themes Section (10 Themes) */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2 text-sm font-bold text-red-600 uppercase tracking-wider">
                   <Layers className="w-4 h-4" />
                   <span>3. Estilo Visual do Design System (10 Temas)</span>
                 </div>
                 <span className="text-xs text-slate-500">
-                  Selecionado: <strong className="text-slate-900">{THEME_LIST.find((t) => t.id === themeId)?.name}</strong>
+                  Tema Selecionado: <strong className="text-slate-900">{THEME_LIST.find((t) => t.id === themeId)?.name}</strong>
                 </span>
+              </div>
+
+              {/* Modo Visual do Totem: Tema Claro vs Tema Escuro */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100/90 border-2 border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
+                <div>
+                  <div className="flex items-center gap-2">
+                    {themeMode === 'light' ? (
+                      <Sun className="w-5 h-5 text-amber-500" />
+                    ) : (
+                      <Moon className="w-5 h-5 text-indigo-500" />
+                    )}
+                    <h4 className="text-sm font-black text-slate-900">
+                      Modo Visual do Totem & Jogos
+                    </h4>
+                    <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${
+                      themeMode === 'light' 
+                        ? 'bg-amber-100 text-amber-800 border border-amber-300' 
+                        : 'bg-indigo-100 text-indigo-800 border border-indigo-300'
+                    }`}>
+                      {themeMode === 'light' ? '☀️ Modo Claro Ativo' : '🌙 Modo Escuro Ativo'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Alterne entre o tema <strong>Claro Clean</strong> (fundo branco/claro com alto contraste) ou <strong>Escuro Neon</strong> (fundo dark com efeitos luminosos) para as telas e desafios da campanha.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 bg-slate-200/90 p-1.5 rounded-2xl w-full sm:w-auto flex-shrink-0 shadow-inner">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setThemeMode('light');
+                      setCustomColors((prev) => ({ ...prev, bgType: 'light' }));
+                    }}
+                    className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition-all ${
+                      themeMode === 'light'
+                        ? 'bg-white text-slate-900 shadow-md ring-2 ring-amber-500/30 scale-[1.03]'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/60'
+                    }`}
+                  >
+                    <Sun className="w-4 h-4 text-amber-500 fill-amber-400" />
+                    <span>☀️ Tema Claro</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setThemeMode('dark');
+                      setCustomColors((prev) => ({ ...prev, bgType: 'dark' }));
+                    }}
+                    className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition-all ${
+                      themeMode === 'dark'
+                        ? 'bg-slate-950 text-white shadow-md ring-2 ring-indigo-500/30 scale-[1.03]'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/60'
+                    }`}
+                  >
+                    <Moon className="w-4 h-4 text-indigo-400 fill-indigo-400" />
+                    <span>🌙 Tema Escuro</span>
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
@@ -752,6 +829,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                           onClick={() => {
                             sound.playClick();
                             setCustomColors((prev) => ({ ...prev, bgType: 'dark' }));
+                            setThemeMode('dark');
                           }}
                           className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 text-xs font-bold transition-all ${
                             customColors.bgType === 'dark'
@@ -768,6 +846,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                           onClick={() => {
                             sound.playClick();
                             setCustomColors((prev) => ({ ...prev, bgType: 'light' }));
+                            setThemeMode('light');
                           }}
                           className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 text-xs font-bold transition-all ${
                             customColors.bgType === 'light'
@@ -1005,6 +1084,52 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
               </div>
             </div>
 
+            {/* Order Mode Section (Aleatório vs Sequencial) */}
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-purple-100 text-purple-600 flex-shrink-0">
+                  <Shuffle className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900">Ordem dos Desafios & Perguntas</h4>
+                  <p className="text-xs text-slate-500">
+                    Defina se ao abrir jogos como Quiz as perguntas virão em ordem aleatória a cada partida ou na ordem cadastrada.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 bg-slate-200/80 p-1 rounded-xl w-full sm:w-auto flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setOrderMode('random');
+                  }}
+                  className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-black transition-all ${
+                    orderMode === 'random'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  🎲 Aleatório (Recomendado)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setOrderMode('ordered');
+                  }}
+                  className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-black transition-all ${
+                    orderMode === 'ordered'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  🔢 Sequencial (Fixa)
+                </button>
+              </div>
+            </div>
+
             {/* Ranking Toggle Section */}
             <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -1069,6 +1194,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
         <GameContentEditorModal
           game={editingContentGame}
           currentContent={gamesConfig[editingContentGame.id]}
+          currentTimeLimit={gamesConfig[`${editingContentGame.id}_time_limit`]}
           campaignContext={{
             campaignName: name,
             clientName: clientName,
@@ -1076,10 +1202,11 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
             themeName: THEMES[themeId]?.name,
           }}
           onClose={() => setEditingContentGame(null)}
-          onSave={(gameId, updatedContent) => {
+          onSave={(gameId, updatedContent, timeLimit) => {
             setGamesConfig((prev) => ({
               ...prev,
               [gameId]: updatedContent,
+              [`${gameId}_time_limit`]: timeLimit,
             }));
             setEditingContentGame(null);
           }}

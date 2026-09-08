@@ -180,35 +180,36 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
   const customColors: CustomColorsConfig | undefined = campaign.games_config?.custom_colors;
   const isCustomActive = !!(customColors && customColors.enabled);
 
-  const theme: ThemeDefinition = isCustomActive
-    ? {
-        ...baseTheme,
-        name: 'Personalizado',
-        primary: customColors.primary || baseTheme.primary,
-        secondary: customColors.secondary || baseTheme.secondary,
-        accent: customColors.accent || customColors.primary,
-        glowColor: customColors.glowColor || customColors.primary,
-        bgGradient:
-          customColors.bgType === 'light'
-            ? 'from-slate-100 via-white to-slate-200'
-            : customColors.bgType === 'custom'
-            ? ''
-            : 'from-slate-950 via-slate-900 to-black',
-        cardBg:
-          customColors.bgType === 'light'
-            ? 'bg-white/95 text-slate-900 shadow-xl'
-            : 'bg-slate-900/80 text-white',
-        cardBorder:
-          customColors.bgType === 'light'
-            ? 'border-slate-200 hover:border-slate-300 shadow-sm'
-            : 'border-white/10 hover:border-white/30',
-        textColor: customColors.bgType === 'light' ? 'text-slate-900' : 'text-white',
-        badgeBg:
-          customColors.bgType === 'light'
-            ? 'bg-slate-100 text-slate-800 border-slate-300'
-            : 'bg-white/10 text-white border-white/20',
-      }
-    : baseTheme;
+  const isLight = 
+    campaign.games_config?.theme_mode === 'light' || 
+    campaign.theme_mode === 'light' || 
+    (isCustomActive && customColors?.bgType === 'light') ||
+    (!isCustomActive && campaign.games_config?.theme_mode === 'light') ||
+    customColors?.bgType === 'light';
+
+  const theme: ThemeDefinition = {
+    ...baseTheme,
+    name: isCustomActive ? 'Personalizado' : baseTheme.name,
+    primary: isCustomActive ? (customColors?.primary || baseTheme.primary) : baseTheme.primary,
+    secondary: isCustomActive ? (customColors?.secondary || baseTheme.secondary) : baseTheme.secondary,
+    accent: isCustomActive ? (customColors?.accent || baseTheme.accent) : baseTheme.accent,
+    glowColor: isCustomActive ? (customColors?.glowColor || baseTheme.glowColor) : baseTheme.glowColor,
+    bgGradient: isLight
+      ? 'from-slate-100 via-slate-50 to-slate-200'
+      : (isCustomActive && customColors?.bgType === 'custom')
+      ? ''
+      : baseTheme.bgGradient || 'from-slate-950 via-slate-900 to-black',
+    cardBg: isLight
+      ? 'bg-white/95 text-slate-900 shadow-xl'
+      : baseTheme.cardBg || 'bg-slate-900/80 text-white',
+    cardBorder: isLight
+      ? 'border-slate-200 hover:border-slate-300 shadow-sm'
+      : baseTheme.cardBorder || 'border-white/10 hover:border-white/30',
+    textColor: isLight ? 'text-slate-900' : (baseTheme.textColor || 'text-white'),
+    badgeBg: isLight
+      ? 'bg-slate-100 text-slate-800 border-slate-300'
+      : baseTheme.badgeBg || 'bg-white/10 text-white border-white/20',
+  };
 
   const customBgStyle: React.CSSProperties =
     isCustomActive && customColors.bgType === 'custom'
@@ -227,6 +228,9 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
 
   // Active Game Render
   if (activeGame) {
+    const orderMode = campaign.games_config?.order_mode || 'random';
+    const gameTimer = campaign.games_config?.[`${activeGame.id}_time_limit`];
+
     const commonProps = {
       onExit: () => setActiveGame(null),
       rankingEnabled: campaign.ranking_enabled,
@@ -234,6 +238,10 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
         handleScoreSubmit(name, score),
       themePrimary: theme.primary,
       theme,
+      isLight,
+      themeMode: (isLight ? 'light' : 'dark') as 'light' | 'dark',
+      orderMode: orderMode as 'random' | 'ordered',
+      timeLimit: gameTimer !== undefined ? Number(gameTimer) : undefined,
       customBgStyle,
       campaignName: campaign.name,
       clientName: campaign.client_name,
@@ -365,24 +373,27 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
         /* 2. TOTEM GAMES SELECTION VIEW */
         <div className="relative w-full h-full flex flex-col animate-in fade-in duration-300">
           {/* Totem Header */}
-          <header className="flex items-center justify-between px-6 py-5 bg-black/40 border-b border-white/10 backdrop-blur-xl z-20">
+          <header className={`flex items-center justify-between px-6 py-5 ${isLight ? 'bg-white/90 border-b border-slate-200/80 backdrop-blur-xl text-slate-900 shadow-xs' : 'bg-black/40 border-b border-white/10 backdrop-blur-xl text-white'} z-20`}>
             <div className="flex items-center gap-4">
               <button
                 onClick={() => {
                   sound.playClick();
                   setInSplash(true);
                 }}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-xs font-bold"
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl ${isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 shadow-xs' : 'bg-white/10 hover:bg-white/20 text-white'} active:scale-95 transition-all text-xs font-bold`}
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Início</span>
               </button>
 
               <div>
-                <span className="text-[11px] font-black uppercase tracking-widest text-amber-400">
+                <span 
+                  style={{ color: theme.primary }}
+                  className="text-[11px] font-black uppercase tracking-widest block"
+                >
                   {campaign.client_name}
                 </span>
-                <h2 className="text-xl sm:text-2xl font-black text-white leading-tight">
+                <h2 className={`text-xl sm:text-2xl font-black ${isLight ? 'text-slate-900' : 'text-white'} leading-tight`}>
                   {campaign.name}
                 </h2>
               </div>
@@ -404,12 +415,12 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
           </header>
 
           {/* Subtitle / Instructions banner */}
-          <div className="px-6 py-3 bg-white/5 border-b border-white/5 flex items-center justify-between text-xs font-bold text-slate-300">
+          <div className={`px-6 py-3 ${isLight ? 'bg-slate-100/90 border-b border-slate-200 text-slate-700' : 'bg-white/5 border-b border-white/5 text-slate-300'} flex items-center justify-between text-xs font-bold`}>
             <span className="flex items-center gap-2">
               <Flame className="w-4 h-4 text-orange-500" />
               <span>Escolha um jogo abaixo e toque para começar a diversão!</span>
             </span>
-            <span className="text-slate-400 font-mono">
+            <span className={isLight ? 'text-slate-500 font-mono' : 'text-slate-400 font-mono'}>
               Totem Ativo • {gamesList.length} Jogos
             </span>
           </div>
@@ -434,8 +445,8 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
                 {/* Left Side: Game Number, Badge & Details */}
                 <div className="flex items-start gap-5 z-10 w-full sm:w-auto">
                   <div
-                    style={{ color: isCustomActive ? theme.primary : undefined }}
-                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-white/15 to-white/5 border border-white/20 flex items-center justify-center font-black text-2xl sm:text-3xl text-amber-400 shadow-inner flex-shrink-0"
+                    style={{ color: theme.primary }}
+                    className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl ${isLight ? 'bg-slate-100 border border-slate-200 shadow-xs' : 'bg-gradient-to-br from-white/15 to-white/5 border border-white/20 text-amber-400 shadow-inner'} flex items-center justify-center font-black text-2xl sm:text-3xl flex-shrink-0`}
                   >
                     {index + 1}
                   </div>
@@ -445,21 +456,17 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
                       <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${theme.badgeBg}`}>
                         {game.category}
                       </span>
-                      <span className="text-[11px] font-mono text-slate-300 bg-black/40 px-2 py-0.5 rounded-md border border-white/10">
+                      <span className={`text-[11px] font-mono px-2 py-0.5 rounded-md border ${isLight ? 'text-slate-700 bg-slate-100 border-slate-200' : 'text-slate-300 bg-black/40 border-white/10'}`}>
                         ⏱️ {game.estimatedTime}
                       </span>
-                      <span className="text-[11px] font-semibold text-slate-400">
-                        Dificuldade: <strong className={isCustomActive && customColors?.bgType === 'light' ? 'text-slate-900' : 'text-white'}>{game.difficulty}</strong>
+                      <span className={`text-[11px] font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        Dificuldade: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{game.difficulty}</strong>
                       </span>
                     </div>
 
                     <h3 className={`text-2xl sm:text-3xl font-black tracking-tight group-hover:opacity-90 transition-colors ${theme.textColor}`}>
                       {game.name}
                     </h3>
-
-                    <p className={`text-sm mt-1 max-w-xl leading-relaxed ${isCustomActive && customColors?.bgType === 'light' ? 'text-slate-600' : 'text-slate-300'}`}>
-                      {game.description}
-                    </p>
                   </div>
                 </div>
 

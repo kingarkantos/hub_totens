@@ -1,27 +1,59 @@
 import React, { useState } from 'react';
-import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders } from 'lucide-react';
+import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock } from 'lucide-react';
 import { GameDefinition } from '../types';
 import { GAME_CONTENT_SCHEMAS } from '../types/gameContent';
 import { parseGameCSV, downloadSampleCsv } from '../lib/csvParser';
 import { generateGameContentWithAI, CampaignAIContext } from '../lib/gemini';
 import { sound } from '../lib/audio';
 
+export const getDefaultTimeForGame = (id: string): number => {
+  switch (id) {
+    case 'quiz': return 15;
+    case 'truefalse': return 15;
+    case 'speed_trivia': return 15;
+    case 'complete_phrase': return 20;
+    case 'speed': return 15;
+    case 'target': return 30;
+    case 'catcher': return 30;
+    case 'balloon': return 30;
+    case 'correct_order': return 30;
+    case 'safe': return 45;
+    case 'connect_pairs': return 45;
+    case 'spot_error': return 45;
+    case 'memory': return 60;
+    case 'puzzle': return 60;
+    case 'hangman': return 60;
+    case 'map_epi': return 60;
+    case 'wordsearch': return 90;
+    case 'wheel': return 0;
+    case 'genius': return 0;
+    default: return 30;
+  }
+};
+
 interface GameContentEditorModalProps {
   game: GameDefinition;
   currentContent: any;
+  currentTimeLimit?: number;
   campaignContext: CampaignAIContext;
   onClose: () => void;
-  onSave: (gameId: string, updatedContent: any) => void;
+  onSave: (gameId: string, updatedContent: any, timeLimit?: number) => void;
 }
 
 export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
   game,
   currentContent,
+  currentTimeLimit,
   campaignContext,
   onClose,
   onSave,
 }) => {
   const meta = GAME_CONTENT_SCHEMAS[game.id];
+  const defaultTime = getDefaultTimeForGame(game.id);
+  const [timeLimit, setTimeLimit] = useState<number>(() => {
+    if (currentTimeLimit !== undefined) return currentTimeLimit;
+    return defaultTime;
+  });
   const [activeTab, setActiveTab] = useState<'csv' | 'form' | 'ai'>('csv');
   const [content, setContent] = useState<any>(currentContent || null);
   const [errorMsg, setErrorMsg] = useState('');
@@ -106,7 +138,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
       return;
     }
     sound.playSuccess();
-    onSave(game.id, content);
+    onSave(game.id, content, timeLimit);
     onClose();
   };
 
@@ -401,6 +433,65 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
 
         {/* Tab Contents */}
         <div className="flex-1 overflow-y-auto p-6">
+          {/* Configuração de Tempo por Jogo */}
+          <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <div>
+              <div className="flex items-center gap-1.5 text-xs font-black uppercase text-amber-900">
+                <Clock className="w-4 h-4 text-amber-600" />
+                <span>Tempo de Duração do Desafio</span>
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-200/90 text-amber-900">
+                  {timeLimit === 0 ? '♾️ Sem Limite de Tempo' : `${timeLimit} segundos`}
+                </span>
+              </div>
+              <p className="text-[11px] text-amber-800/80 mt-0.5">
+                Defina o tempo por pergunta/rodada ou clique em "Sem Tempo" para jogar sem cronômetro.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  sound.playClick();
+                  setTimeLimit(defaultTime);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                  timeLimit === defaultTime && defaultTime > 0
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'bg-white text-slate-700 border border-slate-200 hover:bg-amber-100/50'
+                }`}
+              >
+                Padrão ({defaultTime > 0 ? `${defaultTime}s` : 'Sem Tempo'})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  sound.playClick();
+                  setTimeLimit(0);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                  timeLimit === 0
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-white text-slate-700 border border-slate-200 hover:bg-indigo-50'
+                }`}
+              >
+                ♾️ Sem Tempo
+              </button>
+
+              <div className="flex items-center gap-1 bg-white px-2.5 py-1 rounded-xl border border-slate-200 shadow-xs">
+                <input
+                  type="number"
+                  min={0}
+                  max={300}
+                  value={timeLimit}
+                  onChange={(e) => setTimeLimit(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="w-12 text-center font-black text-xs text-slate-900 bg-transparent focus:outline-none"
+                />
+                <span className="text-[10px] font-bold text-slate-500">seg</span>
+              </div>
+            </div>
+          </div>
           {/* TAB 1: CSV UPLOAD */}
           {activeTab === 'csv' && (
             <div className="space-y-6">
