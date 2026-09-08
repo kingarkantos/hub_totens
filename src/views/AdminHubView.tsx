@@ -350,10 +350,20 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({ onNavigateToCampaign
                         <span className="text-red-600 font-bold truncate">/{camp.slug}</span>
                       </div>
 
-                      <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                      <div className="mt-3 flex items-center gap-2 text-xs text-slate-500 flex-wrap">
                         <span>🎮 {camp.selected_games?.length || 0} Jogos</span>
                         <span>•</span>
-                        <span>🎨 Tema {themeMeta.name}</span>
+                        {camp.games_config?.custom_colors?.enabled ? (
+                          <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-800 font-bold">
+                            <span
+                              style={{ backgroundColor: camp.games_config.custom_colors.primary }}
+                              className="w-2.5 h-2.5 rounded-full shadow-xs"
+                            />
+                            <span>Cores Próprias</span>
+                          </span>
+                        ) : (
+                          <span>🎨 Tema {themeMeta.name}</span>
+                        )}
                       </div>
                     </div>
 

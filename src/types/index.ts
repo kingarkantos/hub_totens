@@ -28,6 +28,17 @@ export interface ThemeDefinition {
   glowColor: string;
 }
 
+export interface CustomColorsConfig {
+  enabled: boolean;
+  primary: string;
+  secondary: string;
+  accent: string;
+  glowColor: string;
+  bgType: 'dark' | 'light' | 'custom';
+  bgFrom?: string;
+  bgTo?: string;
+}
+
 export interface GameDefinition {
   id: string;
   slug: string;
