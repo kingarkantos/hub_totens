@@ -59,9 +59,9 @@ export const TargetGame: React.FC<TargetGameProps> = ({
         const isBonus = Math.random() < 0.25;
         const newTarget: TargetItem = {
           id: nextId.current++,
-          x: 10 + Math.random() * 80,
-          y: 10 + Math.random() * 80,
-          size: isBonus ? 55 : 75,
+          x: 12 + Math.random() * 76,
+          y: 12 + Math.random() * 76,
+          size: isBonus ? 75 : 100,
           isBonus,
           spawnTime: now,
         };
@@ -108,9 +108,9 @@ export const TargetGame: React.FC<TargetGameProps> = ({
       clientName={clientName}
       splashImageUrl={splashImageUrl}
     >
-      <div className="relative w-full flex-1 max-h-[72vh] min-h-[420px] max-w-2xl sm:max-w-3xl my-auto bg-slate-900/75 backdrop-blur-xl rounded-3xl border-2 border-white/20 overflow-hidden select-none touch-none shadow-2xl">
+      <div className="relative w-full flex-1 max-h-[78vh] min-h-[480px] sm:min-h-[560px] max-w-4xl lg:max-w-5xl my-auto bg-slate-900/80 backdrop-blur-xl rounded-3xl border-4 border-white/20 overflow-hidden select-none touch-none shadow-2xl animate-in fade-in duration-300">
         {/* Helper prompt */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full bg-black/60 border border-white/20 text-xs sm:text-sm font-black text-amber-300 pointer-events-none z-10 shadow-lg">
+        <div className="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 px-6 sm:px-8 py-2.5 sm:py-3 rounded-full bg-black/70 border-2 border-white/20 text-sm sm:text-lg font-black text-amber-300 pointer-events-none z-10 shadow-2xl">
           Toque nos alvos o mais rápido possível! 🎯
         </div>
 
@@ -131,11 +131,11 @@ export const TargetGame: React.FC<TargetGameProps> = ({
             }}
             className={`absolute rounded-full flex items-center justify-center font-black transition-all active:scale-75 animate-totem-pulse ${
               t.isBonus
-                ? 'bg-gradient-to-tr from-amber-400 to-yellow-200 text-slate-950 shadow-lg shadow-amber-400/50 border-4 border-white'
-                : 'bg-gradient-to-tr from-rose-600 to-red-500 text-white shadow-lg shadow-red-600/50 border-4 border-rose-300'
+                ? 'bg-gradient-to-tr from-amber-400 to-yellow-200 text-slate-950 shadow-2xl shadow-amber-400/60 border-4 border-white'
+                : 'bg-gradient-to-tr from-rose-600 to-red-500 text-white shadow-2xl shadow-red-600/60 border-4 border-rose-300'
             }`}
           >
-            <span className="text-xl md:text-2xl">{t.isBonus ? '★' : '◎'}</span>
+            <span className="text-2xl sm:text-4xl">{t.isBonus ? '★' : '◎'}</span>
           </button>
         ))}
       </div>

@@ -97,6 +97,7 @@ export interface BaseGameProps {
   themeMode?: 'light' | 'dark';
   orderMode?: 'random' | 'ordered';
   timeLimit?: number;
+  totalTimeLimit?: number;
 }
 
 

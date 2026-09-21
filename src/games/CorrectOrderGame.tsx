@@ -30,7 +30,10 @@ export const CorrectOrderGame: React.FC<CorrectOrderGameProps> = ({
   clientName,
   splashImageUrl,
   customContent,
+  isLight,
+  themeMode,
 }) => {
+  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
   const procedure = useMemo(() => {
     return customContent?.steps && customContent.steps.length >= 3 ? customContent : DEFAULT_PROCEDURE;
   }, [customContent]);
@@ -140,21 +143,27 @@ export const CorrectOrderGame: React.FC<CorrectOrderGameProps> = ({
       campaignName={campaignName}
       clientName={clientName}
       splashImageUrl={splashImageUrl}
+      isLight={isLightMode}
+      themeMode={isLightMode ? 'light' : 'dark'}
     >
-      <div className="flex flex-col flex-1 w-full max-w-2xl sm:max-w-3xl mx-auto justify-between py-2 select-none">
+      <div className="flex flex-col flex-1 w-full max-w-3xl lg:max-w-4xl mx-auto justify-between py-4 sm:py-8 px-2 sm:px-6 gap-5 sm:gap-8 select-none animate-in fade-in duration-300">
         {/* Procedure Title */}
-        <div className="bg-teal-50 border border-teal-200/80 rounded-2xl p-3 text-center shadow-sm">
-          <span className="text-xs font-black uppercase text-teal-800 flex items-center justify-center gap-1.5 mb-0.5">
-            <ListOrdered className="w-4 h-4 text-teal-600" />
+        <div className={`rounded-3xl p-6 sm:p-8 border-2 text-center shadow-xl backdrop-blur-xl ${
+          isLightMode
+            ? 'bg-teal-50/90 border-teal-200 text-teal-950'
+            : 'bg-slate-900/85 border-teal-500/30 text-white'
+        }`}>
+          <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-teal-600 dark:text-teal-400 flex items-center justify-center gap-2 mb-2">
+            <ListOrdered className="w-5 h-5 text-teal-500" />
             Organize os passos na sequência ideal:
           </span>
-          <h3 className="text-sm sm:text-base font-extrabold text-slate-800">
+          <h3 className="text-xl sm:text-3xl font-black leading-snug tracking-tight">
             {procedure.title}
           </h3>
         </div>
 
         {/* Steps List */}
-        <div className="my-auto py-2 space-y-2.5">
+        <div className="my-auto py-2 space-y-3 sm:space-y-4">
           {currentSteps.map((step, idx) => {
             const isCorrectPosition = validated && step === correctSteps[idx];
             const isWrongPosition = validated && step !== correctSteps[idx];
@@ -162,17 +171,17 @@ export const CorrectOrderGame: React.FC<CorrectOrderGameProps> = ({
             return (
               <div
                 key={step}
-                className={`flex items-center gap-2.5 p-3 sm:p-3.5 rounded-2xl border-2 transition-all shadow-sm ${
+                className={`flex items-center gap-4 sm:gap-6 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-2 transition-all shadow-lg ${
                   isCorrectPosition
-                    ? 'bg-emerald-50 border-emerald-500 text-emerald-950'
+                    ? isLightMode ? 'bg-emerald-50 border-emerald-500 text-emerald-950' : 'bg-emerald-950/60 border-emerald-500 text-emerald-200'
                     : isWrongPosition
-                    ? 'bg-rose-50 border-rose-400 text-rose-950'
-                    : 'bg-white border-slate-200 text-slate-800'
+                    ? isLightMode ? 'bg-rose-50 border-rose-400 text-rose-950' : 'bg-rose-950/60 border-rose-500 text-rose-200'
+                    : isLightMode ? 'bg-white border-slate-200 text-slate-900 shadow-md' : 'bg-slate-900/85 border-white/20 text-white shadow-md'
                 }`}
               >
                 {/* Step number badge */}
                 <div
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm flex-shrink-0 ${
+                  className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center font-black text-lg sm:text-2xl flex-shrink-0 shadow-md ${
                     isCorrectPosition
                       ? 'bg-emerald-600 text-white'
                       : isWrongPosition
@@ -180,31 +189,31 @@ export const CorrectOrderGame: React.FC<CorrectOrderGameProps> = ({
                       : 'bg-teal-600 text-white'
                   }`}
                 >
-                  {isCorrectPosition ? <Check className="w-5 h-5 stroke-[3]" /> : idx + 1}
+                  {isCorrectPosition ? <Check className="w-7 h-7 stroke-[3]" /> : idx + 1}
                 </div>
 
                 {/* Step text */}
-                <div className="flex-1 text-xs sm:text-sm font-bold leading-tight">
+                <div className="flex-1 text-base sm:text-xl font-black leading-snug">
                   {step}
                 </div>
 
                 {/* Up/Down buttons for touch totens */}
-                <div className="flex items-center gap-1 flex-shrink-0">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <button
                     type="button"
                     disabled={idx === 0}
                     onClick={() => moveStep(idx, 'up')}
-                    className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 disabled:opacity-20 flex items-center justify-center text-slate-700 transition-all active:scale-90"
+                    className="w-13 h-13 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 active:scale-90 disabled:opacity-20 flex items-center justify-center text-slate-800 dark:text-white transition-all shadow-sm"
                   >
-                    <ArrowUp className="w-5 h-5 stroke-[2.5]" />
+                    <ArrowUp className="w-6 h-6 sm:w-8 sm:h-8 stroke-[3]" />
                   </button>
                   <button
                     type="button"
                     disabled={idx === currentSteps.length - 1}
                     onClick={() => moveStep(idx, 'down')}
-                    className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 disabled:opacity-20 flex items-center justify-center text-slate-700 transition-all active:scale-90"
+                    className="w-13 h-13 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 active:scale-90 disabled:opacity-20 flex items-center justify-center text-slate-800 dark:text-white transition-all shadow-sm"
                   >
-                    <ArrowDown className="w-5 h-5 stroke-[2.5]" />
+                    <ArrowDown className="w-6 h-6 sm:w-8 sm:h-8 stroke-[3]" />
                   </button>
                 </div>
               </div>
@@ -217,10 +226,10 @@ export const CorrectOrderGame: React.FC<CorrectOrderGameProps> = ({
           <button
             type="button"
             onClick={handleValidateOrder}
-            className="w-full py-4.5 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-black text-base shadow-lg shadow-teal-600/30 flex items-center justify-center gap-2 transition-all active:scale-95 border-b-4 border-teal-800"
+            className="w-full py-6 sm:py-7 min-h-[85px] sm:min-h-[95px] bg-teal-600 hover:bg-teal-500 text-white rounded-3xl font-black text-xl sm:text-2xl shadow-xl shadow-teal-950/50 flex items-center justify-center gap-3 transition-all active:scale-95 border-b-4 border-teal-800"
           >
-            <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />
-            Verificar Ordem
+            <CheckCircle2 className="w-7 h-7 stroke-[3]" />
+            <span>Verificar Ordem</span>
           </button>
         </div>
       </div>

@@ -230,6 +230,7 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
   if (activeGame) {
     const orderMode = campaign.games_config?.order_mode || 'random';
     const gameTimer = campaign.games_config?.[`${activeGame.id}_time_limit`];
+    const gameTotalTimer = campaign.games_config?.[`${activeGame.id}_total_time_limit`];
 
     const commonProps = {
       onExit: () => setActiveGame(null),
@@ -242,6 +243,7 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
       themeMode: (isLight ? 'light' : 'dark') as 'light' | 'dark',
       orderMode: orderMode as 'random' | 'ordered',
       timeLimit: gameTimer !== undefined ? Number(gameTimer) : undefined,
+      totalTimeLimit: gameTotalTimer !== undefined ? Number(gameTotalTimer) : undefined,
       customBgStyle,
       campaignName: campaign.name,
       clientName: campaign.client_name,
@@ -386,6 +388,16 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
                 <span>Início</span>
               </button>
 
+              {campaign.splash_image_url && (
+                <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl overflow-hidden border-2 ${isLight ? 'border-slate-300 shadow-xs' : 'border-white/20 shadow-md'} bg-black/20 flex-shrink-0`}>
+                  <img
+                    src={campaign.splash_image_url}
+                    alt={campaign.client_name || campaign.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+
               <div>
                 <span 
                   style={{ color: theme.primary }}
@@ -456,9 +468,28 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
                       <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${theme.badgeBg}`}>
                         {game.category}
                       </span>
-                      <span className={`text-[11px] font-mono px-2 py-0.5 rounded-md border ${isLight ? 'text-slate-700 bg-slate-100 border-slate-200' : 'text-slate-300 bg-black/40 border-white/10'}`}>
-                        ⏱️ {game.estimatedTime}
-                      </span>
+                      {(() => {
+                        const cfgPerQuestion = campaign.games_config?.[`${game.id}_time_limit`];
+                        const cfgTotal = campaign.games_config?.[`${game.id}_total_time_limit`];
+                        const isQuestionGame = ['quiz', 'truefalse', 'speed_trivia', 'complete_phrase'].includes(game.id);
+
+                        let timeDisplay = game.estimatedTime;
+                        if (cfgPerQuestion !== undefined) {
+                          if (cfgPerQuestion === 0) {
+                            timeDisplay = cfgTotal ? `${cfgTotal} seg total` : 'Sem tempo';
+                          } else {
+                            timeDisplay = isQuestionGame ? `${cfgPerQuestion} seg` : `${cfgPerQuestion} seg`;
+                          }
+                        } else if (cfgTotal !== undefined) {
+                          timeDisplay = `${cfgTotal} seg total`;
+                        }
+
+                        return (
+                          <span className={`text-[11px] font-mono px-2 py-0.5 rounded-md border ${isLight ? 'text-slate-700 bg-slate-100 border-slate-200' : 'text-slate-300 bg-black/40 border-white/10'}`}>
+                            ⏱️ {timeDisplay}
+                          </span>
+                        );
+                      })()}
                       <span className={`text-[11px] font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                         Dificuldade: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{game.difficulty}</strong>
                       </span>

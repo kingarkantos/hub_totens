@@ -47,16 +47,32 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
   campaignName,
   clientName,
   splashImageUrl,
+  isLight,
+  themeMode,
+  orderMode = 'random',
+  timeLimit,
+  totalTimeLimit,
   customContent,
 }) => {
-  const statements = useMemo(() => {
+  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
+  const rawStatements = useMemo(() => {
     return customContent && customContent.length > 0 ? customContent : DEFAULT_STATEMENTS;
   }, [customContent]);
+
+  const [statements, setStatements] = useState<TrueFalseCustomItem[]>(() => {
+    if (orderMode === 'ordered') return [...rawStatements];
+    return [...rawStatements].sort(() => Math.random() - 0.5);
+  });
+
+  const isUnlimitedQuestionTime = timeLimit === 0;
+  const questionSeconds = timeLimit !== undefined && timeLimit > 0 ? timeLimit : (timeLimit === 0 ? 0 : 15);
+  const hasTotalTime = totalTimeLimit !== undefined && totalTimeLimit > 0;
 
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(45);
+  const [timeLeft, setTimeLeft] = useState(questionSeconds);
+  const [totalTimeLeft, setTotalTimeLeft] = useState(totalTimeLimit || 0);
   const [selectedAnswer, setSelectedAnswer] = useState<boolean | null>(null);
   const [answered, setAnswered] = useState(false);
   const [gameOver, setGameOver] = useState(false);
@@ -64,22 +80,37 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
 
   const currentItem = statements[currentIdx % statements.length];
 
-  // Timer
+  // Question Timer (counts down each statement if configured)
   useEffect(() => {
-    if (gameOver) return;
+    if (gameOver || answered || isUnlimitedQuestionTime) return;
+    if (timeLeft <= 0) {
+      sound.playError();
+      setAnswered(true);
+      setStreak(0);
+      return;
+    }
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [timeLeft, gameOver, answered, isUnlimitedQuestionTime]);
+
+  // Overall Total Game Timer (if configured)
+  useEffect(() => {
+    if (gameOver || !hasTotalTime) return;
+    const timer = setInterval(() => {
+      setTotalTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
           setGameOver(true);
-          setGameWon(score >= 800);
+          setGameWon(score >= 600);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [gameOver, score]);
+  }, [gameOver, hasTotalTime, score]);
 
   const handleAnswer = (answer: boolean) => {
     if (answered || gameOver) return;
@@ -91,7 +122,8 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
     if (isCorrect) {
       sound.playSuccess();
       const comboBonus = streak * 50;
-      const points = 200 + comboBonus;
+      const timeBonus = !isUnlimitedQuestionTime && timeLeft > 0 ? timeLeft * 10 : 0;
+      const points = 200 + comboBonus + timeBonus;
       setScore((prev) => prev + points);
       setStreak((prev) => prev + 1);
     } else {
@@ -106,50 +138,70 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
       setCurrentIdx((prev) => prev + 1);
       setSelectedAnswer(null);
       setAnswered(false);
+      setTimeLeft(questionSeconds);
     } else {
       sound.playFanfare();
       setGameOver(true);
-      setGameWon(score >= 600);
+      setGameWon(score >= 400);
     }
   };
+
+  const restart = () => {
+    setCurrentIdx(0);
+    setScore(0);
+    setStreak(0);
+    setTimeLeft(questionSeconds);
+    if (hasTotalTime) setTotalTimeLeft(totalTimeLimit || 0);
+    setSelectedAnswer(null);
+    setAnswered(false);
+    setGameOver(false);
+    setGameWon(false);
+    if (orderMode !== 'ordered') {
+      setStatements([...rawStatements].sort(() => Math.random() - 0.5));
+    }
+  };
+
+  const activeTimeDisplay = !isUnlimitedQuestionTime
+    ? timeLeft
+    : hasTotalTime
+    ? totalTimeLeft
+    : undefined;
 
   return (
     <GameContainer
       title="Verdadeiro ou Falso"
       category="Julgamento"
       score={score}
-      timeRemaining={timeLeft}
+      timeRemaining={activeTimeDisplay}
       gameOver={gameOver}
       gameWon={gameWon}
-      onRestart={() => {
-        setCurrentIdx(0);
-        setScore(0);
-        setStreak(0);
-        setTimeLeft(45);
-        setSelectedAnswer(null);
-        setAnswered(false);
-        setGameOver(false);
-        setGameWon(false);
-      }}
+      onRestart={restart}
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       themePrimary={themePrimary}
       theme={theme}
+      isLight={isLightMode}
+      themeMode={isLightMode ? 'light' : 'dark'}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
       clientName={clientName}
       splashImageUrl={splashImageUrl}
     >
-      <div className="flex flex-col flex-1 w-full max-w-2xl sm:max-w-3xl mx-auto justify-between py-2 sm:py-4 select-none">
+      <div className="flex flex-col flex-1 w-full max-w-3xl lg:max-w-4xl mx-auto justify-between py-4 sm:py-8 px-2 sm:px-6 gap-5 sm:gap-8 select-none animate-in fade-in duration-300">
         {/* Progress & Streak Header */}
-        <div className="flex items-center justify-between bg-blue-50 border border-blue-200/80 rounded-2xl px-4 py-2.5 shadow-sm">
-          <span className="text-xs font-black uppercase text-blue-800">
+        <div className={`flex items-center justify-between rounded-2xl px-5 py-3.5 shadow-sm border-2 ${
+          isLightMode 
+            ? 'bg-blue-50 border-blue-200/80 text-blue-900' 
+            : 'bg-slate-900/90 border-blue-500/30 text-blue-300'
+        }`}>
+          <span className="text-sm sm:text-base font-black uppercase tracking-wider flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
             Afirmação {currentIdx + 1} de {statements.length}
           </span>
           {streak > 1 && (
-            <span className="text-xs font-black text-amber-600 bg-amber-100 px-3 py-1 rounded-full flex items-center gap-1 animate-bounce">
-              <Zap className="w-3.5 h-3.5 fill-amber-500" />
+            <span className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-600/50 px-4 py-1.5 rounded-full flex items-center gap-1.5 animate-bounce shadow-xs">
+              <Zap className="w-4 h-4 fill-amber-500" />
               Combo x{streak}!
             </span>
           )}
@@ -157,37 +209,45 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
 
         {/* Statement Card */}
         <div className="my-auto py-2">
-          <div className="bg-white/95 rounded-3xl p-6 sm:p-8 border-2 border-slate-200 shadow-xl text-center backdrop-blur-sm">
-            <span className="inline-block text-xs font-black uppercase tracking-wider text-slate-400 mb-3">
+          <div className={`rounded-3xl p-8 sm:p-12 md:p-14 border-2 shadow-2xl text-center backdrop-blur-xl transition-all ${
+            isLightMode
+              ? 'bg-white/95 border-slate-200 shadow-slate-200/60'
+              : 'bg-slate-900/85 border-white/20 shadow-black/50'
+          }`}>
+            <span className={`inline-block text-xs sm:text-sm font-black uppercase tracking-widest mb-4 ${
+              isLightMode ? 'text-slate-400' : 'text-slate-400'
+            }`}>
               Julgue a afirmação abaixo:
             </span>
-            <h3 className="text-xl sm:text-2xl font-black text-slate-800 leading-snug">
+            <h3 className={`text-2xl sm:text-4xl md:text-5xl font-black leading-snug sm:leading-normal tracking-tight ${
+              isLightMode ? 'text-slate-900' : 'text-white'
+            }`}>
               "{currentItem.statement}"
             </h3>
 
             {/* Explanation reveal */}
             {answered && (
               <div
-                className={`mt-5 p-4 rounded-2xl border text-left transition-all animate-fadeIn ${
+                className={`mt-6 sm:mt-8 p-5 sm:p-7 rounded-2xl sm:rounded-3xl border-2 text-left transition-all animate-fadeIn ${
                   selectedAnswer === currentItem.isTrue
-                    ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
-                    : 'bg-rose-50 border-rose-300 text-rose-900'
+                    ? isLightMode ? 'bg-emerald-50 border-emerald-300 text-emerald-950' : 'bg-emerald-950/70 border-emerald-500 text-emerald-200'
+                    : isLightMode ? 'bg-rose-50 border-rose-300 text-rose-950' : 'bg-rose-950/70 border-rose-500 text-rose-200'
                 }`}
               >
-                <div className="flex items-center gap-2 font-black text-sm mb-1">
+                <div className="flex items-center gap-2.5 font-black text-base sm:text-xl mb-2">
                   {selectedAnswer === currentItem.isTrue ? (
                     <>
-                      <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
+                      <Check className="w-6 h-6 text-emerald-500 stroke-[3]" />
                       Você acertou!
                     </>
                   ) : (
                     <>
-                      <X className="w-4 h-4 text-rose-600 stroke-[3]" />
+                      <X className="w-6 h-6 text-rose-500 stroke-[3]" />
                       Resposta incorreta!
                     </>
                   )}
                 </div>
-                <p className="text-xs sm:text-sm font-medium leading-relaxed">
+                <p className="text-sm sm:text-lg font-bold leading-relaxed">
                   {currentItem.explanation}
                 </p>
               </div>
@@ -197,21 +257,21 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
 
         {/* Action Buttons */}
         {!answered ? (
-          <div className="grid grid-cols-2 gap-3 pt-2">
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 pt-2">
             <button
               type="button"
               onClick={() => handleAnswer(true)}
-              className="py-6 sm:py-7 bg-emerald-600 hover:bg-emerald-500 text-white rounded-3xl font-black text-lg sm:text-xl shadow-lg shadow-emerald-600/30 flex flex-col items-center justify-center gap-1.5 transition-all active:scale-95 border-b-4 border-emerald-800"
+              className="py-8 sm:py-10 min-h-[110px] sm:min-h-[135px] bg-emerald-600 hover:bg-emerald-500 text-white rounded-3xl font-black text-xl sm:text-3xl shadow-xl shadow-emerald-900/40 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-all active:scale-95 border-b-4 border-emerald-800"
             >
-              <ThumbsUp className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.5]" />
+              <ThumbsUp className="w-9 h-9 sm:w-12 sm:h-12 stroke-[2.5]" />
               VERDADEIRO
             </button>
             <button
               type="button"
               onClick={() => handleAnswer(false)}
-              className="py-6 sm:py-7 bg-rose-600 hover:bg-rose-500 text-white rounded-3xl font-black text-lg sm:text-xl shadow-lg shadow-rose-600/30 flex flex-col items-center justify-center gap-1.5 transition-all active:scale-95 border-b-4 border-rose-800"
+              className="py-8 sm:py-10 min-h-[110px] sm:min-h-[135px] bg-rose-600 hover:bg-rose-500 text-white rounded-3xl font-black text-xl sm:text-3xl shadow-xl shadow-rose-900/40 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-all active:scale-95 border-b-4 border-rose-800"
             >
-              <ThumbsDown className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.5]" />
+              <ThumbsDown className="w-9 h-9 sm:w-12 sm:h-12 stroke-[2.5]" />
               FALSO
             </button>
           </div>
@@ -220,10 +280,10 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
             <button
               type="button"
               onClick={handleNext}
-              className="w-full py-5 bg-blue-600 hover:bg-blue-500 text-white rounded-3xl font-black text-lg shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition-all active:scale-95"
+              className="w-full py-6 sm:py-7 min-h-[85px] sm:min-h-[95px] bg-blue-600 hover:bg-blue-500 text-white rounded-3xl font-black text-xl sm:text-2xl shadow-xl shadow-blue-900/40 flex items-center justify-center gap-3 transition-all active:scale-95 border-b-4 border-blue-800"
             >
-              Próxima Pergunta
-              <ArrowRight className="w-5 h-5 stroke-[2.5]" />
+              <span>Próxima Pergunta</span>
+              <ArrowRight className="w-7 h-7 stroke-[3]" />
             </button>
           </div>
         )}

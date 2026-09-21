@@ -31,7 +31,10 @@ export const HangmanGame: React.FC<HangmanGameProps> = ({
   clientName,
   splashImageUrl,
   customContent,
+  isLight,
+  themeMode,
 }) => {
+  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
   const wordsList = useMemo(() => {
     return customContent && customContent.length > 0 ? customContent : DEFAULT_WORDS;
   }, [customContent]);
@@ -126,27 +129,33 @@ export const HangmanGame: React.FC<HangmanGameProps> = ({
       campaignName={campaignName}
       clientName={clientName}
       splashImageUrl={splashImageUrl}
+      isLight={isLightMode}
+      themeMode={isLightMode ? 'light' : 'dark'}
     >
-      <div className="flex flex-col flex-1 w-full max-w-2xl sm:max-w-3xl mx-auto justify-between py-2 select-none">
+      <div className="flex flex-col flex-1 w-full max-w-3xl lg:max-w-4xl mx-auto justify-between py-4 sm:py-8 px-2 sm:px-6 gap-5 sm:gap-8 select-none animate-in fade-in duration-300">
         {/* Header with Category and Lives */}
-        <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200/80 rounded-2xl px-4 py-2.5 shadow-sm">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-black uppercase text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-xl">
+        <div className={`flex items-center justify-between rounded-2xl px-5 py-3.5 shadow-sm border-2 ${
+          isLightMode
+            ? 'bg-emerald-50 border-emerald-200/80 text-emerald-900'
+            : 'bg-slate-900/90 border-emerald-500/30 text-emerald-300'
+        }`}>
+          <div className="flex items-center gap-3">
+            <span className="text-xs sm:text-sm font-black uppercase text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-600/50 px-3.5 py-1.5 rounded-xl">
               {activeItem.category || 'Segurança'}
             </span>
-            <span className="text-xs font-bold text-slate-500">
+            <span className="text-xs sm:text-sm font-black text-slate-500 dark:text-slate-300">
               Palavra {currentWordIdx + 1} de {wordsList.length}
             </span>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             {Array.from({ length: MAX_MISTAKES }).map((_, i) => (
               <Heart
                 key={i}
-                className={`w-5 h-5 transition-all ${
+                className={`w-6 h-6 sm:w-8 sm:h-8 transition-all ${
                   i < remainingLives
-                    ? 'fill-rose-500 text-rose-500 scale-100'
-                    : 'fill-slate-200 text-slate-300 scale-90'
+                    ? 'fill-rose-500 text-rose-500 scale-100 drop-shadow-md'
+                    : 'fill-slate-300 text-slate-400 opacity-40 scale-90'
                 }`}
               />
             ))}
@@ -154,29 +163,35 @@ export const HangmanGame: React.FC<HangmanGameProps> = ({
         </div>
 
         {/* Clue Box */}
-        <div className="my-2 bg-white/90 border border-slate-200 rounded-2xl p-3 text-center shadow-sm">
-          <div className="flex items-center justify-center gap-1.5 text-xs font-black text-emerald-700 uppercase mb-1">
-            <Lightbulb className="w-3.5 h-3.5" />
-            Dica
+        <div className={`my-auto rounded-3xl p-6 sm:p-8 border-2 shadow-xl text-center backdrop-blur-xl ${
+          isLightMode
+            ? 'bg-white/95 border-slate-200 shadow-slate-200/50'
+            : 'bg-slate-900/85 border-white/20 shadow-black/40'
+        }`}>
+          <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-2">
+            <Lightbulb className="w-5 h-5 text-amber-400" />
+            Dica do Desafio
           </div>
-          <p className="text-sm sm:text-base font-bold text-slate-700 leading-snug">
+          <p className={`text-lg sm:text-2xl font-black leading-snug ${isLightMode ? 'text-slate-800' : 'text-white'}`}>
             "{activeItem.clue}"
           </p>
         </div>
 
         {/* Target Word Slots */}
-        <div className="my-auto py-4 flex flex-wrap items-center justify-center gap-2">
+        <div className="my-auto py-2 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3.5">
           {targetWord.split('').map((char, idx) => {
             const isRevealed = guessedLetters.includes(char) || gameOver;
             return (
               <div
                 key={idx}
-                className={`w-11 h-13 sm:w-13 sm:h-16 flex items-center justify-center rounded-2xl text-2xl sm:text-3xl font-black transition-all ${
+                className={`w-14 h-18 sm:w-20 sm:h-24 flex items-center justify-center rounded-2xl sm:rounded-3xl text-3xl sm:text-5xl font-black transition-all shadow-lg border-2 ${
                   isRevealed
                     ? guessedLetters.includes(char)
-                      ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30 scale-105'
-                      : 'bg-rose-500 text-white animate-pulse'
-                    : 'bg-slate-100 border-2 border-slate-300 text-transparent'
+                      ? 'bg-emerald-600 text-white border-emerald-400 shadow-emerald-950/40 scale-105'
+                      : 'bg-rose-500 text-white border-rose-300 animate-pulse'
+                    : isLightMode
+                    ? 'bg-slate-100 border-slate-300 text-transparent'
+                    : 'bg-slate-800 border-slate-600 text-transparent'
                 }`}
               >
                 {isRevealed ? char : ''}
@@ -186,8 +201,8 @@ export const HangmanGame: React.FC<HangmanGameProps> = ({
         </div>
 
         {/* On-Screen Touch Alphabet Keyboard */}
-        <div className="bg-slate-900/90 rounded-3xl p-3 border border-slate-800 shadow-xl backdrop-blur-sm">
-          <div className="grid grid-cols-7 sm:grid-cols-9 gap-1.5">
+        <div className="bg-slate-900/90 rounded-3xl p-4 sm:p-6 border-2 border-slate-800 shadow-2xl backdrop-blur-xl">
+          <div className="grid grid-cols-7 sm:grid-cols-9 gap-2 sm:gap-2.5">
             {ALPHABET.map((letter) => {
               const isUsed = guessedLetters.includes(letter);
               const isCorrect = isUsed && targetWord.includes(letter);
@@ -199,12 +214,12 @@ export const HangmanGame: React.FC<HangmanGameProps> = ({
                   type="button"
                   disabled={isUsed || gameOver}
                   onClick={() => handleLetterClick(letter)}
-                  className={`h-11 sm:h-12 rounded-xl font-black text-sm sm:text-base transition-all active:scale-95 flex items-center justify-center ${
+                  className={`h-13 sm:h-16 rounded-xl sm:rounded-2xl font-black text-lg sm:text-2xl transition-all active:scale-95 flex items-center justify-center shadow-md ${
                     isCorrect
-                      ? 'bg-emerald-500 text-white opacity-80 ring-1 ring-emerald-300'
+                      ? 'bg-emerald-500 text-white opacity-90 ring-2 ring-emerald-300'
                       : isWrong
                       ? 'bg-slate-800 text-slate-600 opacity-40 line-through'
-                      : 'bg-white text-slate-900 hover:bg-emerald-50 hover:text-emerald-700 shadow-sm'
+                      : 'bg-white text-slate-900 hover:bg-emerald-50 hover:text-emerald-700 active:bg-emerald-100'
                   }`}
                 >
                   {letter}

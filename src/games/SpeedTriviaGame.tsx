@@ -147,29 +147,29 @@ export const SpeedTriviaGame: React.FC<SpeedTriviaGameProps> = ({
       clientName={clientName}
       splashImageUrl={splashImageUrl}
     >
-      <div className="flex flex-col flex-1 w-full max-w-2xl sm:max-w-3xl mx-auto justify-between py-2 sm:py-4 select-none">
+      <div className="flex flex-col flex-1 w-full max-w-3xl lg:max-w-4xl mx-auto justify-between py-4 sm:py-8 px-2 sm:px-6 gap-5 sm:gap-8 select-none animate-in fade-in duration-300">
         {/* Speed Bar & Multiplier Header */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-black uppercase text-amber-300 flex items-center gap-1">
-              <Zap className="w-4 h-4 fill-amber-400 text-amber-400" />
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-2">
+            <span className="text-sm sm:text-base font-black uppercase text-amber-300 flex items-center gap-2">
+              <Zap className="w-5 h-5 fill-amber-400 text-amber-400 animate-pulse" />
               Pergunta {currentIdx + 1} de {questions.length}
             </span>
 
             {streak > 1 && (
-              <span className="text-xs font-black text-white bg-gradient-to-r from-amber-500 to-red-500 px-3 py-1 rounded-full flex items-center gap-1 shadow-sm animate-pulse">
-                <Flame className="w-3.5 h-3.5 fill-yellow-300" />
+              <span className="text-xs sm:text-sm font-black text-white bg-gradient-to-r from-amber-500 to-red-500 px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-md animate-pulse">
+                <Flame className="w-4 h-4 fill-yellow-300" />
                 Multiplicador x{streak}!
               </span>
             )}
           </div>
 
           {/* High voltage animated progress bar */}
-          <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden p-0.5 border border-white/20">
+          <div className="h-4 sm:h-5 w-full bg-slate-900 rounded-full overflow-hidden p-0.5 border-2 border-white/20 shadow-inner">
             <div
               className={`h-full rounded-full transition-all duration-1000 ${
                 questionTime > 4
-                  ? 'bg-gradient-to-r from-emerald-500 to-amber-500'
+                  ? 'bg-gradient-to-r from-emerald-500 via-amber-400 to-amber-500 shadow-md'
                   : 'bg-rose-500 animate-pulse'
               }`}
               style={{ width: `${progressPercent}%` }}
@@ -179,25 +179,28 @@ export const SpeedTriviaGame: React.FC<SpeedTriviaGameProps> = ({
 
         {/* Question Card */}
         <div className="my-auto py-2">
-          <div className="bg-slate-900/85 backdrop-blur-xl rounded-3xl p-6 sm:p-10 border-2 border-white/20 shadow-2xl text-center">
-            <h3 className="text-xl sm:text-3xl font-black text-white leading-snug">
+          <div className="bg-slate-900/85 backdrop-blur-xl rounded-3xl p-8 sm:p-12 md:p-14 border-2 border-white/20 shadow-2xl text-center">
+            <span className="inline-block text-xs sm:text-sm font-black uppercase tracking-widest text-amber-300/90 mb-4">
+              Responda rápido para pontuar mais:
+            </span>
+            <h3 className="text-2xl sm:text-4xl md:text-5xl font-black text-white leading-snug sm:leading-normal tracking-tight">
               {activeQ.question}
             </h3>
           </div>
         </div>
 
         {/* 4 Lightning Options - Large Touch Friendly Buttons */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pt-2">
           {activeQ.options.map((opt, i) => {
             const isChosen = selectedOpt === i;
             const isCorrectAnswer = i === activeQ.correct;
 
-            let btnClass = 'bg-slate-900/80 text-white border-2 border-white/20 hover:border-amber-400';
+            let btnClass = 'bg-slate-900/85 text-white border-2 border-white/20 hover:border-amber-400 hover:bg-slate-800/90';
             if (answered) {
               if (isCorrectAnswer) {
-                btnClass = 'bg-emerald-600 text-white border-emerald-400 shadow-lg scale-102';
+                btnClass = 'bg-emerald-600 text-white border-emerald-400 shadow-xl shadow-emerald-950/60 scale-[1.02]';
               } else if (isChosen && !isCorrectAnswer) {
-                btnClass = 'bg-rose-600 text-white border-rose-400';
+                btnClass = 'bg-rose-600 text-white border-rose-400 shadow-xl shadow-rose-950/60';
               } else {
                 btnClass = 'bg-slate-950/40 text-slate-500 border-white/5 opacity-40';
               }
@@ -209,11 +212,16 @@ export const SpeedTriviaGame: React.FC<SpeedTriviaGameProps> = ({
                 type="button"
                 disabled={answered}
                 onClick={() => handleAnswer(i)}
-                className={`p-5 sm:p-6 min-h-[75px] sm:min-h-[85px] rounded-2xl sm:rounded-3xl font-black text-base sm:text-xl text-left flex items-center justify-between transition-all active:scale-95 shadow-md ${btnClass}`}
+                className={`p-6 sm:p-8 min-h-[90px] sm:min-h-[110px] rounded-2xl sm:rounded-3xl font-black text-xl sm:text-2xl text-left flex items-center justify-between transition-all active:scale-95 shadow-lg ${btnClass}`}
               >
-                <span>{opt}</span>
-                {answered && isCorrectAnswer && <CheckCircle2 className="w-6 h-6 text-white flex-shrink-0" />}
-                {answered && isChosen && !isCorrectAnswer && <XCircle className="w-6 h-6 text-white flex-shrink-0" />}
+                <div className="flex items-center gap-4 text-left flex-1">
+                  <span className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/10 flex items-center justify-center font-mono text-base sm:text-xl font-black flex-shrink-0">
+                    {String.fromCharCode(65 + i)}
+                  </span>
+                  <span className="leading-snug">{opt}</span>
+                </div>
+                {answered && isCorrectAnswer && <CheckCircle2 className="w-8 h-8 text-white flex-shrink-0" />}
+                {answered && isChosen && !isCorrectAnswer && <XCircle className="w-8 h-8 text-white flex-shrink-0" />}
               </button>
             );
           })}

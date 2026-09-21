@@ -26,7 +26,10 @@ export const GeniusGame: React.FC<GeniusGameProps> = ({
   clientName,
   splashImageUrl,
   customContent,
+  isLight,
+  themeMode,
 }) => {
+  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
   const [sequence, setSequence] = useState<number[]>([]);
   const [playerIndex, setPlayerIndex] = useState(0);
   const [activePad, setActivePad] = useState<number | null>(null);
@@ -120,17 +123,23 @@ export const GeniusGame: React.FC<GeniusGameProps> = ({
       campaignName={campaignName}
       clientName={clientName}
       splashImageUrl={splashImageUrl}
+      isLight={isLightMode}
+      themeMode={isLightMode ? 'light' : 'dark'}
     >
-      <div className="w-full max-w-md sm:max-w-xl flex-1 flex flex-col items-center justify-between py-6 my-auto gap-6">
-        <div className="flex items-center justify-between w-full text-xs sm:text-sm font-black text-slate-300 px-3">
-          <span>Rodada: <strong className="text-white text-base">{round}</strong></span>
+      <div className="w-full max-w-xl sm:max-w-2xl lg:max-w-3xl flex-1 flex flex-col items-center justify-between py-4 sm:py-8 px-2 sm:px-6 my-auto gap-6 sm:gap-8 select-none animate-in fade-in duration-300">
+        <div className={`w-full flex items-center justify-between text-sm sm:text-lg font-black px-5 py-3.5 rounded-2xl border-2 ${
+          isLightMode
+            ? 'bg-white/90 border-slate-200 text-slate-800 shadow-sm'
+            : 'bg-slate-900/85 border-white/20 text-slate-300 backdrop-blur-xl'
+        }`}>
+          <span>Rodada: <strong className="text-amber-500 font-mono text-base sm:text-xl">{round}</strong></span>
           <span className={isPlayingSeq ? 'text-amber-400 animate-pulse' : 'text-emerald-400'}>
             {isPlayingSeq ? 'Observe a sequência...' : 'Sua vez de repetir!'}
           </span>
         </div>
 
         {/* 2x2 Genius Grid - Large Touch Pads */}
-        <div className="grid grid-cols-2 gap-4 sm:gap-6 w-full aspect-square p-4 sm:p-6 bg-slate-900/85 backdrop-blur-xl rounded-3xl border-4 border-white/20 shadow-2xl">
+        <div className="grid grid-cols-2 gap-5 sm:gap-8 w-full max-w-[520px] sm:max-w-[600px] aspect-square p-5 sm:p-8 bg-slate-900/90 backdrop-blur-xl rounded-3xl border-4 border-white/25 shadow-2xl my-auto">
           {PADS.map((pad) => {
             const isActive = activePad === pad.id;
             return (
@@ -138,10 +147,10 @@ export const GeniusGame: React.FC<GeniusGameProps> = ({
                 key={pad.id}
                 onClick={() => handlePadPress(pad.id)}
                 disabled={isPlayingSeq}
-                className={`rounded-2xl border-4 transition-all duration-150 active:scale-90 flex items-center justify-center ${
+                className={`rounded-3xl border-4 sm:border-8 transition-all duration-150 active:scale-90 flex items-center justify-center ${
                   isActive
-                    ? `${pad.activeColor} ${pad.border} shadow-2xl scale-98 brightness-125`
-                    : `${pad.color} border-white/20 opacity-80 hover:opacity-100`
+                    ? `${pad.activeColor} ${pad.border} shadow-2xl scale-[0.98] brightness-125`
+                    : `${pad.color} border-white/20 opacity-80 hover:opacity-100 shadow-lg`
                 }`}
               />
             );

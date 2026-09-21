@@ -138,99 +138,99 @@ export const GameContainer: React.FC<GameContainerProps> = ({
       )}
 
       {/* Top Bar */}
-      <header className={`flex-shrink-0 flex items-center justify-between px-4 sm:px-6 py-3 ${isLightMode ? 'bg-white/90 border-b border-slate-200/80 shadow-xs text-slate-900' : 'bg-black/30 border-b border-white/10 text-white'} backdrop-blur-md z-30`}>
+      <header className={`flex-shrink-0 flex items-center justify-between px-4 sm:px-8 py-3.5 sm:py-4 ${isLightMode ? 'bg-white/95 border-b border-slate-200/80 shadow-xs text-slate-900' : 'bg-black/40 border-b border-white/10 text-white'} backdrop-blur-md z-30`}>
         <button
           onClick={() => {
             sound.playClick();
             onExit();
           }}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl ${isLightMode ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 shadow-xs' : 'bg-white/10 hover:bg-white/20 text-white'} active:scale-95 transition-all text-xs sm:text-sm font-bold tracking-wide`}
+          className={`flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl ${isLightMode ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 shadow-xs' : 'bg-white/10 hover:bg-white/20 text-white'} active:scale-95 transition-all text-xs sm:text-base font-black tracking-wide`}
         >
-          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+          <ArrowLeft className="w-4 h-4 sm:w-6 sm:h-6" />
           <span>Sair</span>
         </button>
 
         <div className="flex flex-col items-center">
-          <span className={`text-[10px] uppercase tracking-widest ${isLightMode ? 'text-slate-500 font-bold' : 'text-slate-300/80 font-bold'}`}>{category}</span>
-          <h2 className="text-base sm:text-xl font-black tracking-tight">{title}</h2>
+          <span className={`text-[10px] sm:text-xs uppercase tracking-widest ${isLightMode ? 'text-slate-500 font-black' : 'text-slate-300 font-black'}`}>{category}</span>
+          <h2 className="text-base sm:text-2xl font-black tracking-tight">{title}</h2>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-4">
           {timeRemaining !== undefined && timeRemaining > 0 && (
-            <div className={`px-2.5 sm:px-3.5 py-1 rounded-xl ${isLightMode ? 'bg-amber-50 border border-amber-200 text-amber-800' : 'bg-slate-800/90 border border-white/10 text-amber-400'} flex items-center gap-1 font-mono text-xs sm:text-base font-bold`}>
+            <div className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-2xl ${isLightMode ? 'bg-amber-50 border border-amber-200 text-amber-800' : 'bg-slate-800/95 border border-white/15 text-amber-400'} flex items-center gap-1.5 font-mono text-sm sm:text-lg font-black shadow-sm`}>
               <span>⏱️</span>
               <span>{timeRemaining}s</span>
             </div>
           )}
 
-          <div className={`px-2.5 sm:px-3.5 py-1 rounded-xl ${isLightMode ? 'bg-slate-100 border border-slate-200 text-slate-800' : 'bg-white/10 border border-white/15 text-white'} flex items-center gap-1 font-bold text-xs sm:text-base`}>
-            <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />
+          <div className={`px-3 sm:px-5 py-1.5 sm:py-2 rounded-2xl ${isLightMode ? 'bg-slate-100 border border-slate-200 text-slate-800' : 'bg-white/10 border border-white/15 text-white'} flex items-center gap-1.5 font-black text-sm sm:text-lg shadow-sm`}>
+            <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
             <span>{score}</span>
-            <span className={`text-[10px] ${isLightMode ? 'text-slate-500' : 'text-slate-300/80'} hidden sm:inline`}>{customScoreLabel}</span>
+            <span className={`text-xs ${isLightMode ? 'text-slate-500' : 'text-slate-300/80'} hidden sm:inline`}>{customScoreLabel}</span>
           </div>
 
           <button
             onClick={toggleSound}
-            className={`p-2 rounded-xl ${isLightMode ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200' : 'bg-white/10 hover:bg-white/20 text-slate-300'} active:scale-95 transition-all`}
+            className={`p-2.5 sm:p-3 rounded-2xl ${isLightMode ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 shadow-xs' : 'bg-white/10 hover:bg-white/20 text-slate-300'} active:scale-95 transition-all`}
             title={soundOn ? 'Desativar Som' : 'Ativar Som'}
           >
-            {soundOn ? <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" /> : <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />}
+            {soundOn ? <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" /> : <VolumeX className="w-5 h-5 sm:w-6 sm:h-6 text-slate-400" />}
           </button>
         </div>
       </header>
 
       {/* Main Game Play Area - Flex and Scroll-Safe */}
-      <main className="relative flex-1 w-full min-h-0 flex flex-col items-center justify-center p-2 sm:p-6 overflow-y-auto no-scrollbar">
+      <main className="relative flex-1 w-full min-h-0 flex flex-col items-center justify-center p-3 sm:p-8 overflow-y-auto no-scrollbar">
         {children}
       </main>
 
-      {/* Game Over / Victory Modal - Always fully scrollable & visible without clipping */}
+      {/* Game Over / Victory Modal - Enhanced scale for Totem Touch Displays */}
       {gameOver && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overflow-y-auto no-scrollbar animate-in fade-in duration-300">
-          <div className={`w-full max-w-sm my-auto ${isLightMode ? 'bg-white border-2 border-slate-200 text-slate-900 shadow-2xl' : 'bg-slate-900 border-2 border-white/20 text-white shadow-2xl'} rounded-3xl p-4 sm:p-6 flex flex-col items-center text-center max-h-[94vh] max-h-[94dvh] overflow-y-auto no-scrollbar`}>
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center mb-2 shadow-lg shadow-amber-500/30 animate-bounce-subtle flex-shrink-0">
-              <Trophy className="w-6 h-6 sm:w-7 sm:h-7 text-slate-950" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xl p-4 sm:p-6 overflow-y-auto no-scrollbar animate-in fade-in duration-300">
+          <div className={`w-full max-w-md sm:max-w-xl my-auto ${isLightMode ? 'bg-white border-4 border-slate-200 text-slate-900 shadow-2xl' : 'bg-slate-900 border-4 border-white/20 text-white shadow-2xl'} rounded-3xl sm:rounded-[36px] p-6 sm:p-10 flex flex-col items-center text-center max-h-[94vh] max-h-[94dvh] overflow-y-auto no-scrollbar`}>
+            <div className="w-16 h-16 sm:w-22 sm:h-22 rounded-3xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center mb-3 shadow-xl shadow-amber-500/40 animate-bounce-subtle flex-shrink-0">
+              <Trophy className="w-8 h-8 sm:w-11 sm:h-11 text-slate-950" />
             </div>
 
-            <h3 className="text-lg sm:text-2xl font-black tracking-tight mb-0.5">
+            <h3 className="text-2xl sm:text-4xl font-black tracking-tight mb-1">
               {gameWon ? 'Parabéns!' : 'Fim de Jogo!'}
             </h3>
             
-            <p className={`${isLightMode ? 'text-slate-600' : 'text-slate-300'} text-xs sm:text-sm mb-3`}>
+            <p className={`${isLightMode ? 'text-slate-600' : 'text-slate-300'} text-sm sm:text-lg mb-4 sm:mb-6`}>
               Você completou o desafio <strong className={isLightMode ? 'text-slate-900' : 'text-white'}>{title}</strong>.
             </p>
 
-            <div className={`w-full ${isLightMode ? 'bg-slate-50 border border-slate-200' : 'bg-slate-800/90 border border-white/10'} rounded-2xl p-2.5 sm:p-3 mb-3 flex-shrink-0`}>
-              <span className={`text-[10px] ${isLightMode ? 'text-slate-500' : 'text-slate-400'} font-semibold uppercase tracking-wider`}>Pontuação Final</span>
-              <div className="text-2xl sm:text-3xl font-black text-amber-500 tracking-tight mt-0.5 font-mono">
-                {score} <span className={`text-xs ${isLightMode ? 'text-slate-500' : 'text-slate-400'} font-normal`}>{customScoreLabel}</span>
+            <div className={`w-full ${isLightMode ? 'bg-slate-50 border-2 border-slate-200' : 'bg-slate-800/95 border-2 border-white/15'} rounded-3xl p-4 sm:p-6 mb-4 sm:mb-6 flex-shrink-0 shadow-inner`}>
+              <span className={`text-xs sm:text-sm ${isLightMode ? 'text-slate-500' : 'text-slate-400'} font-black uppercase tracking-widest`}>Pontuação Final</span>
+              <div className="text-4xl sm:text-6xl font-black text-amber-500 tracking-tight mt-1 font-mono drop-shadow-sm">
+                {score} <span className={`text-sm sm:text-lg ${isLightMode ? 'text-slate-500' : 'text-slate-400'} font-normal`}>{customScoreLabel}</span>
               </div>
             </div>
 
             {/* Ranking Action - Touch Virtual Keyboard Only */}
             {rankingEnabled && onSubmitScore && !scoreSubmitted && (
-              <div className="w-full mb-3 flex flex-col items-center gap-2 flex-shrink-0">
+              <div className="w-full mb-4 sm:mb-6 flex flex-col items-center gap-2 flex-shrink-0">
                 <button
                   type="button"
                   onClick={() => {
                     sound.playClick();
                     setShowKeyboard(true);
                   }}
-                  className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500/20 to-yellow-500/20 hover:from-amber-500/30 hover:to-yellow-500/30 border border-amber-400/40 text-amber-300 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-95 transition-all shadow-md"
+                  className="w-full py-4 sm:py-5 px-6 rounded-2xl bg-gradient-to-r from-amber-500/25 to-yellow-500/25 hover:from-amber-500/35 hover:to-yellow-500/35 border-2 border-amber-400/50 text-amber-300 font-black text-base sm:text-xl flex items-center justify-center gap-3 active:scale-95 transition-all shadow-lg"
                 >
-                  <Keyboard className="w-4 h-4 text-amber-400" />
+                  <Keyboard className="w-6 h-6 text-amber-400" />
                   <span>Gravar Recorde no Ranking</span>
                 </button>
               </div>
             )}
 
             {scoreSubmitted && (
-              <div className="w-full py-2 mb-3 bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-emerald-300 text-xs font-bold flex items-center justify-center gap-1.5 flex-shrink-0">
+              <div className="w-full py-3.5 sm:py-4 mb-4 sm:mb-6 bg-emerald-500/20 border-2 border-emerald-500/40 rounded-2xl text-emerald-300 text-sm sm:text-base font-black flex items-center justify-center gap-2 flex-shrink-0 shadow-sm">
                 <span>✓</span> Recorde de {playerName || 'Jogador'} registrado!
               </div>
             )}
 
-            <div className="flex w-full gap-2 mt-auto pt-1 flex-shrink-0">
+            <div className="flex w-full gap-3 sm:gap-4 mt-auto pt-2 flex-shrink-0">
               <button
                 type="button"
                 onClick={() => {
@@ -239,9 +239,9 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                   setPlayerName('');
                   onRestart();
                 }}
-                className="flex-1 py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 transition-all font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5"
+                className="flex-1 py-4 sm:py-5 px-4 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 transition-all font-black text-sm sm:text-lg flex items-center justify-center gap-2 border-2 border-white/15"
               >
-                <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span>Jogar Novamente</span>
               </button>
 
@@ -252,7 +252,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                   onExit();
                 }}
                 style={{ backgroundColor: themePrimary }}
-                className="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm text-white active:scale-95 transition-all shadow-lg hover:brightness-110"
+                className="flex-1 py-4 sm:py-5 px-4 rounded-2xl font-black text-sm sm:text-lg text-white active:scale-95 transition-all shadow-xl hover:brightness-110 border-2 border-white/20"
               >
                 Menu Principal
               </button>

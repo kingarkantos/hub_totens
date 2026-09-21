@@ -36,7 +36,10 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({
   clientName,
   splashImageUrl,
   customContent,
+  isLight,
+  themeMode,
 }) => {
+  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
   const ICONS = customContent && customContent.length >= 4 ? customContent : DEFAULT_ICONS;
   const [cards, setCards] = useState<Card[]>([]);
   const [flipped, setFlipped] = useState<number[]>([]);
@@ -138,15 +141,21 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({
       campaignName={campaignName}
       clientName={clientName}
       splashImageUrl={splashImageUrl}
+      isLight={isLightMode}
+      themeMode={isLightMode ? 'light' : 'dark'}
     >
-      <div className="w-full max-w-xl sm:max-w-2xl flex-1 flex flex-col items-center justify-center gap-4 py-2 my-auto">
-        <div className="w-full flex justify-between text-xs sm:text-sm font-black text-slate-300 px-3">
-          <span>Movimentos: <strong className="text-white font-mono">{moves}</strong></span>
-          <span>Pares Encontrados: <strong className="text-emerald-400 font-mono">{cards.filter(c => c.matched).length / 2} / {ICONS.length}</strong></span>
+      <div className="w-full max-w-3xl sm:max-w-4xl lg:max-w-5xl flex-1 flex flex-col items-center justify-between gap-6 py-4 sm:py-8 px-2 sm:px-6 my-auto select-none animate-in fade-in duration-300">
+        <div className={`w-full flex justify-between text-sm sm:text-lg font-black px-4 py-3 rounded-2xl border-2 ${
+          isLightMode 
+            ? 'bg-white/90 border-slate-200 text-slate-800 shadow-sm' 
+            : 'bg-slate-900/80 border-white/20 text-slate-300 backdrop-blur-md'
+        }`}>
+          <span>Movimentos: <strong className={isLightMode ? 'text-slate-950 font-mono' : 'text-white font-mono'}>{moves}</strong></span>
+          <span>Pares Encontrados: <strong className="text-emerald-500 font-mono">{cards.filter(c => c.matched).length / 2} / {ICONS.length}</strong></span>
         </div>
 
-        {/* 4x3 Grid - Larger cards for totem kiosks */}
-        <div className="grid grid-cols-4 gap-3 sm:gap-4 w-full p-4 sm:p-6 bg-slate-900/85 backdrop-blur-xl rounded-3xl border-2 border-white/20 shadow-2xl">
+        {/* 4x3 Grid - Super tactile, large touch cards for totems */}
+        <div className="grid grid-cols-4 gap-3.5 sm:gap-6 w-full p-5 sm:p-10 bg-slate-900/85 backdrop-blur-xl rounded-3xl border-4 border-white/20 shadow-2xl my-auto">
           {cards.map((card) => {
             const isFlipped = flipped.includes(card.id) || card.matched;
             return (
@@ -154,23 +163,27 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({
                 key={card.id}
                 onClick={() => handleCardClick(card.id)}
                 disabled={isFlipped}
-                className={`aspect-square rounded-2xl flex flex-col items-center justify-center p-2 text-2xl md:text-3xl font-black border-2 transition-all duration-300 active:scale-95 ${
+                className={`aspect-square rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center p-2 sm:p-4 font-black border-2 sm:border-4 transition-all duration-300 active:scale-95 shadow-lg ${
                   isFlipped
                     ? card.matched
-                      ? 'bg-emerald-600/30 border-emerald-400 text-white shadow-md shadow-emerald-900/30'
-                      : 'bg-slate-800 border-amber-400 text-white shadow-md'
+                      ? 'bg-emerald-600/40 border-emerald-400 text-white shadow-xl shadow-emerald-950/60 scale-[1.02]'
+                      : 'bg-slate-800 border-amber-400 text-white shadow-xl shadow-amber-950/50 scale-[1.02]'
                     : 'bg-gradient-to-br from-slate-800 to-slate-900 border-white/15 hover:border-white/40 text-slate-500'
                 }`}
               >
                 {isFlipped ? (
                   <>
-                    <span className="scale-110 mb-1">{card.icon}</span>
-                    <span className="text-[9px] font-bold text-slate-300 uppercase tracking-tighter truncate max-w-full">
+                    <span className="text-4xl sm:text-6xl md:text-7xl mb-1 sm:mb-2 transition-transform scale-110 drop-shadow-md">
+                      {card.icon}
+                    </span>
+                    <span className="text-[10px] sm:text-xs md:text-sm font-black text-slate-200 uppercase tracking-tight truncate max-w-full text-center">
                       {card.label}
                     </span>
                   </>
                 ) : (
-                  <span className="text-xl text-slate-600 font-mono">?</span>
+                  <span className="text-3xl sm:text-5xl md:text-6xl text-slate-600 font-mono font-black">
+                    ?
+                  </span>
                 )}
               </button>
             );

@@ -151,9 +151,9 @@ export const CatcherGame: React.FC<CatcherGameProps> = ({
         ref={containerRef}
         onPointerMove={(e) => handleTouchMove(e.clientX)}
         onPointerDown={(e) => handleTouchMove(e.clientX)}
-        className="relative w-full max-w-2xl sm:max-w-3xl flex-1 max-h-[72vh] min-h-[440px] my-auto bg-slate-900/85 backdrop-blur-xl rounded-3xl border-2 border-white/20 overflow-hidden select-none touch-none shadow-2xl"
+        className="relative w-full max-w-4xl lg:max-w-5xl flex-1 max-h-[78vh] min-h-[480px] sm:min-h-[560px] my-auto bg-slate-900/80 backdrop-blur-xl rounded-3xl border-4 border-white/20 overflow-hidden select-none touch-none shadow-2xl animate-in fade-in duration-300"
       >
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs font-bold text-slate-400 pointer-events-none">
+        <div className="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 px-6 sm:px-8 py-2.5 sm:py-3 rounded-full bg-black/70 border-2 border-white/20 text-sm sm:text-lg font-black text-amber-300 pointer-events-none z-10 shadow-2xl">
           Arraste o veículo para coletar os brindes! 🎁
         </div>
 
@@ -166,7 +166,7 @@ export const CatcherGame: React.FC<CatcherGameProps> = ({
               top: `${item.y}px`,
               transform: 'translate(-50%, -50%)',
             }}
-            className="absolute text-3xl pointer-events-none transition-transform"
+            className="absolute text-5xl sm:text-6xl pointer-events-none transition-transform drop-shadow-xl"
           >
             {item.type === 'gift' ? '🎁' : item.type === 'star' ? '⭐' : '💣'}
           </div>
@@ -181,11 +181,11 @@ export const CatcherGame: React.FC<CatcherGameProps> = ({
           }}
           className="absolute flex flex-col items-center pointer-events-none transition-all duration-75"
         >
-          <div className="px-4 py-1.5 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-black text-xs border-2 border-white shadow-xl flex items-center gap-2">
-            <span>🏎️</span>
+          <div className="px-6 sm:px-8 py-3 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-black text-sm sm:text-lg border-4 border-white shadow-2xl flex items-center gap-3">
+            <span className="text-2xl sm:text-3xl">🏎️</span>
             <span>COLETOR</span>
           </div>
-          <div className="w-20 h-4 bg-purple-900/60 rounded-full blur-sm mt-1" />
+          <div className="w-28 h-5 bg-purple-900/70 rounded-full blur-md mt-1" />
         </div>
       </div>
     </GameContainer>

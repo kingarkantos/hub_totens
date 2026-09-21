@@ -71,7 +71,7 @@ export const BalloonGame: React.FC<BalloonGameProps> = ({
           speed: 2.5 + Math.random() * 2.5,
           color: isGold ? '#F59E0B' : BALLOON_COLORS[Math.floor(Math.random() * BALLOON_COLORS.length)],
           isGold,
-          size: isGold ? 48 : 58,
+          size: isGold ? 72 : 88,
         });
         lastSpawn = now;
       }
@@ -79,7 +79,7 @@ export const BalloonGame: React.FC<BalloonGameProps> = ({
       // Update positions
       balloonsRef.current = balloonsRef.current
         .map((b) => ({ ...b, y: b.y - b.speed }))
-        .filter((b) => b.y > -80);
+        .filter((b) => b.y > -100);
 
       setTick(now);
       animId = requestAnimationFrame(loop);
@@ -127,9 +127,9 @@ export const BalloonGame: React.FC<BalloonGameProps> = ({
     >
       <div
         ref={containerRef}
-        className="relative w-full max-w-2xl sm:max-w-3xl flex-1 max-h-[72vh] min-h-[440px] my-auto bg-slate-900/85 backdrop-blur-xl rounded-3xl border-2 border-white/20 overflow-hidden select-none touch-none shadow-2xl"
+        className="relative w-full max-w-4xl lg:max-w-5xl flex-1 max-h-[78vh] min-h-[480px] sm:min-h-[560px] my-auto bg-slate-900/80 backdrop-blur-xl rounded-3xl border-4 border-white/20 overflow-hidden select-none touch-none shadow-2xl animate-in fade-in duration-300"
       >
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full bg-black/60 border border-white/20 text-xs sm:text-sm font-black text-amber-300 pointer-events-none z-10 shadow-lg">
+        <div className="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 px-6 sm:px-8 py-2.5 sm:py-3 rounded-full bg-black/70 border-2 border-white/20 text-sm sm:text-lg font-black text-amber-300 pointer-events-none z-10 shadow-2xl">
           Toque para estourar os balões! Balões dourados valem mais! 🎈
         </div>
 
@@ -149,9 +149,9 @@ export const BalloonGame: React.FC<BalloonGameProps> = ({
               backgroundColor: b.color,
               transform: 'translate(-50%, -50%)',
             }}
-            className="absolute rounded-[50%_50%_50%_50%/60%_60%_40%_40%] shadow-lg active:scale-125 border-2 border-white/30 flex items-center justify-center font-bold text-white transition-transform cursor-pointer"
+            className="absolute rounded-[50%_50%_50%_50%/60%_60%_40%_40%] shadow-2xl active:scale-125 border-4 border-white/40 flex items-center justify-center font-black text-white transition-transform cursor-pointer"
           >
-            {b.isGold && <span className="text-xs">★</span>}
+            {b.isGold && <span className="text-xl sm:text-2xl drop-shadow-md">★</span>}
           </button>
         ))}
       </div>

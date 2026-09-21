@@ -248,7 +248,7 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({ onNavigateToCampaign
           <div>
             <span className="text-xs font-black uppercase tracking-widest text-red-600 flex items-center gap-1.5 mb-2">
               <Shield className="w-3.5 h-3.5" />
-              <span>Totens Conectados ao Supabase</span>
+              <span>Totens Conectados</span>
             </span>
             <h2 className="text-2xl md:text-3xl font-black text-slate-900">
               Gerenciador de Campanhas Interativas
@@ -286,7 +286,7 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({ onNavigateToCampaign
           {loading ? (
             <div className="py-16 text-center text-slate-500">
               <div className="w-8 h-8 rounded-full border-2 border-red-600 border-t-transparent animate-spin mx-auto mb-3" />
-              <span>Carregando campanhas do Supabase...</span>
+              <span>Carregando campanhas...</span>
             </div>
           ) : campaigns.length === 0 ? (
             <div className="p-12 text-center bg-white border-2 border-dashed border-slate-200 rounded-3xl shadow-xs">

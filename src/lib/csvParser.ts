@@ -169,11 +169,14 @@ export function parseGameCSV(gameId: string, csvText: string): any {
       }));
 
     case 'truefalse':
-      return rows.map((r) => ({
-        statement: r.statement || r['afirmacao'] || 'Afirmação de segurança',
-        isTrue: (r.is_true || r['verdadeiro'] || '').toLowerCase() === 'true',
-        explanation: r.explanation || r['explicacao'] || 'Explicação detalhada',
-      }));
+      return rows.map((r) => {
+        const val = (r.is_true || r['verdadeiro'] || '').toLowerCase().trim();
+        return {
+          statement: r.statement || r['afirmacao'] || 'Afirmação de segurança',
+          isTrue: val === 'true' || val === 'verdadeiro' || val === 'v' || val === 'sim' || val === '1',
+          explanation: r.explanation || r['explicacao'] || 'Explicação detalhada',
+        };
+      });
 
     case 'complete_phrase':
       return rows.map((r) => ({

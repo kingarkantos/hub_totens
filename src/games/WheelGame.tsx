@@ -86,10 +86,10 @@ export const WheelGame: React.FC<WheelGameProps> = ({
       ctx.rotate(startAngle + sliceAngle / 2);
       ctx.textAlign = 'right';
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 15px Outfit, Inter, sans-serif';
+      ctx.font = 'bold 18px Outfit, Inter, sans-serif';
       ctx.shadowColor = '#000000aa';
       ctx.shadowBlur = 4;
-      ctx.fillText(PRIZES[i].label, radius - 20, 5);
+      ctx.fillText(PRIZES[i].label, radius - 24, 6);
       ctx.restore();
     }
 
@@ -204,17 +204,17 @@ export const WheelGame: React.FC<WheelGameProps> = ({
       clientName={clientName}
       splashImageUrl={splashImageUrl}
     >
-      <div className="flex flex-col items-center justify-center gap-6 sm:gap-8 w-full max-w-lg my-auto">
+      <div className="flex flex-col items-center justify-between gap-6 sm:gap-10 w-full max-w-xl sm:max-w-2xl lg:max-w-3xl my-auto py-4 sm:py-8 px-2 sm:px-6 select-none animate-in fade-in duration-300">
         {/* Pointer indicator */}
         <div className="relative flex flex-col items-center">
-          <div className="w-0 h-0 border-x-[16px] sm:border-x-[20px] border-x-transparent border-t-[28px] sm:border-t-[34px] border-t-amber-400 drop-shadow-xl z-20 -mb-5 sm:-mb-6" />
+          <div className="w-0 h-0 border-x-[20px] sm:border-x-[26px] border-x-transparent border-t-[34px] sm:border-t-[44px] border-t-amber-400 drop-shadow-2xl z-20 -mb-6 sm:-mb-8" />
           
-          <div className="relative rounded-full p-2 sm:p-3 bg-slate-900/90 border-4 border-white/20 shadow-2xl backdrop-blur-md">
+          <div className="relative rounded-full p-3 sm:p-4 bg-slate-900/90 border-4 border-white/25 shadow-2xl backdrop-blur-xl">
             <canvas
               ref={canvasRef}
-              width={380}
-              height={380}
-              className="w-[280px] h-[280px] sm:w-[380px] sm:h-[380px] max-w-[50vh] max-h-[50vh] cursor-pointer touch-none"
+              width={440}
+              height={440}
+              className="w-[300px] h-[300px] sm:w-[420px] sm:h-[420px] md:w-[460px] md:h-[460px] max-w-[55vh] max-h-[55vh] cursor-pointer touch-none"
               onClick={spin}
             />
           </div>
@@ -225,15 +225,15 @@ export const WheelGame: React.FC<WheelGameProps> = ({
           onClick={spin}
           disabled={spinning || gameOver}
           style={{ backgroundColor: themePrimary }}
-          className="w-full py-5 sm:py-6 px-8 rounded-3xl text-white font-black text-xl sm:text-2xl tracking-wider uppercase shadow-2xl active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none hover:brightness-110 flex items-center justify-center gap-3 animate-totem-pulse border-2 border-white/20"
+          className="w-full py-6 sm:py-8 px-10 rounded-3xl text-white font-black text-2xl sm:text-3xl tracking-wider uppercase shadow-2xl active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none hover:brightness-110 flex items-center justify-center gap-4 animate-totem-pulse border-4 border-white/20"
         >
-          <span>🎯</span>
+          <span className="text-3xl">🎯</span>
           <span>{spinning ? 'GIRANDO...' : 'TOQUE PARA GIRAR!'}</span>
         </button>
 
         {wonPrize && !gameOver && (
-          <div className="text-center font-bold text-amber-300 text-base sm:text-lg">
-            Você ganhou: <span className="text-white text-lg sm:text-xl">{wonPrize.label}</span>!
+          <div className="text-center font-black text-amber-300 text-lg sm:text-2xl">
+            Você ganhou: <span className="text-white text-xl sm:text-3xl">{wonPrize.label}</span>!
           </div>
         )}
       </div>

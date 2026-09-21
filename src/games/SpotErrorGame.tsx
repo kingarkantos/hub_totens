@@ -46,7 +46,10 @@ export const SpotErrorGame: React.FC<SpotErrorGameProps> = ({
   clientName,
   splashImageUrl,
   customContent,
+  isLight,
+  themeMode,
 }) => {
+  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
   const scenario = customContent || DEFAULT_SCENARIO;
 
   const hazards: HazardHotspot[] = scenario.hazards.map((h, i) => ({
@@ -125,43 +128,49 @@ export const SpotErrorGame: React.FC<SpotErrorGameProps> = ({
       campaignName={campaignName}
       clientName={clientName}
       splashImageUrl={splashImageUrl}
+      isLight={isLightMode}
+      themeMode={isLightMode ? 'light' : 'dark'}
     >
-      <div className="flex flex-col flex-1 w-full max-w-2xl sm:max-w-3xl mx-auto justify-between py-2 select-none">
+      <div className="flex flex-col flex-1 w-full max-w-4xl lg:max-w-5xl mx-auto justify-between py-4 sm:py-8 px-2 sm:px-6 gap-5 sm:gap-8 select-none animate-in fade-in duration-300">
         {/* Header with Title and Count */}
-        <div className="bg-orange-50 border border-orange-200/80 rounded-2xl px-4 py-2.5 shadow-sm flex items-center justify-between">
+        <div className={`rounded-2xl px-6 py-3.5 shadow-sm border-2 flex items-center justify-between ${
+          isLightMode
+            ? 'bg-orange-50 border-orange-200/80 text-orange-950'
+            : 'bg-slate-900/90 border-orange-500/30 text-orange-300'
+        }`}>
           <div>
-            <span className="text-xs font-black uppercase text-orange-800 flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-orange-600" />
+            <span className="text-sm sm:text-base font-black uppercase flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-orange-500" />
               {scenario.scenarioTitle}
             </span>
           </div>
-          <span className="text-xs font-black text-orange-900 bg-orange-200/70 px-2.5 py-1 rounded-xl">
+          <span className="text-xs sm:text-sm font-black text-orange-950 bg-orange-200/80 border border-orange-300 px-3.5 py-1.5 rounded-xl shadow-xs">
             {foundIds.length} / {hazards.length} irregularidades
           </span>
         </div>
 
         {/* Interactive Scenario Area with Hotspots */}
         <div className="my-auto py-2">
-          <div className="relative w-full aspect-[4/3] rounded-3xl overflow-hidden border-2 border-slate-300 shadow-xl bg-gradient-to-br from-slate-800 via-slate-900 to-zinc-950 flex items-center justify-center">
+          <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] min-h-[440px] sm:min-h-[520px] rounded-3xl overflow-hidden border-4 border-slate-300 dark:border-white/20 shadow-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-zinc-950 flex items-center justify-center backdrop-blur-xl">
             {/* Visual Floor & Background Graphics */}
-            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#f97316_1px,transparent_1px)] [background-size:16px_16px]" />
+            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#f97316_2px,transparent_2px)] [background-size:24px_24px]" />
 
             {/* Industrial Plant / Kiosk Visual Mock Layout */}
-            <div className="absolute inset-8 rounded-2xl border-2 border-dashed border-slate-700/60 flex flex-col justify-between p-4 pointer-events-none">
-              <div className="flex justify-between text-slate-500 font-mono text-[10px]">
+            <div className="absolute inset-8 rounded-3xl border-2 border-dashed border-slate-700/60 flex flex-col justify-between p-6 pointer-events-none">
+              <div className="flex justify-between text-slate-400 font-mono text-xs sm:text-sm font-bold">
                 <span>SETOR OPERACIONAL 01</span>
                 <span>ZONA CRÍTICA DE RISCO</span>
               </div>
-              <div className="text-center font-bold text-slate-600 text-xs">
+              <div className="text-center font-black text-slate-300 text-sm sm:text-lg">
                 Toque nos pontos de irregularidade de segurança
               </div>
-              <div className="flex justify-between text-slate-500 font-mono text-[10px]">
+              <div className="flex justify-between text-slate-400 font-mono text-xs sm:text-sm font-bold">
                 <span>NR-12 / NR-10 AUDIT</span>
                 <span>INSPEÇÃO TOTEM</span>
               </div>
             </div>
 
-            {/* Hotspots */}
+            {/* Hotspots - Large Tactile Touch Buttons */}
             {hazards.map((hazard) => {
               const isFound = foundIds.includes(hazard.id);
 
@@ -174,15 +183,15 @@ export const SpotErrorGame: React.FC<SpotErrorGameProps> = ({
                     left: `${hazard.xPercent}%`,
                     top: `${hazard.yPercent}%`,
                   }}
-                  className={`absolute -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-all active:scale-95 shadow-lg ${
+                  className={`absolute -translate-x-1/2 -translate-y-1/2 w-18 h-18 sm:w-22 sm:h-22 rounded-3xl flex items-center justify-center text-3xl sm:text-4xl transition-all active:scale-95 shadow-2xl ${
                     isFound
-                      ? 'bg-emerald-500 text-white shadow-emerald-500/50 scale-105 border-2 border-white'
-                      : 'bg-orange-500/90 hover:bg-orange-400 text-white animate-bounce shadow-orange-500/50 border-2 border-amber-300'
+                      ? 'bg-emerald-500 text-white shadow-emerald-500/50 scale-105 border-4 border-white'
+                      : 'bg-orange-500/95 hover:bg-orange-400 text-white animate-bounce shadow-orange-500/50 border-4 border-amber-300'
                   }`}
                 >
-                  {isFound ? <Check className="w-7 h-7 stroke-[3] text-white" /> : hazard.icon}
+                  {isFound ? <Check className="w-9 h-9 stroke-[3] text-white" /> : hazard.icon}
                   {!isFound && (
-                    <span className="absolute -inset-1 rounded-2xl border-2 border-amber-400 animate-ping opacity-40 pointer-events-none" />
+                    <span className="absolute -inset-2 rounded-3xl border-2 border-amber-400 animate-ping opacity-50 pointer-events-none" />
                   )}
                 </button>
               );
@@ -191,23 +200,27 @@ export const SpotErrorGame: React.FC<SpotErrorGameProps> = ({
         </div>
 
         {/* Hazard Found Info Banner or Checklist */}
-        <div className="bg-white/95 border border-slate-200 rounded-2xl p-3 shadow-sm min-h-[64px] flex items-center justify-between gap-3">
+        <div className={`rounded-3xl p-4 sm:p-6 shadow-xl min-h-[80px] sm:min-h-[90px] flex items-center justify-between gap-4 border-2 ${
+          isLightMode 
+            ? 'bg-white/95 border-slate-200' 
+            : 'bg-slate-900/90 border-white/20 backdrop-blur-xl'
+        }`}>
           {activeHazardInfo ? (
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center flex-shrink-0 font-bold">
-                <ShieldAlert className="w-5 h-5" />
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-orange-100 dark:bg-orange-950/80 text-orange-600 dark:text-orange-400 flex items-center justify-center flex-shrink-0 font-bold border border-orange-300">
+                <ShieldAlert className="w-7 h-7" />
               </div>
               <div>
-                <div className="text-xs font-black text-slate-800">
+                <div className={`text-base sm:text-xl font-black ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
                   {activeHazardInfo.name}
                 </div>
-                <div className="text-[11px] font-medium text-slate-500">
+                <div className={`text-xs sm:text-base font-bold ${isLightMode ? 'text-slate-600' : 'text-slate-300'}`}>
                   {activeHazardInfo.description}
                 </div>
               </div>
             </div>
           ) : (
-            <div className="text-xs font-bold text-slate-400 text-center w-full">
+            <div className="text-sm sm:text-base font-black text-slate-400 text-center w-full">
               Observe o cenário industrial e toque nas irregularidades identificadas
             </div>
           )}

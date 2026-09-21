@@ -27,7 +27,10 @@ export const ConnectPairsGame: React.FC<ConnectPairsGameProps> = ({
   clientName,
   splashImageUrl,
   customContent,
+  isLight,
+  themeMode,
 }) => {
+  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
   const basePairs = useMemo(() => {
     return customContent && customContent.length >= 3 ? customContent.slice(0, 4) : DEFAULT_PAIRS;
   }, [customContent]);
@@ -147,21 +150,27 @@ export const ConnectPairsGame: React.FC<ConnectPairsGameProps> = ({
       campaignName={campaignName}
       clientName={clientName}
       splashImageUrl={splashImageUrl}
+      isLight={isLightMode}
+      themeMode={isLightMode ? 'light' : 'dark'}
     >
-      <div className="flex flex-col flex-1 w-full max-w-2xl sm:max-w-4xl mx-auto justify-between py-2 select-none">
+      <div className="flex flex-col flex-1 w-full max-w-4xl lg:max-w-5xl mx-auto justify-between py-4 sm:py-8 px-2 sm:px-6 gap-5 sm:gap-8 select-none animate-in fade-in duration-300">
         {/* Instruction Header */}
-        <div className="bg-sky-50 border border-sky-200/80 rounded-2xl px-4 py-2.5 shadow-sm text-center">
-          <span className="text-xs font-black uppercase text-sky-800 flex items-center justify-center gap-1.5">
-            <Link className="w-3.5 h-3.5 text-sky-600" />
+        <div className={`rounded-2xl px-6 py-3.5 shadow-sm border-2 text-center ${
+          isLightMode 
+            ? 'bg-sky-50 border-sky-200/80 text-sky-900' 
+            : 'bg-slate-900/90 border-sky-500/30 text-sky-300'
+        }`}>
+          <span className="text-sm sm:text-base font-black uppercase tracking-wider flex items-center justify-center gap-2">
+            <Link className="w-5 h-5 text-sky-500" />
             Toque em um item da esquerda e no correspondente da direita
           </span>
         </div>
 
         {/* Two Columns Grid */}
-        <div className="my-auto py-3 grid grid-cols-2 gap-3 sm:gap-4">
+        <div className="my-auto py-2 grid grid-cols-2 gap-4 sm:gap-6">
           {/* Left Column */}
-          <div className="space-y-2.5">
-            <div className="text-xs font-black uppercase tracking-wider text-slate-400 text-center mb-1">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="text-xs sm:text-sm font-black uppercase tracking-widest text-slate-400 text-center mb-2">
               Situação / Risco
             </div>
             {basePairs.map((pair) => {
@@ -174,24 +183,28 @@ export const ConnectPairsGame: React.FC<ConnectPairsGameProps> = ({
                   type="button"
                   disabled={isMatched}
                   onClick={() => handleLeftClick(pair.left)}
-                  className={`w-full min-h-[72px] p-3 rounded-2xl font-black text-xs sm:text-sm text-left transition-all active:scale-95 border-2 flex items-center justify-between gap-2 shadow-sm ${
+                  className={`w-full min-h-[85px] sm:min-h-[105px] p-4 sm:p-6 rounded-2xl sm:rounded-3xl font-black text-base sm:text-xl text-left transition-all active:scale-95 border-2 flex items-center justify-between gap-3 shadow-lg ${
                     isMatched
-                      ? 'bg-emerald-50 text-emerald-900 border-emerald-400 opacity-80'
+                      ? isLightMode 
+                        ? 'bg-emerald-50 text-emerald-950 border-emerald-400 opacity-80' 
+                        : 'bg-emerald-950/60 text-emerald-200 border-emerald-500 opacity-70'
                       : isSelected
-                      ? 'bg-sky-500 text-white border-sky-600 shadow-md scale-102 ring-2 ring-sky-300'
-                      : 'bg-white text-slate-800 border-slate-200 hover:border-sky-300'
+                      ? 'bg-sky-500 text-white border-sky-400 shadow-xl shadow-sky-950/50 scale-[1.02] ring-4 ring-sky-300'
+                      : isLightMode
+                      ? 'bg-white text-slate-900 border-slate-200 hover:border-sky-400 shadow-md'
+                      : 'bg-slate-900/85 text-white border-white/20 hover:border-sky-400 shadow-md'
                   }`}
                 >
                   <span className="leading-snug">{pair.left}</span>
-                  {isMatched && <Check className="w-4 h-4 text-emerald-600 stroke-[3] flex-shrink-0" />}
+                  {isMatched && <Check className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-500 stroke-[3] flex-shrink-0" />}
                 </button>
               );
             })}
           </div>
 
           {/* Right Column */}
-          <div className="space-y-2.5">
-            <div className="text-xs font-black uppercase tracking-wider text-slate-400 text-center mb-1">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="text-xs sm:text-sm font-black uppercase tracking-widest text-slate-400 text-center mb-2">
               Proteção / Solução
             </div>
             {shuffledRights.map((rightText) => {
@@ -206,16 +219,20 @@ export const ConnectPairsGame: React.FC<ConnectPairsGameProps> = ({
                   type="button"
                   disabled={isMatched}
                   onClick={() => handleRightClick(rightText)}
-                  className={`w-full min-h-[72px] p-3 rounded-2xl font-black text-xs sm:text-sm text-left transition-all active:scale-95 border-2 flex items-center justify-between gap-2 shadow-sm ${
+                  className={`w-full min-h-[85px] sm:min-h-[105px] p-4 sm:p-6 rounded-2xl sm:rounded-3xl font-black text-base sm:text-xl text-left transition-all active:scale-95 border-2 flex items-center justify-between gap-3 shadow-lg ${
                     isMatched
-                      ? 'bg-emerald-50 text-emerald-900 border-emerald-400 opacity-80'
+                      ? isLightMode 
+                        ? 'bg-emerald-50 text-emerald-950 border-emerald-400 opacity-80' 
+                        : 'bg-emerald-950/60 text-emerald-200 border-emerald-500 opacity-70'
                       : isSelected
-                      ? 'bg-sky-500 text-white border-sky-600 shadow-md scale-102 ring-2 ring-sky-300'
-                      : 'bg-white text-slate-800 border-slate-200 hover:border-sky-300'
+                      ? 'bg-sky-500 text-white border-sky-400 shadow-xl shadow-sky-950/50 scale-[1.02] ring-4 ring-sky-300'
+                      : isLightMode
+                      ? 'bg-white text-slate-900 border-slate-200 hover:border-sky-400 shadow-md'
+                      : 'bg-slate-900/85 text-white border-white/20 hover:border-sky-400 shadow-md'
                   }`}
                 >
                   <span className="leading-snug">{rightText}</span>
-                  {isMatched && <Check className="w-4 h-4 text-emerald-600 stroke-[3] flex-shrink-0" />}
+                  {isMatched && <Check className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-500 stroke-[3] flex-shrink-0" />}
                 </button>
               );
             })}
@@ -223,7 +240,7 @@ export const ConnectPairsGame: React.FC<ConnectPairsGameProps> = ({
         </div>
 
         {/* Footer info */}
-        <div className="text-center text-xs font-bold text-slate-400 pb-1">
+        <div className={`text-center text-sm sm:text-base font-black pb-1 ${isLightMode ? 'text-slate-600' : 'text-slate-300'}`}>
           {matchedPairs.length} de {basePairs.length} pares conectados com sucesso
         </div>
       </div>

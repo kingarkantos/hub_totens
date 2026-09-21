@@ -108,48 +108,48 @@ export const SafeGame: React.FC<SafeGameProps> = ({
       clientName={clientName}
       splashImageUrl={splashImageUrl}
     >
-      <div className="w-full max-w-md sm:max-w-xl flex-1 flex flex-col items-center justify-between py-6 my-auto gap-5">
+      <div className="w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl flex-1 flex flex-col items-center justify-between py-4 sm:py-8 px-2 sm:px-6 my-auto gap-6 sm:gap-8 select-none animate-in fade-in duration-300">
         {/* Safe Vault Graphic */}
-        <div className="w-24 h-24 sm:w-28 sm:h-28 p-5 rounded-full bg-slate-900/90 border-4 border-amber-400 shadow-2xl flex items-center justify-center backdrop-blur-md">
+        <div className="w-28 h-28 sm:w-36 sm:h-36 p-5 sm:p-7 rounded-full bg-slate-900/90 border-4 border-amber-400 shadow-2xl flex items-center justify-center backdrop-blur-xl">
           {unlocked ? (
-            <Unlock className="w-12 h-12 sm:w-14 sm:h-14 text-emerald-400 animate-bounce" />
+            <Unlock className="w-14 h-14 sm:w-18 sm:h-18 text-emerald-400 animate-bounce" />
           ) : (
-            <Lock className="w-12 h-12 sm:w-14 sm:h-14 text-amber-400" />
+            <Lock className="w-14 h-14 sm:w-18 sm:h-18 text-amber-400" />
           )}
         </div>
 
-        <p className="text-center text-xs sm:text-sm font-bold text-slate-300">
+        <p className="text-center text-sm sm:text-xl font-black text-slate-200">
           Ajuste os 3 discos numéricos usando as dicas e destranque o cofre! 🔐
         </p>
 
         {/* 3 Dials Grid */}
-        <div className="grid grid-cols-3 gap-3 sm:gap-4 w-full">
+        <div className="grid grid-cols-3 gap-3.5 sm:gap-6 w-full">
           {[0, 1, 2].map((idx) => {
             const hint = getHint(idx);
             return (
               <div
                 key={idx}
-                className="flex flex-col items-center p-3 sm:p-4 rounded-3xl bg-slate-900/85 border-2 border-white/20 backdrop-blur-md shadow-lg"
+                className="flex flex-col items-center p-4 sm:p-6 rounded-3xl bg-slate-900/85 border-2 sm:border-4 border-white/20 backdrop-blur-xl shadow-2xl"
               >
                 <button
                   onClick={() => changeDial(idx, 1)}
-                  className="w-full py-3 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 text-xl font-black text-white mb-2"
+                  className="w-full py-4 sm:py-5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-90 text-2xl sm:text-3xl font-black text-white mb-3 transition-transform"
                 >
                   ▲
                 </button>
 
-                <div className="w-18 h-22 sm:w-22 sm:h-26 rounded-2xl bg-slate-950 border-2 border-white/25 flex items-center justify-center text-4xl sm:text-6xl font-mono font-black text-amber-400 shadow-inner">
+                <div className="w-22 h-26 sm:w-30 sm:h-36 rounded-2xl sm:rounded-3xl bg-slate-950 border-2 sm:border-4 border-white/25 flex items-center justify-center text-5xl sm:text-7xl md:text-8xl font-mono font-black text-amber-400 shadow-inner">
                   {currentDials[idx]}
                 </div>
 
                 <button
                   onClick={() => changeDial(idx, -1)}
-                  className="w-full py-3 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 text-xl font-black text-white mt-2"
+                  className="w-full py-4 sm:py-5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-90 text-2xl sm:text-3xl font-black text-white mt-3 transition-transform"
                 >
                   ▼
                 </button>
 
-                <span className={`text-xs sm:text-sm font-black mt-2 ${hint.color}`}>
+                <span className={`text-xs sm:text-base font-black mt-3 text-center ${hint.color}`}>
                   {hint.text}
                 </span>
               </div>
@@ -161,9 +161,9 @@ export const SafeGame: React.FC<SafeGameProps> = ({
         <button
           onClick={testUnlock}
           style={{ backgroundColor: themePrimary }}
-          className="w-full py-5 sm:py-6 px-8 rounded-3xl text-white font-black text-lg sm:text-2xl uppercase tracking-wider shadow-2xl active:scale-95 transition-all hover:brightness-110 flex items-center justify-center gap-3 border-2 border-white/20"
+          className="w-full py-6 sm:py-8 px-8 rounded-3xl text-white font-black text-xl sm:text-3xl uppercase tracking-wider shadow-2xl active:scale-95 transition-all hover:brightness-110 flex items-center justify-center gap-4 border-4 border-white/20"
         >
-          <Unlock className="w-6 h-6 sm:w-7 sm:h-7" />
+          <Unlock className="w-8 h-8 sm:w-10 sm:h-10" />
           <span>DESTRANCAR COFRE</span>
         </button>
       </div>

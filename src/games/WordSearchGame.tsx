@@ -23,7 +23,10 @@ export const WordSearchGame: React.FC<WordSearchGameProps> = ({
   clientName,
   splashImageUrl,
   customContent,
+  isLight,
+  themeMode,
 }) => {
+  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
   const targetWords = useMemo(() => {
     if (customContent?.words && customContent.words.length > 0) {
       return customContent.words.map((w) => w.toUpperCase().trim().replace(/[^A-Z]/g, ''));
@@ -185,34 +188,42 @@ export const WordSearchGame: React.FC<WordSearchGameProps> = ({
       campaignName={campaignName}
       clientName={clientName}
       splashImageUrl={splashImageUrl}
+      isLight={isLightMode}
+      themeMode={isLightMode ? 'light' : 'dark'}
     >
-      <div className="flex flex-col flex-1 w-full max-w-2xl sm:max-w-3xl mx-auto justify-between py-2 select-none">
+      <div className="flex flex-col flex-1 w-full max-w-4xl lg:max-w-5xl mx-auto justify-between py-4 sm:py-8 px-2 sm:px-6 gap-5 sm:gap-8 select-none animate-in fade-in duration-300">
         {/* Words Checklist */}
-        <div className="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-3 shadow-sm backdrop-blur-sm">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-black uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+        <div className={`rounded-3xl p-5 sm:p-6 border-2 shadow-xl backdrop-blur-xl ${
+          isLightMode
+            ? 'bg-amber-50/90 border-amber-200 shadow-amber-950/5'
+            : 'bg-slate-900/85 border-amber-500/30 shadow-black/40'
+        }`}>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-500" />
               Palavras a Encontrar ({foundWords.length}/{targetWords.length})
             </span>
             {currentSelectionWord && (
-              <span className="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+              <span className="text-xs sm:text-sm font-black text-amber-950 dark:text-amber-200 bg-amber-200 dark:bg-amber-950/90 border border-amber-400 px-3.5 py-1 rounded-full shadow-xs">
                 Formando: {currentSelectionWord}
               </span>
             )}
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2 sm:gap-2.5">
             {targetWords.map((word) => {
               const isFound = foundWords.includes(word);
               return (
                 <span
                   key={word}
-                  className={`text-xs font-extrabold px-2.5 py-1 rounded-xl transition-all flex items-center gap-1 ${
+                  className={`text-xs sm:text-base font-extrabold px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-2xl transition-all flex items-center gap-1.5 shadow-sm ${
                     isFound
-                      ? 'bg-emerald-600 text-white shadow-sm scale-105'
-                      : 'bg-white text-slate-700 border border-amber-200'
+                      ? 'bg-emerald-600 text-white shadow-emerald-950/40 scale-105'
+                      : isLightMode
+                      ? 'bg-white text-slate-800 border-2 border-amber-200'
+                      : 'bg-slate-800 text-slate-200 border-2 border-slate-700'
                   }`}
                 >
-                  {isFound && <Check className="w-3 h-3 stroke-[3]" />}
+                  {isFound && <Check className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3]" />}
                   {word}
                 </span>
               );
@@ -220,9 +231,9 @@ export const WordSearchGame: React.FC<WordSearchGameProps> = ({
           </div>
         </div>
 
-        {/* 9x9 Grid */}
-        <div className="my-auto py-2 flex justify-center">
-          <div className="grid grid-cols-9 gap-1.5 p-2.5 bg-slate-900/90 rounded-3xl shadow-xl border-2 border-amber-500/30 max-w-[420px] w-full aspect-square">
+        {/* 9x9 Grid - Large Totem Touch Grid */}
+        <div className="my-auto py-2 flex justify-center w-full">
+          <div className="grid grid-cols-9 gap-2 sm:gap-3 p-3 sm:p-5 bg-slate-900/90 rounded-3xl shadow-2xl border-4 border-amber-500/40 max-w-[580px] sm:max-w-[650px] lg:max-w-[700px] w-full aspect-square backdrop-blur-xl">
             {grid.map((row, r) =>
               row.map((letter, c) => {
                 const isSelected = selectedCells.some((cell) => cell.r === r && cell.c === c);
@@ -231,10 +242,10 @@ export const WordSearchGame: React.FC<WordSearchGameProps> = ({
                     key={`${r}-${c}`}
                     type="button"
                     onClick={() => handleCellClick(r, c)}
-                    className={`flex items-center justify-center rounded-xl font-black text-base sm:text-lg transition-all active:scale-95 ${
+                    className={`flex items-center justify-center rounded-xl sm:rounded-2xl font-black text-xl sm:text-2xl md:text-3xl transition-all active:scale-95 ${
                       isSelected
-                        ? 'bg-amber-400 text-slate-950 scale-105 shadow-md shadow-amber-400/50 ring-2 ring-white'
-                        : 'bg-slate-800/80 text-white hover:bg-slate-700/80 border border-slate-700/50'
+                        ? 'bg-amber-400 text-slate-950 scale-105 shadow-lg shadow-amber-400/50 ring-4 ring-white'
+                        : 'bg-slate-800/90 text-white hover:bg-slate-700 border-2 border-slate-700/60 shadow-sm'
                     }`}
                   >
                     {letter}
@@ -246,16 +257,16 @@ export const WordSearchGame: React.FC<WordSearchGameProps> = ({
         </div>
 
         {/* Clear selection & helper action */}
-        <div className="flex items-center justify-between gap-2 pt-2">
+        <div className="flex items-center justify-between gap-4 pt-2">
           <button
             type="button"
             onClick={handleClearSelection}
             disabled={selectedCells.length === 0}
-            className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 disabled:opacity-40 text-slate-700 font-black text-sm rounded-2xl transition-all shadow-sm active:scale-95"
+            className="flex-1 py-4 sm:py-5 bg-slate-200 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 disabled:opacity-40 text-slate-800 dark:text-white font-black text-base sm:text-lg rounded-2xl sm:rounded-3xl transition-all shadow-md active:scale-95"
           >
             Limpar Seleção
           </button>
-          <div className="text-xs font-medium text-slate-500 px-3 text-right">
+          <div className="text-xs sm:text-sm font-bold text-slate-400 px-3 text-right">
             Toque nas letras em sequência para formar a palavra
           </div>
         </div>

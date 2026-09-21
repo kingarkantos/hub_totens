@@ -60,10 +60,12 @@ export const QuizGame: React.FC<QuizGameProps> = ({
   themeMode,
   orderMode = 'random',
   timeLimit,
+  totalTimeLimit,
 }) => {
   const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
   const isUnlimitedTime = timeLimit === 0;
   const questionSeconds = timeLimit && timeLimit > 0 ? timeLimit : 15;
+  const hasTotalTime = totalTimeLimit !== undefined && totalTimeLimit > 0;
 
   const rawQuestions = useMemo(() => {
     return customContent && customContent.length > 0 ? customContent : DEFAULT_QUESTIONS;
@@ -78,6 +80,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(questionSeconds);
+  const [totalTimeLeft, setTotalTimeLeft] = useState(totalTimeLimit || 0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [answered, setAnswered] = useState(false);
   const [gameOver, setGameOver] = useState(false);
@@ -129,6 +132,22 @@ export const QuizGame: React.FC<QuizGameProps> = ({
     return () => clearInterval(timer);
   }, [timeLeft, gameOver, answered, isUnlimitedTime, handleTimeout]);
 
+  // Total challenge countdown timer (if configured)
+  useEffect(() => {
+    if (gameOver || !hasTotalTime) return;
+    const timer = setInterval(() => {
+      setTotalTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setGameOver(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [gameOver, hasTotalTime]);
+
   const handleSelect = (idx: number) => {
     if (answered || gameOver) return;
     setSelectedOption(idx);
@@ -164,10 +183,17 @@ export const QuizGame: React.FC<QuizGameProps> = ({
     setCurrentIdx(0);
     setScore(0);
     setTimeLeft(questionSeconds);
+    if (hasTotalTime) setTotalTimeLeft(totalTimeLimit || 0);
     setSelectedOption(null);
     setAnswered(false);
     setGameOver(false);
   };
+
+  const activeTimeDisplay = !isUnlimitedTime
+    ? timeLeft
+    : hasTotalTime
+    ? totalTimeLeft
+    : undefined;
 
   const currentQ = questions[currentIdx] || rawQuestions[0];
 
@@ -176,7 +202,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({
       title="Quiz da Marca"
       category="Conhecimento"
       score={score}
-      timeRemaining={isUnlimitedTime ? undefined : timeLeft}
+      timeRemaining={activeTimeDisplay}
       gameOver={gameOver}
       onRestart={restart}
       onExit={onExit}

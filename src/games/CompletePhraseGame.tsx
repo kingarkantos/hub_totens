@@ -134,31 +134,32 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = ({
       clientName={clientName}
       splashImageUrl={splashImageUrl}
     >
-      <div className="flex flex-col flex-1 w-full max-w-2xl sm:max-w-3xl mx-auto justify-between py-2 sm:py-4 select-none">
+      <div className="flex flex-col flex-1 w-full max-w-3xl lg:max-w-4xl mx-auto justify-between py-4 sm:py-8 px-2 sm:px-6 gap-5 sm:gap-8 select-none animate-in fade-in duration-300">
         {/* Step indicator */}
-        <div className="flex items-center justify-between bg-black/40 border border-white/20 rounded-2xl px-4 py-2.5 shadow-sm backdrop-blur-md">
-          <span className="text-xs font-black uppercase text-amber-300">
+        <div className="flex items-center justify-between bg-black/40 border-2 border-white/20 rounded-2xl px-5 py-3.5 shadow-sm backdrop-blur-md">
+          <span className="text-sm sm:text-base font-black uppercase text-amber-300 flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
             Frase {currentIdx + 1} de {phrases.length}
           </span>
-          <span className="text-xs font-bold text-slate-300 flex items-center gap-1">
-            <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+          <span className="text-xs sm:text-sm font-black text-slate-300 flex items-center gap-2">
+            <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
             Selecione o termo correto
           </span>
         </div>
 
         {/* Phrase Sentence Box */}
-        <div className="my-auto py-3">
-          <div className="bg-slate-900/85 backdrop-blur-xl rounded-3xl p-6 sm:p-10 border-2 border-white/20 shadow-2xl text-center">
-            <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-300 mb-3 block">
+        <div className="my-auto py-2">
+          <div className="bg-slate-900/85 backdrop-blur-xl rounded-3xl p-8 sm:p-12 md:p-14 border-2 border-white/20 shadow-2xl text-center">
+            <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-amber-300/90 mb-4 block">
               Complete a lacuna com a opção ideal:
             </span>
-            <p className="text-xl sm:text-3xl font-extrabold text-white leading-relaxed">
+            <p className="text-2xl sm:text-4xl md:text-5xl font-black text-white leading-relaxed sm:leading-relaxed">
               {parts[0]}
               <span
-                className={`inline-block px-4 py-1.5 mx-2 rounded-2xl border-b-4 font-black transition-all ${
+                className={`inline-block px-5 sm:px-7 py-2 sm:py-3 mx-2 sm:mx-3 rounded-2xl sm:rounded-3xl border-b-4 font-black transition-all ${
                   answered
                     ? selectedOpt === activePhrase.missingWord
-                      ? 'bg-emerald-600 text-white border-emerald-400 scale-105'
+                      ? 'bg-emerald-600 text-white border-emerald-400 scale-105 shadow-lg shadow-emerald-950/50'
                       : 'bg-rose-600 text-white border-rose-400'
                     : 'bg-amber-400 text-slate-950 border-amber-600 animate-pulse'
                 }`}
@@ -171,17 +172,17 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = ({
         </div>
 
         {/* 4 Large Choice Chips */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pt-2">
           {activePhrase.options.map((opt) => {
             const isChosen = selectedOpt === opt;
             const isCorrectAnswer = opt === activePhrase.missingWord;
 
-            let btnStyle = 'bg-slate-900/80 text-white border-2 border-white/20 hover:border-amber-400';
+            let btnStyle = 'bg-slate-900/85 text-white border-2 border-white/20 hover:border-amber-400 hover:bg-slate-800/90';
             if (answered) {
               if (isCorrectAnswer) {
-                btnStyle = 'bg-emerald-600 text-white border-emerald-400 shadow-lg scale-102';
+                btnStyle = 'bg-emerald-600 text-white border-emerald-400 shadow-xl shadow-emerald-950/60 scale-[1.02]';
               } else if (isChosen && !isCorrectAnswer) {
-                btnStyle = 'bg-rose-600 text-white border-rose-400';
+                btnStyle = 'bg-rose-600 text-white border-rose-400 shadow-xl shadow-rose-950/60';
               } else {
                 btnStyle = 'bg-slate-950/40 text-slate-500 border-white/5 opacity-40';
               }
@@ -193,11 +194,11 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = ({
                 type="button"
                 disabled={answered}
                 onClick={() => handleSelectOption(opt)}
-                className={`p-5 sm:p-6 min-h-[75px] sm:min-h-[85px] rounded-2xl sm:rounded-3xl font-black text-base sm:text-xl text-left flex items-center justify-between transition-all active:scale-95 shadow-md ${btnStyle}`}
+                className={`p-6 sm:p-8 min-h-[90px] sm:min-h-[110px] rounded-2xl sm:rounded-3xl font-black text-xl sm:text-2xl text-left flex items-center justify-between transition-all active:scale-95 shadow-lg ${btnStyle}`}
               >
-                <span>{opt}</span>
-                {answered && isCorrectAnswer && <CheckCircle2 className="w-6 h-6 text-white flex-shrink-0" />}
-                {answered && isChosen && !isCorrectAnswer && <XCircle className="w-6 h-6 text-white flex-shrink-0" />}
+                <span className="leading-snug">{opt}</span>
+                {answered && isCorrectAnswer && <CheckCircle2 className="w-8 h-8 text-white flex-shrink-0" />}
+                {answered && isChosen && !isCorrectAnswer && <XCircle className="w-8 h-8 text-white flex-shrink-0" />}
               </button>
             );
           })}
@@ -205,14 +206,14 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = ({
 
         {/* Next Button after answering */}
         {answered && (
-          <div className="pt-3">
+          <div className="pt-2">
             <button
               type="button"
               onClick={handleNext}
-              className="w-full py-4.5 bg-fuchsia-600 hover:bg-fuchsia-500 text-white rounded-2xl font-black text-base shadow-lg shadow-fuchsia-600/30 flex items-center justify-center gap-2 transition-all active:scale-95"
+              className="w-full py-6 sm:py-7 min-h-[85px] sm:min-h-[95px] bg-fuchsia-600 hover:bg-fuchsia-500 text-white rounded-3xl font-black text-xl sm:text-2xl shadow-xl shadow-fuchsia-950/50 flex items-center justify-center gap-3 transition-all active:scale-95 border-b-4 border-fuchsia-800"
             >
-              Continuar
-              <ArrowRight className="w-5 h-5 stroke-[2.5]" />
+              <span>Continuar</span>
+              <ArrowRight className="w-7 h-7 stroke-[3]" />
             </button>
           </div>
         )}

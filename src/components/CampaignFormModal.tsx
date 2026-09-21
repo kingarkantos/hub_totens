@@ -4,7 +4,7 @@ import { Campaign, GameDefinition, ThemeId, CustomColorsConfig } from '../types'
 import { THEME_LIST, THEMES } from '../lib/themes';
 import { GAMES_CATALOG } from '../lib/gamesCatalog';
 import { GamePreviewModal } from '../games/GamePreviewModal';
-import { GameContentEditorModal } from './GameContentEditorModal';
+import { GameContentEditorModal, getContentCount } from './GameContentEditorModal';
 import { sound } from '../lib/audio';
 import { supabase, BUCKETS } from '../lib/supabase';
 
@@ -122,7 +122,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
     } catch (err: any) {
       console.error('Error uploading splash to Supabase:', err);
       sound.playError();
-      alert('Erro ao enviar imagem para o Supabase Storage: ' + (err.message || 'Tente novamente.'));
+      alert('Erro ao enviar imagem: ' + (err.message || 'Tente novamente.'));
     } finally {
       setUploadingImage(false);
     }
@@ -161,7 +161,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
     } catch (err: any) {
       console.error('Error mirroring to Supabase:', err);
       sound.playError();
-      alert('Não foi possível transferir imagem externa para o Supabase (bloqueio CORS da origem). Faça o upload do arquivo local diretamente!');
+      alert('Não foi possível transferir imagem externa (bloqueio CORS da origem). Faça o upload do arquivo local diretamente!');
     } finally {
       setUploadingImage(false);
     }
@@ -223,7 +223,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
     } catch (err) {
       console.error(err);
       sound.playError();
-      alert('Erro ao salvar campanha no Supabase.');
+      alert('Erro ao salvar campanha.');
     } finally {
       setSaving(false);
     }
@@ -326,22 +326,22 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
               </div>
             </div>
 
-            {/* Splash Image Section with Supabase Storage Upload */}
+            {/* Splash Image Section with Cloud Storage Upload */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-bold text-red-600 uppercase tracking-wider">
                   <ImageIcon className="w-4 h-4" />
-                  <span>2. Imagem de Splash Screen do Totem (Supabase Storage)</span>
+                  <span>2. Imagem de Splash Screen do Totem</span>
                 </div>
                 {splashUrl.includes('supabase.co') && (
                   <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-bold shadow-xs animate-in fade-in">
                     <Database className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Hospedada no Supabase</span>
+                    <span>Hospedada na Nuvem</span>
                   </span>
                 )}
               </div>
 
-              {/* Upload to Supabase Box */}
+              {/* Upload Box */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
                 <div className="md:col-span-7 flex flex-col gap-3">
                   <label className="relative flex flex-col items-center justify-center p-5 border-2 border-dashed border-red-300 hover:border-red-500 hover:bg-red-50/40 rounded-2xl cursor-pointer transition-all bg-slate-50 group">
@@ -355,7 +355,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                     {uploadingImage ? (
                       <div className="flex flex-col items-center py-2 text-red-600">
                         <Loader2 className="w-8 h-8 animate-spin mb-2" />
-                        <span className="text-xs font-bold">Enviando imagem para o Supabase Storage...</span>
+                        <span className="text-xs font-bold">Enviando imagem...</span>
                         <span className="text-[10px] text-slate-400 mt-1">Aguarde a geração da URL pública</span>
                       </div>
                     ) : (
@@ -364,10 +364,10 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                           <UploadCloud className="w-6 h-6" />
                         </div>
                         <span className="text-xs sm:text-sm font-bold text-slate-900">
-                          Clique ou Arraste uma Imagem para o Supabase
+                          Clique ou Arraste uma Imagem
                         </span>
                         <span className="text-[11px] text-slate-500 mt-0.5">
-                          Formatos: PNG, JPG, WebP (Máx: 10MB) • Salvo no Bucket do Supabase
+                          Formatos: PNG, JPG, WebP (Máx: 10MB) • Armazenamento em Nuvem
                         </span>
                       </div>
                     )}
@@ -376,7 +376,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                   {uploadSuccess && (
                     <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold animate-in fade-in">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                      <span>Upload concluído! A imagem foi salva no Supabase Storage da campanha.</span>
+                      <span>Upload concluído! A imagem foi salva na campanha.</span>
                     </div>
                   )}
 
@@ -400,10 +400,10 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                           onClick={handleMirrorToSupabase}
                           disabled={uploadingImage}
                           className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
-                          title="Fazer cópia e hospedar esta imagem no Supabase Storage"
+                          title="Fazer cópia e hospedar esta imagem na nuvem"
                         >
                           <Database className="w-3.5 h-3.5 text-amber-400" />
-                          <span>Salvar no Supabase</span>
+                          <span>Salvar na Nuvem</span>
                         </button>
                       )}
                     </div>
@@ -1041,9 +1041,26 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                       </div>
 
                       <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between gap-1.5 flex-wrap">
-                        <span className="text-[10px] text-slate-500 font-mono">
-                          ⏱️ {game.estimatedTime}
-                        </span>
+                        {(() => {
+                          const cfgTime = gamesConfig[`${game.id}_time_limit`];
+                          const cfgTotal = gamesConfig[`${game.id}_total_time_limit`];
+                          const isQuestionGame = ['quiz', 'truefalse', 'speed_trivia', 'complete_phrase'].includes(game.id);
+
+                          let timeDisplay = game.estimatedTime;
+                          if (cfgTime !== undefined) {
+                            timeDisplay = cfgTime === 0 
+                              ? (cfgTotal ? `${cfgTotal}s total` : 'Sem tempo') 
+                              : (isQuestionGame ? `${cfgTime}s / perg` : `${cfgTime}s`);
+                          } else if (cfgTotal !== undefined) {
+                            timeDisplay = `${cfgTotal}s total`;
+                          }
+
+                          return (
+                            <span className="text-[10px] text-slate-500 font-mono">
+                              ⏱️ {timeDisplay}
+                            </span>
+                          );
+                        })()}
 
                         <div className="flex items-center gap-1.5">
                           {/* Content Customization Button */}
@@ -1061,7 +1078,11 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                             title="Alimentar conteúdo por CSV, Formulário ou IA"
                           >
                             <FileSpreadsheet className="w-3 h-3 text-red-600" />
-                            <span>{hasCustomContent ? 'Editado ✓' : 'Conteúdo'}</span>
+                            <span>
+                              {hasCustomContent 
+                                ? `Editado (${getContentCount(gamesConfig[game.id])}) ✓` 
+                                : 'Conteúdo'}
+                            </span>
                           </button>
 
                           {/* Interactive Preview Button */}
@@ -1195,6 +1216,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           game={editingContentGame}
           currentContent={gamesConfig[editingContentGame.id]}
           currentTimeLimit={gamesConfig[`${editingContentGame.id}_time_limit`]}
+          currentTotalTimeLimit={gamesConfig[`${editingContentGame.id}_total_time_limit`]}
           campaignContext={{
             campaignName: name,
             clientName: clientName,
@@ -1202,11 +1224,12 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
             themeName: THEMES[themeId]?.name,
           }}
           onClose={() => setEditingContentGame(null)}
-          onSave={(gameId, updatedContent, timeLimit) => {
+          onSave={(gameId, updatedContent, timeLimit, totalTimeLimit) => {
             setGamesConfig((prev) => ({
               ...prev,
               [gameId]: updatedContent,
               [`${gameId}_time_limit`]: timeLimit,
+              [`${gameId}_total_time_limit`]: totalTimeLimit,
             }));
             setEditingContentGame(null);
           }}

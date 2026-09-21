@@ -32,7 +32,10 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = ({
   campaignName,
   clientName,
   splashImageUrl,
+  isLight,
+  themeMode,
 }) => {
+  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
   const [selectedEpiId, setSelectedEpiId] = useState<string | null>(null);
   const [matchedIds, setMatchedIds] = useState<string[]>([]);
   const [score, setScore] = useState(0);
@@ -123,18 +126,24 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = ({
       campaignName={campaignName}
       clientName={clientName}
       splashImageUrl={splashImageUrl}
+      isLight={isLightMode}
+      themeMode={isLightMode ? 'light' : 'dark'}
     >
-      <div className="flex flex-col flex-1 w-full max-w-2xl sm:max-w-3xl mx-auto justify-between py-2 select-none">
+      <div className="flex flex-col flex-1 w-full max-w-4xl lg:max-w-5xl mx-auto justify-between py-4 sm:py-8 px-2 sm:px-6 gap-5 sm:gap-8 select-none animate-in fade-in duration-300">
         {/* Instruction Header */}
-        <div className="bg-rose-50 border border-rose-200/80 rounded-2xl px-4 py-2.5 shadow-sm text-center">
-          <span className="text-xs font-black uppercase text-rose-800 flex items-center justify-center gap-1.5">
-            <MapPin className="w-3.5 h-3.5 text-rose-600" />
+        <div className={`rounded-2xl px-6 py-3.5 shadow-sm border-2 text-center ${
+          isLightMode
+            ? 'bg-rose-50 border-rose-200/80 text-rose-950'
+            : 'bg-slate-900/90 border-rose-500/30 text-rose-300'
+        }`}>
+          <span className="text-sm sm:text-base font-black uppercase tracking-wider flex items-center justify-center gap-2">
+            <MapPin className="w-5 h-5 text-rose-500" />
             Toque no EPI abaixo e depois toque no Setor correspondente no mapa
           </span>
         </div>
 
         {/* Sectors on the Map */}
-        <div className="my-auto py-2 grid grid-cols-2 gap-2.5 sm:gap-3">
+        <div className="my-auto py-2 grid grid-cols-2 gap-4 sm:gap-6">
           {SECTORS.map((sector) => {
             const isMatched = matchedIds.includes(sector.id);
 
@@ -144,34 +153,38 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = ({
                 type="button"
                 disabled={isMatched}
                 onClick={() => handleSelectSector(sector.id)}
-                className={`p-3.5 sm:p-4 rounded-3xl border-2 transition-all active:scale-95 text-left flex flex-col justify-between min-h-[110px] sm:min-h-[120px] shadow-sm ${
+                className={`p-5 sm:p-7 rounded-3xl border-2 sm:border-4 transition-all active:scale-95 text-left flex flex-col justify-between min-h-[140px] sm:min-h-[160px] shadow-xl ${
                   isMatched
-                    ? 'bg-emerald-50 border-emerald-500 text-emerald-950 opacity-90'
+                    ? isLightMode
+                      ? 'bg-emerald-50 border-emerald-500 text-emerald-950 opacity-90'
+                      : 'bg-emerald-950/70 border-emerald-500 text-emerald-200 opacity-90'
                     : selectedEpiId
-                    ? 'bg-white border-rose-300 hover:border-rose-500 ring-2 ring-rose-100 hover:bg-rose-50/50'
-                    : 'bg-white border-slate-200 text-slate-800'
+                    ? 'bg-white dark:bg-slate-900 border-rose-400 hover:border-rose-600 ring-4 ring-rose-200/50'
+                    : isLightMode
+                    ? 'bg-white border-slate-200 text-slate-900 shadow-md'
+                    : 'bg-slate-900/85 border-white/20 text-white shadow-md'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-slate-400">
                     SETOR DE RISCO
                   </span>
                   {isMatched ? (
-                    <span className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center">
-                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-md">
+                      <Check className="w-5 h-5 stroke-[3]" />
                     </span>
                   ) : (
-                    <MapPin className="w-4 h-4 text-rose-500" />
+                    <MapPin className="w-6 h-6 text-rose-500" />
                   )}
                 </div>
 
-                <div className="font-extrabold text-xs sm:text-sm text-slate-800 leading-snug">
+                <div className="font-black text-base sm:text-xl leading-snug">
                   {sector.sectorName}
                 </div>
 
                 {isMatched && (
-                  <div className="text-[11px] font-black text-emerald-700 flex items-center gap-1 mt-1">
-                    <span>{sector.epiEmoji}</span>
+                  <div className="text-xs sm:text-base font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-2">
+                    <span className="text-xl sm:text-2xl">{sector.epiEmoji}</span>
                     <span>{sector.requiredEpi}</span>
                   </div>
                 )}
@@ -181,11 +194,11 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = ({
         </div>
 
         {/* Available EPIs row */}
-        <div className="bg-slate-900/90 rounded-3xl p-3 border border-slate-800 shadow-xl backdrop-blur-sm">
-          <div className="text-[10px] font-black uppercase text-slate-400 text-center mb-2">
+        <div className="bg-slate-900/90 rounded-3xl p-4 sm:p-6 border-2 border-slate-800 shadow-2xl backdrop-blur-xl">
+          <div className="text-xs sm:text-sm font-black uppercase text-slate-400 text-center mb-3">
             EPIs Disponíveis (Toque para selecionar)
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             {shuffledEpis.map((epi) => {
               const isMatched = matchedIds.includes(epi.id);
               const isSelected = selectedEpiId === epi.id;
@@ -196,16 +209,16 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = ({
                   type="button"
                   disabled={isMatched}
                   onClick={() => handleSelectEpi(epi.id)}
-                  className={`p-2.5 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${
+                  className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center gap-2 transition-all active:scale-95 border-2 ${
                     isMatched
-                      ? 'bg-slate-800/40 opacity-30 text-slate-500 line-through'
+                      ? 'bg-slate-800/40 opacity-30 text-slate-500 line-through border-transparent'
                       : isSelected
-                      ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/50 scale-105 ring-2 ring-white'
-                      : 'bg-slate-800 text-white hover:bg-slate-700 border border-slate-700'
+                      ? 'bg-rose-600 text-white shadow-xl shadow-rose-950/60 scale-105 ring-4 ring-white border-rose-400'
+                      : 'bg-slate-800 text-white hover:bg-slate-700 border-slate-700 shadow-md'
                   }`}
                 >
-                  <span className="text-2xl">{epi.epiEmoji}</span>
-                  <span className="text-[10px] font-bold text-center leading-tight">
+                  <span className="text-4xl sm:text-5xl">{epi.epiEmoji}</span>
+                  <span className="text-xs sm:text-sm font-black text-center leading-tight">
                     {epi.requiredEpi}
                   </span>
                 </button>
