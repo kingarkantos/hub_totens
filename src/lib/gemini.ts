@@ -9,14 +9,44 @@ export interface CampaignAIContext {
   itemCount?: number;
 }
 
-const DEFAULT_GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+let cachedGeminiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+
+/**
+ * Retrieves effective Gemini API key, checking in-memory cache, env, and Supabase settings.
+ */
+export async function getEffectiveGeminiKey(explicitKey?: string): Promise<string> {
+  if (explicitKey && explicitKey.trim()) return explicitKey.trim();
+  if (cachedGeminiKey && cachedGeminiKey.trim()) return cachedGeminiKey.trim();
+
+  try {
+    const { data } = await supabase
+      .from('hubtotens_settings')
+      .select('value')
+      .eq('key', 'gemini_api_key')
+      .maybeSingle();
+
+    if (data?.value && typeof data.value === 'string' && data.value.trim()) {
+      cachedGeminiKey = data.value.trim();
+      return cachedGeminiKey;
+    }
+  } catch (err) {
+    console.warn('Could not fetch gemini_api_key from settings:', err);
+  }
+
+  return cachedGeminiKey;
+}
 
 export async function generateGameContentWithAI(
   gameId: string,
   context: CampaignAIContext,
-  apiKey: string = DEFAULT_GEMINI_KEY
+  apiKey?: string
 ): Promise<any> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const effectiveKey = await getEffectiveGeminiKey(apiKey);
+  if (!effectiveKey) {
+    throw new Error('Chave da API Gemini não configurada. Configure em Configurações do Hub.');
+  }
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${effectiveKey}`;
 
   const count = context.itemCount && context.itemCount > 0 ? context.itemCount : undefined;
 
@@ -244,14 +274,15 @@ IMPORTANTE: Responda ESTRITAMENTE em formato JSON válido, sem comentários, sem
 export async function generateImageWithAI(
   userPrompt: string,
   context?: Partial<CampaignAIContext>,
-  apiKey: string = DEFAULT_GEMINI_KEY
+  apiKey?: string
 ): Promise<string> {
-  let visualPrompt = userPrompt;
+  const effectiveKey = await getEffectiveGeminiKey(apiKey);
+  let visualPrompt = '';
 
-  // 1. Refine prompt with Gemini if available to maximize image visual quality
-  if (apiKey) {
+  // 1. Refine prompt with Gemini to generate an exact visual commercial scene
+  if (effectiveKey) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${effectiveKey}`;
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -261,16 +292,25 @@ export async function generateImageWithAI(
               role: 'user',
               parts: [
                 {
-                  text: `Translate and transform the following description into a concise (max 30 words) English visual prompt for a photo/illustration AI generator:
-"${userPrompt}"
-Brand/Theme: ${context?.clientName || ''} ${context?.campaignName || ''}. Clean, commercial quality, vibrant colors, 4k. Return ONLY the English prompt, no quotes.`,
+                  text: `You are an expert commercial art director for interactive marketing touch kiosks.
+Transform the following quiz question or topic into a vivid, photorealistic or sleek modern 3D scene description in English for text-to-image AI.
+
+Topic / Question: "${userPrompt}"
+Brand / Client: ${context?.clientName || 'Modern Brand'}
+Campaign: ${context?.campaignName || 'Interactive Quiz'}
+
+STRICT MANDATORY RULES:
+- Focus DIRECTLY and EXCLUSIVELY on the concrete subject matter of the topic (e.g. futuristic eco-friendly vehicle, zero emissions technology, solar/wind clean energy, modern engineering, electric motors, sustainable resources, high-tech digital dashboards).
+- ABSOLUTELY NEVER generate dark fantasy, gothic, emo, anime, horror, or portraits of random people.
+- The image MUST be clean, bright, professional, high-end commercial advertising photography or 3D product render.
+- Output ONLY the final English prompt (maximum 35 words), without quotation marks or explanations.`,
                 },
               ],
             },
           ],
           generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 60,
+            temperature: 0.3,
+            maxOutputTokens: 80,
           },
         }),
       });
@@ -283,12 +323,23 @@ Brand/Theme: ${context?.clientName || ''} ${context?.campaignName || ''}. Clean,
         }
       }
     } catch (e) {
-      console.warn('Gemini prompt enhancement skipped:', e);
+      console.warn('Gemini prompt enhancement error:', e);
     }
   }
 
+  // Fallback if Gemini key is missing or failed
+  if (!visualPrompt) {
+    const cleanTopic = userPrompt
+      .replace(/^(qual|quais|o que|como|quando|onde|por que|porque|selecione|assinale)\s+(é|são|o|a|os|as|um|uma)?/gi, '')
+      .replace(/[?.,!]/g, '')
+      .trim();
+
+    visualPrompt = `Commercial photograph of ${cleanTopic || 'modern automotive and sustainable technology'}, high quality, ${context?.clientName || 'modern brand'}, clean bright studio lighting, 8k resolution`;
+  }
+
   // 2. Pollinations AI Flux Generator
-  const encodedPrompt = encodeURIComponent(visualPrompt);
+  const finalPrompt = `${visualPrompt}, commercial advertising photography, modern sleek aesthetic, high quality, 8k resolution, crisp details, sharp focus, clean lighting`;
+  const encodedPrompt = encodeURIComponent(finalPrompt);
   const seed = Math.floor(Math.random() * 899999) + 100000;
   const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=768&nologo=true&seed=${seed}&model=flux`;
 
