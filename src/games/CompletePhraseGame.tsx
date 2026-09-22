@@ -50,6 +50,7 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = ({
 
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
   const [timeLeft, setTimeLeft] = useState(50);
   const [selectedOpt, setSelectedOpt] = useState<string | null>(null);
   const [answered, setAnswered] = useState(false);
@@ -84,6 +85,7 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = ({
     const isCorrect = opt === activePhrase.missingWord;
     if (isCorrect) {
       sound.playSuccess();
+      setCorrectCount((prev) => prev + 1);
       const points = 250 + timeLeft * 3;
       setScore((prev) => prev + points);
     } else {
@@ -112,12 +114,15 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = ({
       title="Complete a Frase"
       category="Linguagem"
       score={score}
+      correctAnswers={correctCount}
+      totalQuestions={phrases.length}
       timeRemaining={timeLeft}
       gameOver={gameOver}
       gameWon={gameWon}
       onRestart={() => {
         setCurrentIdx(0);
         setScore(0);
+        setCorrectCount(0);
         setTimeLeft(50);
         setSelectedOpt(null);
         setAnswered(false);

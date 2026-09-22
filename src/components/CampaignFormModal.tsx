@@ -6,12 +6,13 @@ import { GAMES_CATALOG } from '../lib/gamesCatalog';
 import { GamePreviewModal } from '../games/GamePreviewModal';
 import { GameContentEditorModal, getContentCount } from './GameContentEditorModal';
 import { sound } from '../lib/audio';
-import { supabase, BUCKETS } from '../lib/supabase';
+import { supabase, TABLES, BUCKETS } from '../lib/supabase';
 
 interface CampaignFormModalProps {
   campaignToEdit?: Campaign | null;
   onClose: () => void;
   onSave: (campaignData: Partial<Campaign>) => Promise<void>;
+  onCampaignUpdated?: (campaignId: string, gamesConfig: Record<string, any>) => void;
 }
 
 const SPLASH_PRESETS = [
@@ -37,6 +38,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
   campaignToEdit,
   onClose,
   onSave,
+  onCampaignUpdated,
 }) => {
   const [name, setName] = useState(campaignToEdit?.name || '');
   const [slug, setSlug] = useState(campaignToEdit?.slug || '');
@@ -49,9 +51,18 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
   const [selectedGames, setSelectedGames] = useState<string[]>(
     campaignToEdit?.selected_games || []
   );
-  const [gamesConfig, setGamesConfig] = useState<Record<string, any>>(
-    campaignToEdit?.games_config || {}
-  );
+  const [gamesConfig, setGamesConfig] = useState<Record<string, any>>(() => {
+    const raw = campaignToEdit?.games_config;
+    if (!raw) return {};
+    if (typeof raw === 'string') {
+      try {
+        return JSON.parse(raw);
+      } catch {
+        return {};
+      }
+    }
+    return { ...raw };
+  });
   const initialThemeMode: 'light' | 'dark' = 
     campaignToEdit?.theme_mode || 
     campaignToEdit?.games_config?.theme_mode || 
@@ -1224,14 +1235,47 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
             themeName: THEMES[themeId]?.name,
           }}
           onClose={() => setEditingContentGame(null)}
-          onSave={(gameId, updatedContent, timeLimit, totalTimeLimit) => {
-            setGamesConfig((prev) => ({
-              ...prev,
+          onSave={async (gameId, updatedContent, timeLimit, totalTimeLimit) => {
+            const nextGamesConfig = {
+              ...gamesConfig,
               [gameId]: updatedContent,
               [`${gameId}_time_limit`]: timeLimit,
               [`${gameId}_total_time_limit`]: totalTimeLimit,
-            }));
+            };
+            setGamesConfig(nextGamesConfig);
             setEditingContentGame(null);
+
+            const completeGamesConfig = {
+              ...nextGamesConfig,
+              theme_mode: themeMode,
+              order_mode: orderMode,
+              custom_colors: {
+                ...customColors,
+                bgType: customColors.enabled ? customColors.bgType : (themeMode === 'light' ? 'light' : 'dark'),
+              },
+            };
+
+            // Update in-memory reference of campaignToEdit so re-opening content retains all edits
+            if (campaignToEdit) {
+              campaignToEdit.games_config = completeGamesConfig;
+            }
+
+            // Auto-persist directly to database if editing existing campaign
+            if (campaignToEdit?.id) {
+              try {
+                await supabase
+                  .from(TABLES.CAMPAIGNS)
+                  .update({
+                    games_config: completeGamesConfig,
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq('id', campaignToEdit.id);
+
+                onCampaignUpdated?.(campaignToEdit.id, completeGamesConfig);
+              } catch (err) {
+                console.error('Error auto-persisting game content to database:', err);
+              }
+            }
           }}
         />
       )}

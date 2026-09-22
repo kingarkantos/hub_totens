@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle } from 'lucide-react';
+import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw } from 'lucide-react';
 import { GameDefinition } from '../types';
 import {
   GAME_CONTENT_SCHEMAS,
@@ -278,6 +278,9 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
     return isQuestionGame ? 60 : 0;
   });
 
+  const isStarterContent = currentContent === undefined || currentContent === null;
+  const [hasCustomEdits, setHasCustomEdits] = useState(!isStarterContent);
+
   const [content, setContent] = useState<any>(() => {
     if (currentContent !== undefined && currentContent !== null) return currentContent;
     return getStarterContentForGame(game.id);
@@ -315,8 +318,9 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
   };
 
   const [aiItemCount, setAiItemCount] = useState<number>(() => getDefaultCountForGame(game.id));
+  const [csvImportMode, setCsvImportMode] = useState<'replace' | 'append'>('replace');
 
-  // Handle CSV File Upload - APPENDS if array content exists
+  // Handle CSV File Upload - REPLACES or APPENDS according to csvImportMode
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -328,20 +332,27 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
         const parsed = parseGameCSV(game.id, text);
 
         if (Array.isArray(parsed)) {
-          if (Array.isArray(content) && content.length > 0) {
+          if (csvImportMode === 'append' && Array.isArray(content) && content.length > 0 && hasCustomEdits) {
             const merged = [...content, ...parsed];
             setContent(merged);
+            setHasCustomEdits(true);
             setSuccessMsg(`+${parsed.length} novos itens adicionados do CSV! Total: ${merged.length} itens.`);
           } else {
             setContent(parsed);
-            setSuccessMsg(`CSV importado com sucesso! (${parsed.length} itens carregados)`);
+            setHasCustomEdits(true);
+            setSuccessMsg(`CSV importado com sucesso! (${parsed.length} itens carregados).`);
           }
         } else {
           setContent(parsed);
+          setHasCustomEdits(true);
           setSuccessMsg('Configuração importada com sucesso do CSV!');
         }
 
-        sound.playSuccess();
+        try {
+          sound.playSuccess();
+        } catch (e) {
+          console.warn(e);
+        }
         setErrorMsg('');
         setActiveTab('form'); // Switch to manual form tab so user sees all items immediately!
       } catch (err: any) {
@@ -350,9 +361,10 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
       }
     };
     reader.readAsText(file);
+    e.target.value = '';
   };
 
-  // Handle AI Generation - APPENDS if array content exists
+  // Handle AI Generation - REPLACES starter examples, APPENDS if already custom
   const handleGenerateAI = async () => {
     setIsGeneratingAI(true);
     setErrorMsg('');
@@ -367,20 +379,26 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
       });
 
       if (Array.isArray(generated)) {
-        if (Array.isArray(content) && content.length > 0) {
+        if (Array.isArray(content) && content.length > 0 && hasCustomEdits) {
           const merged = [...content, ...generated];
           setContent(merged);
           setSuccessMsg(`+${generated.length} novos itens gerados com IA e acrescentados! Total: ${merged.length} itens.`);
         } else {
           setContent(generated);
-          setSuccessMsg(`Conteúdo temático gerado com Inteligência Artificial! (${generated.length} itens)`);
+          setHasCustomEdits(true);
+          setSuccessMsg(`Conteúdo temático gerado com Inteligência Artificial! (${generated.length} itens - exemplos iniciais substituídos).`);
         }
       } else {
         setContent(generated);
+        setHasCustomEdits(true);
         setSuccessMsg('Conteúdo temático gerado com Inteligência Artificial (Gemini)!');
       }
 
-      sound.playSuccess();
+      try {
+        sound.playSuccess();
+      } catch (e) {
+        console.warn(e);
+      }
       setActiveTab('form'); // Switch to manual form tab so user sees all items immediately!
     } catch (err: any) {
       console.error(err);
@@ -396,9 +414,12 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
       alert('Nenhum conteúdo configurado ainda!');
       return;
     }
-    sound.playSuccess();
+    try {
+      sound.playSuccess();
+    } catch (e) {
+      console.warn('Audio play error:', e);
+    }
     onSave(game.id, content, timeLimit, totalTimeLimit);
-    onClose();
   };
 
   // -------------------------------------------------------------
@@ -413,57 +434,100 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
-                <span className="text-xs font-black text-slate-800 uppercase tracking-wide">
-                  Afirmações de Verdadeiro ou Falso ({statements.length})
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-slate-800 uppercase tracking-wide">
+                    Afirmações de Verdadeiro ou Falso ({statements.length})
+                  </span>
+                  {!hasCustomEdits && statements.length > 0 && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                      Exemplos Iniciais
+                    </span>
+                  )}
+                </div>
                 <p className="text-[11px] text-slate-500">
                   Edite os campos abaixo ou clique no botão para adicionar novas afirmações ao jogo.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  sound.playClick();
-                  setContent([
-                    ...statements,
-                    {
-                      statement: '',
-                      isTrue: true,
-                      explanation: '',
-                    },
-                  ]);
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Adicionar Afirmação</span>
-              </button>
-            </div>
-
-            {statements.length === 0 ? (
-              <div className="p-8 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                <p className="text-xs text-slate-500 mb-3">Nenhuma afirmação cadastrada ainda.</p>
+              <div className="flex items-center gap-2">
+                {statements.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      if (window.confirm('Deseja limpar todos os registros da lista?')) {
+                        setContent([]);
+                        setHasCustomEdits(true);
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 text-xs font-bold border border-slate-200 active:scale-95 transition-all"
+                    title="Limpar todos os registros para começar do zero"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Limpar Tudo</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
                     sound.playClick();
                     setContent([
+                      ...statements,
                       {
-                        statement: 'O uso de protetor auditivo só é necessário se o barulho incomodar.',
-                        isTrue: false,
-                        explanation: 'Falso! O ruído contínuo causa danos cumulativos imperceptíveis no início.',
-                      },
-                      {
-                        statement: 'A inspeção prévia dos EPIs antes do uso é obrigatória pela NR-6.',
+                        statement: '',
                         isTrue: true,
-                        explanation: 'Verdadeiro! O colaborador deve inspecionar o equipamento antes de cada jornada.',
+                        explanation: '',
                       },
                     ]);
+                    setHasCustomEdits(true);
                   }}
-                  className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase shadow-xs"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
                 >
-                  + Inserir Exemplos Iniciais
+                  <Plus className="w-4 h-4" />
+                  <span>Adicionar Afirmação</span>
                 </button>
+              </div>
+            </div>
+
+            {statements.length === 0 ? (
+              <div className="p-8 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                <p className="text-xs text-slate-500 mb-3">Nenhuma afirmação cadastrada ainda.</p>
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setContent([
+                        {
+                          statement: 'O uso de protetor auditivo só é necessário se o barulho incomodar.',
+                          isTrue: false,
+                          explanation: 'Falso! O ruído contínuo causa danos cumulativos imperceptíveis no início.',
+                        },
+                        {
+                          statement: 'A inspeção prévia dos EPIs antes do uso é obrigatória pela NR-6.',
+                          isTrue: true,
+                          explanation: 'Verdadeiro! O colaborador deve inspecionar o equipamento antes de cada jornada.',
+                        },
+                      ]);
+                      setHasCustomEdits(false);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-slate-300 shadow-xs flex items-center gap-1.5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Restaurar Exemplos</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setContent([{ statement: '', isTrue: true, explanation: '' }]);
+                      setHasCustomEdits(true);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase shadow-xs flex items-center gap-1.5"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Adicionar em Branco</span>
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="space-y-3 max-h-[440px] overflow-y-auto pr-1">
@@ -478,6 +542,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                         onClick={() => {
                           sound.playClick();
                           setContent(statements.filter((_, i) => i !== idx));
+                          setHasCustomEdits(true);
                         }}
                         className="text-rose-600 hover:text-rose-700 text-xs font-bold flex items-center gap-1 hover:underline"
                       >
@@ -495,9 +560,9 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                         value={item.statement}
                         placeholder="Ex: O protetor auditivo só é necessário se o barulho incomodar..."
                         onChange={(e) => {
-                          const copy = [...statements];
-                          copy[idx].statement = e.target.value;
-                          setContent(copy);
+                          const val = e.target.value;
+                          setContent(statements.map((it, i) => i === idx ? { ...it, statement: val } : it));
+                          setHasCustomEdits(true);
                         }}
                         className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-semibold focus:outline-none focus:border-red-500"
                       />
@@ -513,9 +578,8 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                             type="button"
                             onClick={() => {
                               sound.playClick();
-                              const copy = [...statements];
-                              copy[idx].isTrue = true;
-                              setContent(copy);
+                              setContent(statements.map((it, i) => i === idx ? { ...it, isTrue: true } : it));
+                              setHasCustomEdits(true);
                             }}
                             className={`flex-1 py-1.5 text-xs font-black rounded-lg transition-all ${
                               item.isTrue
@@ -529,9 +593,8 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                             type="button"
                             onClick={() => {
                               sound.playClick();
-                              const copy = [...statements];
-                              copy[idx].isTrue = false;
-                              setContent(copy);
+                              setContent(statements.map((it, i) => i === idx ? { ...it, isTrue: false } : it));
+                              setHasCustomEdits(true);
                             }}
                             className={`flex-1 py-1.5 text-xs font-black rounded-lg transition-all ${
                               !item.isTrue
@@ -553,9 +616,9 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                           value={item.explanation}
                           placeholder="Ex: Falso! O ruído danifica a audição de forma contínua."
                           onChange={(e) => {
-                            const copy = [...statements];
-                            copy[idx].explanation = e.target.value;
-                            setContent(copy);
+                            const val = e.target.value;
+                            setContent(statements.map((it, i) => i === idx ? { ...it, explanation: val } : it));
+                            setHasCustomEdits(true);
                           }}
                           className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-red-500"
                         />
@@ -577,52 +640,95 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
-                <span className="text-xs font-black text-slate-800 uppercase tracking-wide">
-                  Perguntas de Múltipla Escolha ({questions.length})
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-slate-800 uppercase tracking-wide">
+                    Perguntas de Múltipla Escolha ({questions.length})
+                  </span>
+                  {!hasCustomEdits && questions.length > 0 && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                      Exemplos Iniciais
+                    </span>
+                  )}
+                </div>
                 <p className="text-[11px] text-slate-500">
                   Cadastre perguntas com 4 alternativas e marque o círculo da resposta correta.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  sound.playClick();
-                  setContent([
-                    ...questions,
-                    {
-                      question: '',
-                      options: ['', '', '', ''],
-                      correct: 0,
-                    },
-                  ]);
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Adicionar Pergunta</span>
-              </button>
-            </div>
-
-            {questions.length === 0 ? (
-              <div className="p-8 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                <p className="text-xs text-slate-500 mb-3">Nenhuma pergunta cadastrada ainda.</p>
+              <div className="flex items-center gap-2">
+                {questions.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      if (window.confirm('Deseja remover todas as perguntas da lista?')) {
+                        setContent([]);
+                        setHasCustomEdits(true);
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 text-xs font-bold border border-slate-200 active:scale-95 transition-all"
+                    title="Limpar todas as perguntas para começar do zero"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Limpar Tudo</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
                     sound.playClick();
                     setContent([
+                      ...questions,
                       {
-                        question: 'Qual é o equipamento de proteção individual essencial para trabalhos em altura?',
-                        options: ['Cinto tipo paraquedista', 'Bota simples', 'Óculos de sol', 'Luva de algodão'],
+                        question: '',
+                        options: ['', '', '', ''],
                         correct: 0,
                       },
                     ]);
+                    setHasCustomEdits(true);
                   }}
-                  className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase shadow-xs"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
                 >
-                  + Inserir Pergunta Inicial
+                  <Plus className="w-4 h-4" />
+                  <span>Adicionar Pergunta</span>
                 </button>
+              </div>
+            </div>
+
+            {questions.length === 0 ? (
+              <div className="p-8 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                <p className="text-xs text-slate-500 mb-3">Nenhuma pergunta cadastrada ainda.</p>
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setContent(getStarterContentForGame(game.id));
+                      setHasCustomEdits(false);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-slate-300 shadow-xs flex items-center gap-1.5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Restaurar Exemplos</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setContent([
+                        {
+                          question: '',
+                          options: ['', '', '', ''],
+                          correct: 0,
+                        },
+                      ]);
+                      setHasCustomEdits(true);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase shadow-xs flex items-center gap-1.5"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Adicionar em Branco</span>
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="space-y-3.5 max-h-[440px] overflow-y-auto pr-1">
@@ -637,6 +743,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                         onClick={() => {
                           sound.playClick();
                           setContent(questions.filter((_, i) => i !== qIdx));
+                          setHasCustomEdits(true);
                         }}
                         className="text-rose-600 hover:text-rose-700 text-xs font-bold flex items-center gap-1 hover:underline"
                       >
@@ -654,9 +761,9 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                         value={q.question}
                         placeholder="Digite a pergunta para o totem..."
                         onChange={(e) => {
-                          const copy = [...questions];
-                          copy[qIdx].question = e.target.value;
-                          setContent(copy);
+                          const val = e.target.value;
+                          setContent(questions.map((it, i) => i === qIdx ? { ...it, question: val } : it));
+                          setHasCustomEdits(true);
                         }}
                         className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-bold focus:outline-none focus:border-red-500"
                       />
@@ -681,9 +788,8 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                               name={`correct_${qIdx}`}
                               checked={q.correct === optIdx}
                               onChange={() => {
-                                const copy = [...questions];
-                                copy[qIdx].correct = optIdx;
-                                setContent(copy);
+                                setContent(questions.map((it, i) => i === qIdx ? { ...it, correct: optIdx } : it));
+                                setHasCustomEdits(true);
                               }}
                               className="w-4 h-4 text-emerald-600 focus:ring-0 cursor-pointer"
                               title="Marcar como alternativa correta"
@@ -696,9 +802,12 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                               value={opt}
                               placeholder={`Alternativa ${String.fromCharCode(65 + optIdx)}`}
                               onChange={(e) => {
-                                const copy = [...questions];
-                                copy[qIdx].options[optIdx] = e.target.value;
-                                setContent(copy);
+                                const val = e.target.value;
+                                setContent(questions.map((it, i) => i === qIdx ? {
+                                  ...it,
+                                  options: it.options.map((op, oIdx) => oIdx === optIdx ? val : op),
+                                } : it));
+                                setHasCustomEdits(true);
                               }}
                               className="flex-1 bg-transparent text-xs text-slate-900 font-medium focus:outline-none"
                             />
@@ -721,110 +830,185 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
-                <span className="text-xs font-black text-slate-800 uppercase tracking-wide">
-                  Frases com Lacuna ({phrases.length})
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-slate-800 uppercase tracking-wide">
+                    Frases com Lacuna ({phrases.length})
+                  </span>
+                  {!hasCustomEdits && phrases.length > 0 && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                      Exemplos Iniciais
+                    </span>
+                  )}
+                </div>
                 <p className="text-[11px] text-slate-500">
                   Digite a frase com "___" e cadastre as alternativas com a palavra correta.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  sound.playClick();
-                  setContent([
-                    ...phrases,
-                    {
-                      sentence: 'O uso de ___ é obrigatório na área fabril.',
-                      missingWord: 'capacete',
-                      options: ['capacete', 'chinelo', 'boné', 'relógio'],
-                    },
-                  ]);
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Adicionar Frase</span>
-              </button>
+              <div className="flex items-center gap-2">
+                {phrases.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      if (window.confirm('Deseja remover todas as frases da lista?')) {
+                        setContent([]);
+                        setHasCustomEdits(true);
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 text-xs font-bold border border-slate-200 active:scale-95 transition-all"
+                    title="Limpar todas as frases para começar do zero"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Limpar Tudo</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setContent([
+                      ...phrases,
+                      {
+                        sentence: 'O uso de ___ é obrigatório na área fabril.',
+                        missingWord: 'capacete',
+                        options: ['capacete', 'chinelo', 'boné', 'relógio'],
+                      },
+                    ]);
+                    setHasCustomEdits(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Adicionar Frase</span>
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-3.5 max-h-[440px] overflow-y-auto pr-1">
-              {phrases.map((item, idx) => (
-                <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 shadow-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-100">
-                      Frase #{idx + 1}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        sound.playClick();
-                        setContent(phrases.filter((_, i) => i !== idx));
-                      }}
-                      className="text-rose-600 hover:text-rose-700 text-xs font-bold flex items-center gap-1 hover:underline"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Remover</span>
-                    </button>
-                  </div>
+            {phrases.length === 0 ? (
+              <div className="p-8 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                <p className="text-xs text-slate-500 mb-3">Nenhuma frase cadastrada ainda.</p>
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setContent(getStarterContentForGame(game.id));
+                      setHasCustomEdits(false);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-slate-300 shadow-xs flex items-center gap-1.5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Restaurar Exemplos</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setContent([
+                        {
+                          sentence: 'O uso de ___ é obrigatório na área.',
+                          missingWord: 'EPI',
+                          options: ['EPI', 'Crachá', 'Uniforme', 'Sapato'],
+                        },
+                      ]);
+                      setHasCustomEdits(true);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase shadow-xs flex items-center gap-1.5"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Adicionar em Branco</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3.5 max-h-[440px] overflow-y-auto pr-1">
+                {phrases.map((item, idx) => (
+                  <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-100">
+                        Frase #{idx + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setContent(phrases.filter((_, i) => i !== idx));
+                          setHasCustomEdits(true);
+                        }}
+                        className="text-rose-600 hover:text-rose-700 text-xs font-bold flex items-center gap-1 hover:underline"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Remover</span>
+                      </button>
+                    </div>
 
-                  <div>
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">
-                      Frase (use ___ no lugar da palavra):
-                    </label>
-                    <input
-                      type="text"
-                      value={item.sentence}
-                      onChange={(e) => {
-                        const copy = [...phrases];
-                        copy[idx].sentence = e.target.value;
-                        setContent(copy);
-                      }}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-red-500"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[10px] text-emerald-700 font-bold uppercase mb-1">
-                        Palavra Correta (Lacuna):
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">
+                        Frase (use ___ no lugar da palavra):
                       </label>
                       <input
                         type="text"
-                        value={item.missingWord}
+                        value={item.sentence}
                         onChange={(e) => {
-                          const copy = [...phrases];
-                          copy[idx].missingWord = e.target.value;
-                          copy[idx].options[0] = e.target.value;
-                          setContent(copy);
+                          const val = e.target.value;
+                          setContent(phrases.map((it, i) => i === idx ? { ...it, sentence: val } : it));
+                          setHasCustomEdits(true);
                         }}
-                        className="w-full px-3 py-1.5 bg-emerald-50 border border-emerald-300 rounded-lg text-xs font-black text-emerald-900 focus:outline-none"
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-red-500"
                       />
                     </div>
-                    <div>
-                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">
-                        Outras 3 Opções (Distratores):
-                      </label>
-                      <div className="grid grid-cols-3 gap-1">
-                        {[1, 2, 3].map((optIdx) => (
-                          <input
-                            key={optIdx}
-                            type="text"
-                            value={item.options?.[optIdx] || ''}
-                            onChange={(e) => {
-                              const copy = [...phrases];
-                              copy[idx].options[optIdx] = e.target.value;
-                              setContent(copy);
-                            }}
-                            className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none"
-                          />
-                        ))}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] text-emerald-700 font-bold uppercase mb-1">
+                          Palavra Correta (Lacuna):
+                        </label>
+                        <input
+                          type="text"
+                          value={item.missingWord}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setContent(phrases.map((it, i) => {
+                              if (i !== idx) return it;
+                              const updatedOptions = [...(it.options || [])];
+                              updatedOptions[0] = val;
+                              return { ...it, missingWord: val, options: updatedOptions };
+                            }));
+                            setHasCustomEdits(true);
+                          }}
+                          className="w-full px-3 py-1.5 bg-emerald-50 border border-emerald-300 rounded-lg text-xs font-black text-emerald-900 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">
+                          Outras 3 Opções (Distratores):
+                        </label>
+                        <div className="grid grid-cols-3 gap-1">
+                          {[1, 2, 3].map((optIdx) => (
+                            <input
+                              key={optIdx}
+                              type="text"
+                              value={item.options?.[optIdx] || ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setContent(phrases.map((it, i) => {
+                                  if (i !== idx) return it;
+                                  const updatedOptions = [...(it.options || [])];
+                                  updatedOptions[optIdx] = val;
+                                  return { ...it, options: updatedOptions };
+                                }));
+                                setHasCustomEdits(true);
+                              }}
+                              className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none"
+                            />
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       }
@@ -843,79 +1027,132 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                   Cadastre as palavras secretas, dicas e categorias.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  sound.playClick();
-                  setContent([...words, { word: '', clue: '', category: 'Segurança' }]);
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Adicionar Palavra</span>
-              </button>
+              <div className="flex items-center gap-2">
+                {words.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      if (window.confirm('Deseja limpar todas as palavras da lista?')) {
+                        setContent([]);
+                        setHasCustomEdits(true);
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 text-xs font-bold border border-slate-200 active:scale-95 transition-all"
+                    title="Limpar tudo para começar do zero"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Limpar Tudo</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setContent([...words, { word: '', clue: '', category: 'Segurança' }]);
+                    setHasCustomEdits(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Adicionar Palavra</span>
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-3 max-h-[440px] overflow-y-auto pr-1">
-              {words.map((item, idx) => (
-                <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-3 items-center shadow-xs">
-                  <div className="sm:col-span-4">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">Palavra Secreta:</label>
-                    <input
-                      type="text"
-                      value={item.word}
-                      placeholder="Ex: EXTINTOR"
-                      onChange={(e) => {
-                        const copy = [...words];
-                        copy[idx].word = e.target.value.toUpperCase();
-                        setContent(copy);
-                      }}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-black text-red-600 tracking-wider focus:outline-none focus:border-red-500"
-                    />
-                  </div>
-                  <div className="sm:col-span-5">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">Dica:</label>
-                    <input
-                      type="text"
-                      value={item.clue}
-                      placeholder="Ex: Usado para conter início de incêndio"
-                      onChange={(e) => {
-                        const copy = [...words];
-                        copy[idx].clue = e.target.value;
-                        setContent(copy);
-                      }}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none"
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">Categoria:</label>
-                    <input
-                      type="text"
-                      value={item.category || ''}
-                      placeholder="Segurança"
-                      onChange={(e) => {
-                        const copy = [...words];
-                        copy[idx].category = e.target.value;
-                        setContent(copy);
-                      }}
-                      className="w-full px-2 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-700 focus:outline-none"
-                    />
-                  </div>
-                  <div className="sm:col-span-1 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        sound.playClick();
-                        setContent(words.filter((_, i) => i !== idx));
-                      }}
-                      className="p-2 rounded-xl text-rose-600 hover:bg-rose-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+            {words.length === 0 ? (
+              <div className="p-8 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                <p className="text-xs text-slate-500 mb-3">Nenhuma palavra cadastrada ainda.</p>
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setContent(getStarterContentForGame(game.id));
+                      setHasCustomEdits(false);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-slate-300 shadow-xs flex items-center gap-1.5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Restaurar Exemplos</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setContent([{ word: 'PREVENCAO', clue: 'Melhor atitude diária', category: 'Segurança' }]);
+                      setHasCustomEdits(true);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase shadow-xs flex items-center gap-1.5"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Adicionar em Branco</span>
+                  </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[440px] overflow-y-auto pr-1">
+                {words.map((item, idx) => (
+                  <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-3 items-center shadow-xs">
+                    <div className="sm:col-span-4">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">Palavra Secreta:</label>
+                      <input
+                        type="text"
+                        value={item.word}
+                        placeholder="Ex: EXTINTOR"
+                        onChange={(e) => {
+                          const val = e.target.value.toUpperCase();
+                          setContent(words.map((it, i) => i === idx ? { ...it, word: val } : it));
+                          setHasCustomEdits(true);
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-black text-red-600 tracking-wider focus:outline-none focus:border-red-500"
+                      />
+                    </div>
+                    <div className="sm:col-span-5">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">Dica:</label>
+                      <input
+                        type="text"
+                        value={item.clue}
+                        placeholder="Ex: Usado para conter início de incêndio"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setContent(words.map((it, i) => i === idx ? { ...it, clue: val } : it));
+                          setHasCustomEdits(true);
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">Categoria:</label>
+                      <input
+                        type="text"
+                        value={item.category || ''}
+                        placeholder="Segurança"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setContent(words.map((it, i) => i === idx ? { ...it, category: val } : it));
+                          setHasCustomEdits(true);
+                        }}
+                        className="w-full px-2 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-700 focus:outline-none"
+                      />
+                    </div>
+                    <div className="sm:col-span-1 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setContent(words.filter((_, i) => i !== idx));
+                          setHasCustomEdits(true);
+                        }}
+                        className="p-2 rounded-xl text-rose-600 hover:bg-rose-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       }
@@ -934,65 +1171,118 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                   Cadastre o item da coluna esquerda e o seu par correspondente na direita.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  sound.playClick();
-                  setContent([...pairs, { left: '', right: '' }]);
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Adicionar Par</span>
-              </button>
+              <div className="flex items-center gap-2">
+                {pairs.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      if (window.confirm('Deseja limpar todos os pares da lista?')) {
+                        setContent([]);
+                        setHasCustomEdits(true);
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 text-xs font-bold border border-slate-200 active:scale-95 transition-all"
+                    title="Limpar tudo para começar do zero"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Limpar Tudo</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setContent([...pairs, { left: '', right: '' }]);
+                    setHasCustomEdits(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Adicionar Par</span>
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-3 max-h-[440px] overflow-y-auto pr-1">
-              {pairs.map((item, idx) => (
-                <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-3 items-center shadow-xs">
-                  <div className="sm:col-span-5">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">Item Esquerda:</label>
-                    <input
-                      type="text"
-                      value={item.left}
-                      placeholder="Ex: Óculos de Proteção"
-                      onChange={(e) => {
-                        const copy = [...pairs];
-                        copy[idx].left = e.target.value;
-                        setContent(copy);
-                      }}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-bold focus:outline-none focus:border-red-500"
-                    />
-                  </div>
-                  <div className="sm:col-span-6">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">Par Correspondente (Direita):</label>
-                    <input
-                      type="text"
-                      value={item.right}
-                      placeholder="Ex: Proteção contra fagulhas"
-                      onChange={(e) => {
-                        const copy = [...pairs];
-                        copy[idx].right = e.target.value;
-                        setContent(copy);
-                      }}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-bold focus:outline-none focus:border-red-500"
-                    />
-                  </div>
-                  <div className="sm:col-span-1 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        sound.playClick();
-                        setContent(pairs.filter((_, i) => i !== idx));
-                      }}
-                      className="p-2 rounded-xl text-rose-600 hover:bg-rose-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+            {pairs.length === 0 ? (
+              <div className="p-8 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                <p className="text-xs text-slate-500 mb-3">Nenhum par cadastrado ainda.</p>
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setContent(getStarterContentForGame(game.id));
+                      setHasCustomEdits(false);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-slate-300 shadow-xs flex items-center gap-1.5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Restaurar Exemplos</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setContent([{ left: 'Ruído', right: 'Protetor Auricular' }]);
+                      setHasCustomEdits(true);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase shadow-xs flex items-center gap-1.5"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Adicionar em Branco</span>
+                  </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[440px] overflow-y-auto pr-1">
+                {pairs.map((item, idx) => (
+                  <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-3 items-center shadow-xs">
+                    <div className="sm:col-span-5">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">Item Esquerda:</label>
+                      <input
+                        type="text"
+                        value={item.left}
+                        placeholder="Ex: Óculos de Proteção"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setContent(pairs.map((it, i) => i === idx ? { ...it, left: val } : it));
+                          setHasCustomEdits(true);
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-bold focus:outline-none focus:border-red-500"
+                      />
+                    </div>
+                    <div className="sm:col-span-6">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-1">Par Correspondente (Direita):</label>
+                      <input
+                        type="text"
+                        value={item.right}
+                        placeholder="Ex: Proteção contra fagulhas"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setContent(pairs.map((it, i) => i === idx ? { ...it, right: val } : it));
+                          setHasCustomEdits(true);
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-bold focus:outline-none focus:border-red-500"
+                      />
+                    </div>
+                    <div className="sm:col-span-1 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setContent(pairs.filter((_, i) => i !== idx));
+                          setHasCustomEdits(true);
+                        }}
+                        className="p-2 rounded-xl text-rose-600 hover:bg-rose-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       }
@@ -1011,77 +1301,130 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                   Edite os prêmios, pontuações e cores das fatias.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  sound.playClick();
-                  setContent([...items, { label: 'Novo Prêmio', score: 300, color: '#DC2626' }]);
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Adicionar Fatia</span>
-              </button>
-            </div>
-
-            <div className="space-y-2.5 max-h-[440px] overflow-y-auto pr-1">
-              {items.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 shadow-xs">
-                  <div className="flex-1">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Nome do Prêmio</label>
-                    <input
-                      type="text"
-                      value={item.label}
-                      onChange={(e) => {
-                        const copy = [...items];
-                        copy[idx].label = e.target.value;
-                        setContent(copy);
-                      }}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-bold focus:outline-none focus:border-red-500"
-                    />
-                  </div>
-
-                  <div className="w-24">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Pontos</label>
-                    <input
-                      type="number"
-                      value={item.score}
-                      onChange={(e) => {
-                        const copy = [...items];
-                        copy[idx].score = Number(e.target.value);
-                        setContent(copy);
-                      }}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-red-600 font-bold focus:outline-none focus:border-red-500"
-                    />
-                  </div>
-
-                  <div className="w-16">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Cor</label>
-                    <input
-                      type="color"
-                      value={item.color}
-                      onChange={(e) => {
-                        const copy = [...items];
-                        copy[idx].color = e.target.value;
-                        setContent(copy);
-                      }}
-                      className="w-full h-9 bg-transparent border-0 cursor-pointer rounded-lg"
-                    />
-                  </div>
-
+              <div className="flex items-center gap-2">
+                {items.length > 0 && (
                   <button
                     type="button"
                     onClick={() => {
                       sound.playClick();
-                      setContent(items.filter((_, i) => i !== idx));
+                      if (window.confirm('Deseja limpar todas as fatias da roleta?')) {
+                        setContent([]);
+                        setHasCustomEdits(true);
+                      }
                     }}
-                    className="p-2 rounded-xl text-rose-600 hover:bg-rose-50 mt-4"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 text-xs font-bold border border-slate-200 active:scale-95 transition-all"
+                    title="Limpar tudo para começar do zero"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Limpar Tudo</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setContent([...items, { label: 'Novo Prêmio', score: 300, color: '#DC2626' }]);
+                    setHasCustomEdits(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Adicionar Fatia</span>
+                </button>
+              </div>
+            </div>
+
+            {items.length === 0 ? (
+              <div className="p-8 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                <p className="text-xs text-slate-500 mb-3">Nenhuma fatia cadastrada ainda.</p>
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setContent(getStarterContentForGame(game.id));
+                      setHasCustomEdits(false);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-slate-300 shadow-xs flex items-center gap-1.5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Restaurar Exemplos</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setContent([{ label: 'Brinde Especial', score: 500, color: '#EF4444' }]);
+                      setHasCustomEdits(true);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase shadow-xs flex items-center gap-1.5"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Adicionar em Branco</span>
                   </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <div className="space-y-2.5 max-h-[440px] overflow-y-auto pr-1">
+                {items.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 shadow-xs">
+                    <div className="flex-1">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Nome do Prêmio</label>
+                      <input
+                        type="text"
+                        value={item.label}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setContent(items.map((it, i) => i === idx ? { ...it, label: val } : it));
+                          setHasCustomEdits(true);
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-bold focus:outline-none focus:border-red-500"
+                      />
+                    </div>
+
+                    <div className="w-24">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Pontos</label>
+                      <input
+                        type="number"
+                        value={item.score}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setContent(items.map((it, i) => i === idx ? { ...it, score: val } : it));
+                          setHasCustomEdits(true);
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-red-600 font-bold focus:outline-none focus:border-red-500"
+                      />
+                    </div>
+
+                    <div className="w-16">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Cor</label>
+                      <input
+                        type="color"
+                        value={item.color}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setContent(items.map((it, i) => i === idx ? { ...it, color: val } : it));
+                          setHasCustomEdits(true);
+                        }}
+                        className="w-full h-9 bg-transparent border-0 cursor-pointer rounded-lg"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setContent(items.filter((_, i) => i !== idx));
+                        setHasCustomEdits(true);
+                      }}
+                      className="p-2 rounded-xl text-rose-600 hover:bg-rose-50 mt-4"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       }
@@ -1100,61 +1443,114 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                   Defina o ícone/emoji e o nome de cada par de cartas.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  sound.playClick();
-                  setContent([...pairs, { symbol: '🛡️', label: 'Segurança' }]);
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Adicionar Par</span>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[440px] overflow-y-auto pr-1">
-              {pairs.map((item, idx) => (
-                <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-3 shadow-xs">
-                  <div className="w-16">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Emoji</label>
-                    <input
-                      type="text"
-                      value={item.symbol}
-                      onChange={(e) => {
-                        const copy = [...pairs];
-                        copy[idx].symbol = e.target.value;
-                        setContent(copy);
-                      }}
-                      className="w-full text-center py-1.5 bg-white border border-slate-300 rounded-xl text-base focus:outline-none"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Nome da Carta</label>
-                    <input
-                      type="text"
-                      value={item.label}
-                      onChange={(e) => {
-                        const copy = [...pairs];
-                        copy[idx].label = e.target.value;
-                        setContent(copy);
-                      }}
-                      className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-red-500"
-                    />
-                  </div>
+              <div className="flex items-center gap-2">
+                {pairs.length > 0 && (
                   <button
                     type="button"
                     onClick={() => {
                       sound.playClick();
-                      setContent(pairs.filter((_, i) => i !== idx));
+                      if (window.confirm('Deseja limpar todas as cartas da lista?')) {
+                        setContent([]);
+                        setHasCustomEdits(true);
+                      }
                     }}
-                    className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl mt-3"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 text-xs font-bold border border-slate-200 active:scale-95 transition-all"
+                    title="Limpar tudo para começar do zero"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Limpar Tudo</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setContent([...pairs, { symbol: '🛡️', label: 'Segurança' }]);
+                    setHasCustomEdits(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Adicionar Par</span>
+                </button>
+              </div>
+            </div>
+
+            {pairs.length === 0 ? (
+              <div className="p-8 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                <p className="text-xs text-slate-500 mb-3">Nenhum par de cartas cadastrado ainda.</p>
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setContent(getStarterContentForGame(game.id));
+                      setHasCustomEdits(false);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-slate-300 shadow-xs flex items-center gap-1.5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Restaurar Exemplos</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setContent([{ symbol: '⚡', label: 'Energia' }]);
+                      setHasCustomEdits(true);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase shadow-xs flex items-center gap-1.5"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Adicionar em Branco</span>
                   </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[440px] overflow-y-auto pr-1">
+                {pairs.map((item, idx) => (
+                  <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-3 shadow-xs">
+                    <div className="w-16">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Emoji</label>
+                      <input
+                        type="text"
+                        value={item.symbol}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setContent(pairs.map((it, i) => i === idx ? { ...it, symbol: val } : it));
+                          setHasCustomEdits(true);
+                        }}
+                        className="w-full text-center py-1.5 bg-white border border-slate-300 rounded-xl text-base focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Nome da Carta</label>
+                      <input
+                        type="text"
+                        value={item.label}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setContent(pairs.map((it, i) => i === idx ? { ...it, label: val } : it));
+                          setHasCustomEdits(true);
+                        }}
+                        className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-red-500"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setContent(pairs.filter((_, i) => i !== idx));
+                        setHasCustomEdits(true);
+                      }}
+                      className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl mt-3"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       }
@@ -2499,6 +2895,48 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </div>
+
+              {/* Import Mode Selector */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+                <div>
+                  <span className="text-xs font-black text-slate-800 uppercase tracking-wide">
+                    Modo de Importação do CSV:
+                  </span>
+                  <p className="text-[11px] text-slate-500">
+                    Escolha se o CSV deve substituir os registros atuais ou somar à lista existente.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setCsvImportMode('replace');
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                      csvImportMode === 'replace'
+                        ? 'bg-red-600 text-white border-red-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                    }`}
+                  >
+                    Substituir Tudo (Recomendado)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setCsvImportMode('append');
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                      csvImportMode === 'append'
+                        ? 'bg-red-600 text-white border-red-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                    }`}
+                  >
+                    Acrescentar ao Existente
+                  </button>
                 </div>
               </div>
 

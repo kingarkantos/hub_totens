@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { ArrowLeft, Volume2, VolumeX, Trophy, RotateCcw, Keyboard, Sparkles } from 'lucide-react';
+import { ArrowLeft, Volume2, VolumeX, Trophy, RotateCcw, Keyboard, Sparkles, CheckCircle2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '../lib/audio';
 import { TouchVirtualKeyboard } from '../components/TouchVirtualKeyboard';
@@ -18,6 +18,8 @@ interface GameContainerProps {
   rankingEnabled?: boolean;
   onSubmitScore?: (playerName: string) => void;
   customScoreLabel?: string;
+  correctAnswers?: number;
+  totalQuestions?: number;
   themePrimary?: string;
   theme?: ThemeDefinition;
   customBgStyle?: React.CSSProperties;
@@ -41,6 +43,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   rankingEnabled = false,
   onSubmitScore,
   customScoreLabel = 'Pontos',
+  correctAnswers,
+  totalQuestions,
   themePrimary = '#DC2626',
   theme,
   customBgStyle,
@@ -200,12 +204,35 @@ export const GameContainer: React.FC<GameContainerProps> = ({
               Você completou o desafio <strong className={isLightMode ? 'text-slate-900' : 'text-white'}>{title}</strong>.
             </p>
 
-            <div className={`w-full ${isLightMode ? 'bg-slate-50 border-2 border-slate-200' : 'bg-slate-800/95 border-2 border-white/15'} rounded-3xl p-4 sm:p-6 mb-4 sm:mb-6 flex-shrink-0 shadow-inner`}>
+            <div className={`w-full ${isLightMode ? 'bg-slate-50 border-2 border-slate-200' : 'bg-slate-800/95 border-2 border-white/15'} rounded-3xl p-4 sm:p-6 mb-4 sm:mb-5 flex-shrink-0 shadow-inner`}>
               <span className={`text-xs sm:text-sm ${isLightMode ? 'text-slate-500' : 'text-slate-400'} font-black uppercase tracking-widest`}>Pontuação Final</span>
               <div className="text-4xl sm:text-6xl font-black text-amber-500 tracking-tight mt-1 font-mono drop-shadow-sm">
                 {score} <span className={`text-sm sm:text-lg ${isLightMode ? 'text-slate-500' : 'text-slate-400'} font-normal`}>{customScoreLabel}</span>
               </div>
             </div>
+
+            {/* Accuracy / Correct Answers for Question & Trivia Games */}
+            {correctAnswers !== undefined && totalQuestions !== undefined && totalQuestions > 0 && (
+              <div className={`w-full ${isLightMode ? 'bg-emerald-50 border-2 border-emerald-300 text-emerald-950' : 'bg-emerald-950/50 border-2 border-emerald-500/50 text-white'} rounded-3xl p-4 sm:p-5 mb-4 sm:mb-5 flex items-center justify-between shadow-md flex-shrink-0`}>
+                <div className="text-left">
+                  <span className={`text-xs sm:text-sm font-black uppercase tracking-wider ${isLightMode ? 'text-emerald-800' : 'text-emerald-300'} flex items-center gap-1.5`}>
+                    <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
+                    <span>Respostas Corretas</span>
+                  </span>
+                  <p className={`text-[11px] sm:text-xs ${isLightMode ? 'text-emerald-700/80' : 'text-slate-300'} mt-0.5`}>
+                    Aproveitamento total no desafio
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl sm:text-4xl font-black font-mono text-emerald-500 tracking-tight">
+                    {correctAnswers} <span className={`text-sm sm:text-xl ${isLightMode ? 'text-slate-600' : 'text-slate-400'} font-normal`}>de {totalQuestions}</span>
+                  </div>
+                  <span className="text-[11px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 font-mono">
+                    {Math.round((correctAnswers / totalQuestions) * 100)}% de acertos
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Ranking Action - Touch Virtual Keyboard Only */}
             {rankingEnabled && onSubmitScore && !scoreSubmitted && (

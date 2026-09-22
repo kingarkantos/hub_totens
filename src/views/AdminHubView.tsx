@@ -470,12 +470,25 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({ onNavigateToCampaign
       {/* Modals */}
       {(showCreateModal || editingCampaign) && (
         <CampaignFormModal
+          key={editingCampaign ? editingCampaign.id : 'new-campaign'}
           campaignToEdit={editingCampaign}
           onClose={() => {
             setShowCreateModal(false);
             setEditingCampaign(null);
           }}
           onSave={handleSaveCampaign}
+          onCampaignUpdated={(campaignId, updatedGamesConfig) => {
+            setCampaigns((prev) =>
+              prev.map((c) =>
+                c.id === campaignId ? { ...c, games_config: updatedGamesConfig } : c
+              )
+            );
+            setEditingCampaign((prev) =>
+              prev && prev.id === campaignId
+                ? { ...prev, games_config: updatedGamesConfig }
+                : prev
+            );
+          }}
         />
       )}
 

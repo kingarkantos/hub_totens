@@ -79,6 +79,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({
 
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
   const [timeLeft, setTimeLeft] = useState(questionSeconds);
   const [totalTimeLeft, setTotalTimeLeft] = useState(totalTimeLimit || 0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -156,6 +157,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({
     const isCorrect = shuffledOptions[idx]?.isCorrect;
     if (isCorrect) {
       sound.playSuccess();
+      setCorrectCount((c) => c + 1);
       const points = isUnlimitedTime ? 100 : 100 + timeLeft * 10;
       setScore((s) => s + points);
     } else {
@@ -182,6 +184,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({
     }
     setCurrentIdx(0);
     setScore(0);
+    setCorrectCount(0);
     setTimeLeft(questionSeconds);
     if (hasTotalTime) setTotalTimeLeft(totalTimeLimit || 0);
     setSelectedOption(null);
@@ -202,6 +205,8 @@ export const QuizGame: React.FC<QuizGameProps> = ({
       title="Quiz da Marca"
       category="Conhecimento"
       score={score}
+      correctAnswers={correctCount}
+      totalQuestions={questions.length}
       timeRemaining={activeTimeDisplay}
       gameOver={gameOver}
       onRestart={restart}

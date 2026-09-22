@@ -57,6 +57,7 @@ export const SpeedTriviaGame: React.FC<SpeedTriviaGameProps> = ({
 
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
   const [streak, setStreak] = useState(0);
   const [questionTime, setQuestionTime] = useState(QUESTION_TIME_LIMIT);
   const [selectedOpt, setSelectedOpt] = useState<number | null>(null);
@@ -93,6 +94,7 @@ export const SpeedTriviaGame: React.FC<SpeedTriviaGameProps> = ({
     const isCorrect = optionIdx === activeQ.correct;
     if (isCorrect) {
       sound.playSuccess();
+      setCorrectCount((prev) => prev + 1);
       const speedBonus = questionTime * 40;
       const streakBonus = streak * 60;
       const earned = 250 + speedBonus + streakBonus;
@@ -124,12 +126,15 @@ export const SpeedTriviaGame: React.FC<SpeedTriviaGameProps> = ({
       title="Trivia Rápida"
       category="Agilidade"
       score={score}
+      correctAnswers={correctCount}
+      totalQuestions={questions.length}
       timeRemaining={questionTime}
       gameOver={gameOver}
       gameWon={gameWon}
       onRestart={() => {
         setCurrentIdx(0);
         setScore(0);
+        setCorrectCount(0);
         setStreak(0);
         setQuestionTime(QUESTION_TIME_LIMIT);
         setSelectedOpt(null);

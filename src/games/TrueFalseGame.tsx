@@ -70,6 +70,7 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
 
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
   const [streak, setStreak] = useState(0);
   const [timeLeft, setTimeLeft] = useState(questionSeconds);
   const [totalTimeLeft, setTotalTimeLeft] = useState(totalTimeLimit || 0);
@@ -121,6 +122,7 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
     const isCorrect = answer === currentItem.isTrue;
     if (isCorrect) {
       sound.playSuccess();
+      setCorrectCount((prev) => prev + 1);
       const comboBonus = streak * 50;
       const timeBonus = !isUnlimitedQuestionTime && timeLeft > 0 ? timeLeft * 10 : 0;
       const points = 200 + comboBonus + timeBonus;
@@ -149,6 +151,7 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
   const restart = () => {
     setCurrentIdx(0);
     setScore(0);
+    setCorrectCount(0);
     setStreak(0);
     setTimeLeft(questionSeconds);
     if (hasTotalTime) setTotalTimeLeft(totalTimeLimit || 0);
@@ -172,6 +175,8 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
       title="Verdadeiro ou Falso"
       category="Julgamento"
       score={score}
+      correctAnswers={correctCount}
+      totalQuestions={statements.length}
       timeRemaining={activeTimeDisplay}
       gameOver={gameOver}
       gameWon={gameWon}
