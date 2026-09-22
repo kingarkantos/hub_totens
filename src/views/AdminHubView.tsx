@@ -191,10 +191,6 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({ onNavigateToCampaign
               Acessar Painel Principal
             </button>
           </form>
-
-          <div className="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">
-            Senha padrão: <strong className="text-slate-700 font-mono">24658011</strong> (alterável no painel)
-          </div>
         </div>
       </div>
     );
