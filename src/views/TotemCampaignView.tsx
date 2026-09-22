@@ -375,11 +375,40 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white drop-shadow-2xl max-w-3xl leading-tight">
               {campaign.name}
             </h1>
-            {campaign.description && (
-              <p className="text-sm sm:text-lg text-slate-300 mt-4 max-w-xl font-medium drop-shadow leading-relaxed">
-                {campaign.description}
-              </p>
-            )}
+            {campaign.description && (() => {
+              const descAlign = campaign.games_config?.description_align || 'left';
+              const descSize = campaign.games_config?.description_size || 'md';
+
+              const alignClass = descAlign === 'center'
+                ? 'text-center'
+                : descAlign === 'right'
+                ? 'text-right'
+                : descAlign === 'justify'
+                ? 'text-justify'
+                : 'text-left';
+
+              const sizeClass = descSize === 'sm'
+                ? 'text-xs sm:text-sm'
+                : descSize === 'lg'
+                ? 'text-base sm:text-lg'
+                : 'text-sm sm:text-base';
+
+              const hasMultipleLines = campaign.description.includes('\n') || campaign.description.length > 120;
+
+              if (hasMultipleLines) {
+                return (
+                  <div className={`mt-4 w-full max-w-2xl sm:max-w-3xl max-h-[35vh] sm:max-h-[42vh] overflow-y-auto px-6 py-5 rounded-3xl bg-black/50 backdrop-blur-xl border border-white/20 shadow-2xl text-slate-200 font-medium leading-relaxed whitespace-pre-line no-scrollbar ${alignClass} ${sizeClass}`}>
+                    {campaign.description}
+                  </div>
+                );
+              }
+
+              return (
+                <p className={`mt-4 max-w-2xl font-medium drop-shadow leading-relaxed whitespace-pre-line text-slate-300 ${alignClass} ${sizeClass}`}>
+                  {campaign.description}
+                </p>
+              );
+            })()}
           </div>
 
           {/* Central Interactive Touch CTA */}

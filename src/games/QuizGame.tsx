@@ -269,6 +269,18 @@ export const QuizGame: React.FC<QuizGameProps> = ({
           >
             Selecione a resposta correta:
           </span>
+
+          {/* Question Image (if provided) */}
+          {(currentQ.imageUrl || currentQ.image_url) && (
+            <div className="w-full max-h-48 sm:max-h-64 rounded-2xl overflow-hidden mb-4 border border-white/20 bg-black/20 flex items-center justify-center shadow-md">
+              <img
+                src={currentQ.imageUrl || currentQ.image_url}
+                alt="Imagem da Pergunta"
+                className="max-h-48 sm:max-h-64 w-auto object-contain rounded-xl"
+              />
+            </div>
+          )}
+
           <h3 className={`text-xl sm:text-3xl md:text-4xl font-black leading-snug sm:leading-normal tracking-tight ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
             {currentQ.question}
           </h3>

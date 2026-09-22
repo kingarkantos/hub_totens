@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw } from 'lucide-react';
+import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { supabase, BUCKETS } from '../lib/supabase';
 import { GameDefinition } from '../types';
 import {
   GAME_CONTENT_SCHEMAS,
@@ -298,6 +299,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
 
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [uploadingImgIdx, setUploadingImgIdx] = useState<number | null>(null);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiCustomPrompt, setAiCustomPrompt] = useState('');
 
@@ -771,6 +773,129 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                         }}
                         className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-bold focus:outline-none focus:border-red-500"
                       />
+                    </div>
+
+                    {/* Question Image Attachment */}
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 space-y-2">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700">
+                          <ImageIcon className="w-3.5 h-3.5 text-blue-600" />
+                          <span>Imagem Ilustrativa da Pergunta (Opcional)</span>
+                        </div>
+                        {(q.imageUrl || q.image_url) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              sound.playClick();
+                              setContent(questions.map((it, i) => i === qIdx ? { ...it, imageUrl: undefined, image_url: undefined } : it));
+                              setHasCustomEdits(true);
+                            }}
+                            className="text-[10px] text-rose-600 hover:text-rose-700 font-bold flex items-center gap-1 hover:underline"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            <span>Remover Imagem</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {(q.imageUrl || q.image_url) ? (
+                        <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-lg border border-slate-200">
+                          <img
+                            src={q.imageUrl || q.image_url}
+                            alt="Preview da Pergunta"
+                            className="w-16 h-12 object-contain rounded-md border border-slate-300 bg-white"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <span className="text-[10px] font-mono text-slate-600 truncate block">
+                              {q.imageUrl || q.image_url}
+                            </span>
+                            <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1 mt-0.5">
+                              <Check className="w-3 h-3 stroke-[3]" /> Imagem anexada com sucesso
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col sm:flex-row items-center gap-2">
+                          <label className="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer flex items-center justify-center gap-1.5 border border-slate-200 active:scale-95 transition-all flex-shrink-0">
+                            <input
+                              type="file"
+                              accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                              className="hidden"
+                              disabled={uploadingImgIdx === qIdx}
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                setUploadingImgIdx(qIdx);
+                                sound.playClick();
+                                try {
+                                  const fileExt = file.name.split('.').pop() || 'jpg';
+                                  const fileName = `quiz_${Date.now()}_${Math.random().toString(36).substring(2, 6)}.${fileExt}`;
+                                  const filePath = `quiz_images/${fileName}`;
+
+                                  const { error } = await supabase.storage
+                                    .from(BUCKETS.SPLASHES)
+                                    .upload(filePath, file, { contentType: file.type || 'image/jpeg', upsert: true });
+
+                                  if (error) {
+                                    const reader = new FileReader();
+                                    reader.onload = () => {
+                                      const base64Url = reader.result as string;
+                                      setContent(questions.map((it, i) => i === qIdx ? { ...it, imageUrl: base64Url } : it));
+                                      setHasCustomEdits(true);
+                                      sound.playSuccess();
+                                    };
+                                    reader.readAsDataURL(file);
+                                  } else {
+                                    const { data: publicUrlData } = supabase.storage
+                                      .from(BUCKETS.SPLASHES)
+                                      .getPublicUrl(filePath);
+                                    const url = publicUrlData?.publicUrl || '';
+                                    setContent(questions.map((it, i) => i === qIdx ? { ...it, imageUrl: url } : it));
+                                    setHasCustomEdits(true);
+                                    sound.playSuccess();
+                                  }
+                                } catch (err) {
+                                  const reader = new FileReader();
+                                  reader.onload = () => {
+                                    const base64Url = reader.result as string;
+                                    setContent(questions.map((it, i) => i === qIdx ? { ...it, imageUrl: base64Url } : it));
+                                    setHasCustomEdits(true);
+                                    sound.playSuccess();
+                                  };
+                                  reader.readAsDataURL(file);
+                                } finally {
+                                  setUploadingImgIdx(null);
+                                }
+                              }}
+                            />
+                            {uploadingImgIdx === qIdx ? (
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                                <span>Enviando...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="w-3.5 h-3.5 text-blue-600" />
+                                <span>Subir Imagem</span>
+                              </>
+                            )}
+                          </label>
+
+                          <div className="w-full sm:flex-1 flex items-center">
+                            <input
+                              type="url"
+                              placeholder="Ou cole o link direto da imagem (https://...)"
+                              value={q.imageUrl || q.image_url || ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setContent(questions.map((it, i) => i === qIdx ? { ...it, imageUrl: val } : it));
+                                setHasCustomEdits(true);
+                              }}
+                              className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-1.5">

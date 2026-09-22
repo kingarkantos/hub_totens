@@ -156,10 +156,13 @@ export function parseGameCSV(gameId: string, csvText: string): any {
         else if (correctRaw === optC.toUpperCase()) correctIdx = 2;
         else if (correctRaw === optD.toUpperCase()) correctIdx = 3;
 
+        const imageUrl = getVal(r, ['image_url', 'imagem', 'image', 'foto', 'url_imagem'], 6);
+
         return {
           question,
           options: [optA, optB, optC, optD],
           correct: correctIdx,
+          imageUrl: imageUrl || undefined,
         };
       });
 

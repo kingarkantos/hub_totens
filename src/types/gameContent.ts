@@ -10,6 +10,8 @@ export interface QuizQuestionItem {
   question: string;
   options: [string, string, string, string];
   correct: number; // 0 to 3
+  imageUrl?: string;
+  image_url?: string;
 }
 
 export interface TargetCustomItem {
@@ -170,13 +172,14 @@ Chaveiro Turbo,250,#EA580C`,
       { name: 'option_c', description: 'Alternativa C', example: 'Veículos sem revisão' },
       { name: 'option_d', description: 'Alternativa D', example: 'Motores a vapor' },
       { name: 'correct_option', description: 'Letra da alternativa correta (A, B, C ou D)', example: 'A' },
+      { name: 'image_url', description: 'URL da imagem da pergunta (opcional)', example: 'https://exemplo.com/foto.jpg' },
     ],
-    sampleCsv: `question,option_a,option_b,option_c,option_d,correct_option
-Qual o compromisso pioneiro da marca para o futuro?,Eletrificação e Zero Emissões,Mais consumo de combustível,Veículos sem garantia,Motores a vapor,A
-O que o sistema de assistência à condução proporciona?,Menor visibilidade,Máxima segurança e frenagem autônoma,Aumento de ruído,Desativação dos freios,B
-Qual a principal vantagem da motorização híbrida avançada?,Maior emissão de poluentes,Eficiência energética e torque instantâneo,Tanque menor sem autonomia,Perda de potência,B
-Qual o atributo mais reconhecido e elogiado pelos clientes?,Durabilidade e alto valor de revenda,Peças descartáveis,Falta de revisões,Pneus sem aderência,A
-No painel digital touchscreen o que você pode conectar?,Somente fita cassete,Apple CarPlay e Android Auto sem fio,Disquete de computador,Rádio analógico apenas,B`,
+    sampleCsv: `question,option_a,option_b,option_c,option_d,correct_option,image_url
+Qual o compromisso pioneiro da marca para o futuro?,Eletrificação e Zero Emissões,Mais consumo de combustível,Veículos sem garantia,Motores a vapor,A,
+O que o sistema de assistência à condução proporciona?,Menor visibilidade,Máxima segurança e frenagem autônoma,Aumento de ruído,Desativação dos freios,B,
+Qual a principal vantagem da motorização híbrida avançada?,Maior emissão de poluentes,Eficiência energética e torque instantâneo,Tanque menor sem autonomia,Perda de potência,B,
+Qual o atributo mais reconhecido e elogiado pelos clientes?,Durabilidade e alto valor de revenda,Peças descartáveis,Falta de revisões,Pneus sem aderência,A,
+No painel digital touchscreen o que você pode conectar?,Somente fita cassete,Apple CarPlay e Android Auto sem fio,Disquete de computador,Rádio analógico apenas,B,`,
   },
 
   target: {

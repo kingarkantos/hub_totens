@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw, Shuffle, Clock } from 'lucide-react';
+import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw, Shuffle, Clock, AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, List } from 'lucide-react';
 import { Campaign, GameDefinition, ThemeId, CustomColorsConfig } from '../types';
 import { THEME_LIST, THEMES } from '../lib/themes';
 import { GAMES_CATALOG, GAME_CATEGORIES } from '../lib/gamesCatalog';
@@ -73,6 +73,12 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
     campaignToEdit?.games_config?.order_mode || 'random'
   );
   const [gameCategoryFilter, setGameCategoryFilter] = useState<string>('all');
+  const [descriptionAlign, setDescriptionAlign] = useState<'left' | 'center' | 'right' | 'justify'>(
+    campaignToEdit?.games_config?.description_align || 'left'
+  );
+  const [descriptionSize, setDescriptionSize] = useState<'sm' | 'md' | 'lg'>(
+    campaignToEdit?.games_config?.description_size || 'md'
+  );
 
   const initialCustomColors: CustomColorsConfig = campaignToEdit?.games_config?.custom_colors || {
     enabled: false,
@@ -222,6 +228,8 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           ...gamesConfig,
           theme_mode: themeMode,
           order_mode: orderMode,
+          description_align: descriptionAlign,
+          description_size: descriptionSize,
           custom_colors: {
             ...customColors,
             bgType: customColors.enabled ? customColors.bgType : (themeMode === 'light' ? 'light' : 'dark'),
@@ -323,17 +331,151 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                   </p>
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                    Descrição ou Regras da Ativação (Opcional)
-                  </label>
+                <div className="md:col-span-2 space-y-2">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <label className="block text-xs font-bold text-slate-700 uppercase">
+                      Descrição ou Regras da Ativação (Opcional)
+                    </label>
+
+                    {/* Simple Formatting Toolbar */}
+                    <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 flex-wrap">
+                      {/* Alignment Options */}
+                      <div className="flex items-center bg-white rounded-lg p-0.5 border border-slate-200 shadow-2xs">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sound.playClick();
+                            setDescriptionAlign('left');
+                          }}
+                          className={`p-1.5 rounded-md transition-all ${
+                            descriptionAlign === 'left' ? 'bg-red-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                          }`}
+                          title="Alinhar à Esquerda"
+                        >
+                          <AlignLeft className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sound.playClick();
+                            setDescriptionAlign('center');
+                          }}
+                          className={`p-1.5 rounded-md transition-all ${
+                            descriptionAlign === 'center' ? 'bg-red-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                          }`}
+                          title="Centralizar Texto"
+                        >
+                          <AlignCenter className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sound.playClick();
+                            setDescriptionAlign('justify');
+                          }}
+                          className={`p-1.5 rounded-md transition-all ${
+                            descriptionAlign === 'justify' ? 'bg-red-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                          }`}
+                          title="Justificar Texto"
+                        >
+                          <AlignJustify className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sound.playClick();
+                            setDescriptionAlign('right');
+                          }}
+                          className={`p-1.5 rounded-md transition-all ${
+                            descriptionAlign === 'right' ? 'bg-red-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                          }`}
+                          title="Alinhar à Direita"
+                        >
+                          <AlignRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <span className="w-px h-4 bg-slate-300 mx-0.5" />
+
+                      {/* Text Style Helpers */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setDescription((prev) => prev ? `${prev}\n- ` : '- ');
+                        }}
+                        className="px-2 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-red-600 text-[11px] font-bold flex items-center gap-1 shadow-2xs active:scale-95"
+                        title="Inserir item de lista com marcador (- item)"
+                      >
+                        <List className="w-3.5 h-3.5 text-red-600" />
+                        <span>Lista (- )</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setDescription((prev) => prev ? `${prev} **Destaque** ` : '**Destaque** ');
+                        }}
+                        className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-red-600 text-xs font-black shadow-2xs active:scale-95"
+                        title="Inserir Negrito (**texto**)"
+                      >
+                        <Bold className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setDescription((prev) => prev ? `${prev} *Itálico* ` : '*Itálico* ');
+                        }}
+                        className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-red-600 text-xs font-black shadow-2xs active:scale-95"
+                        title="Inserir Itálico (*texto*)"
+                      >
+                        <Italic className="w-3.5 h-3.5" />
+                      </button>
+
+                      <span className="w-px h-4 bg-slate-300 mx-0.5" />
+
+                      {/* Font Size Selector */}
+                      <div className="flex items-center gap-1 text-[10px] font-bold">
+                        <span className="text-slate-400 uppercase text-[9px] mr-0.5">Tam:</span>
+                        {(['sm', 'md', 'lg'] as const).map((sz) => (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => {
+                              sound.playClick();
+                              setDescriptionSize(sz);
+                            }}
+                            className={`px-1.5 py-0.5 rounded-md transition-all ${
+                              descriptionSize === sz
+                                ? 'bg-red-600 text-white font-black'
+                                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            {sz === 'sm' ? 'P' : sz === 'md' ? 'M' : 'G'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
                   <textarea
-                    rows={2}
-                    placeholder="Ex: Ativação interativa de estande no Salão do Automóvel..."
+                    rows={6}
+                    placeholder="Ex: Ativação interativa de estande no Salão do Automóvel...&#10;- Regra 1: Toque na tela para iniciar&#10;- Regra 2: Cada acerto pontua no ranking"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500 focus:bg-white text-sm"
+                    style={{
+                      textAlign: descriptionAlign === 'justify' ? 'justify' : descriptionAlign,
+                    }}
+                    className={`w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500 focus:bg-white text-sm font-medium leading-relaxed shadow-inner ${
+                      descriptionAlign === 'center' ? 'text-center' : descriptionAlign === 'right' ? 'text-right' : descriptionAlign === 'justify' ? 'text-justify' : 'text-left'
+                    }`}
                   />
+                  <p className="text-[11px] text-slate-500">
+                    Dica: Quebras de linha e tópicos iniciados com hífen (<code className="bg-slate-200 px-1 py-0.5 rounded text-slate-800">- item</code>) serão preservados exatamente como formatado na tela de início do totem.
+                  </p>
                 </div>
               </div>
             </div>
