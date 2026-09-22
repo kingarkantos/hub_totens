@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Maximize, Minimize, Trophy, Play, Sparkles, ArrowLeft, Volume2, VolumeX, Flame } from 'lucide-react';
+import { Maximize, Minimize, Trophy, Play, Sparkles, ArrowLeft, Volume2, VolumeX, Flame, ShieldAlert, Home } from 'lucide-react';
 import { Campaign, GameDefinition, ThemeDefinition, CustomColorsConfig } from '../types';
 import { supabase, TABLES } from '../lib/supabase';
 import { THEMES } from '../lib/themes';
@@ -51,25 +51,11 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
           .from(TABLES.CAMPAIGNS)
           .select('*')
           .eq('slug', slug)
-          .single();
+          .maybeSingle();
 
-        if (error || !data) {
-          console.warn('Campaign not found in Supabase, using fallback');
-          // Fallback demo
-          setCampaign({
-            id: 'demo-campaign',
-            slug,
-            name: 'Campanha Interativa Totem',
-            client_name: 'Ativação Oficial',
-            description: 'Experimente nossos jogos exclusivos no totem!',
-            splash_image_url: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1920&q=80',
-            theme_id: 'honda-red',
-            selected_games: GAMES_CATALOG.map((g) => g.id),
-            ranking_enabled: true,
-            active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
+        if (error || !data || data.active === false) {
+          // If deleted or inactive, deactivate the link
+          setCampaign(null);
         } else {
           setCampaign(data as Campaign);
         }
@@ -79,13 +65,14 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
           .from(TABLES.SETTINGS)
           .select('value')
           .eq('key', 'idle_timeout_seconds')
-          .single();
+          .maybeSingle();
 
         if (timeoutSetting?.value) {
           setIdleSeconds(Number(timeoutSetting.value) || 90);
         }
       } catch (err) {
         console.error(err);
+        setCampaign(null);
       } finally {
         setLoading(false);
       }
@@ -169,9 +156,39 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
 
   if (!campaign) {
     return (
-      <div className="fixed inset-0 w-full h-full flex flex-col items-center justify-center bg-slate-950 text-white p-6 text-center">
-        <h2 className="text-3xl font-black text-rose-500 mb-2">Campanha Não Encontrada</h2>
-        <p className="text-slate-400">A campanha /{slug} não existe ou está desativada.</p>
+      <div className="fixed inset-0 w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-slate-950 via-slate-900 to-black text-white p-6 text-center select-none overflow-y-auto">
+        <div className="max-w-md sm:max-w-lg w-full bg-slate-900/90 border-2 border-white/15 rounded-[32px] sm:rounded-[40px] p-8 sm:p-12 shadow-2xl backdrop-blur-xl flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-300">
+          {/* Glowing Status Icon */}
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-tr from-amber-500/20 to-rose-500/20 border-2 border-amber-500/40 flex items-center justify-center mb-6 shadow-xl shadow-amber-500/10">
+            <ShieldAlert className="w-10 h-10 sm:w-12 sm:h-12 text-amber-400" />
+          </div>
+
+          <span className="text-[11px] sm:text-xs font-black uppercase tracking-widest px-3.5 py-1 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 mb-3">
+            Link Desativado
+          </span>
+
+          <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight mb-3">
+            Campanha Indisponível
+          </h2>
+
+          <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-6 font-medium">
+            A campanha vinculada ao link <span className="text-amber-400 font-mono font-bold bg-white/10 px-2.5 py-1 rounded-lg">/{slug}</span> não está ativa no momento. Ela pode ter sido encerrada ou excluída pelo administrador.
+          </p>
+
+          <div className="w-full pt-4 border-t border-white/10 flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                sound.playClick();
+                window.location.href = '/';
+              }}
+              className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 active:scale-95 text-white font-black text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-lg transition-all"
+            >
+              <Home className="w-5 h-5" />
+              <span>Voltar ao Início</span>
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
