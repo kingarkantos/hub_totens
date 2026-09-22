@@ -184,8 +184,10 @@ export const GameContainer: React.FC<GameContainerProps> = ({
       </header>
 
       {/* Main Game Play Area - Flex and Scroll-Safe */}
-      <main className="relative flex-1 w-full min-h-0 flex flex-col items-center justify-center p-3 sm:p-8 overflow-y-auto no-scrollbar">
-        {children}
+      <main className="relative flex-1 w-full min-h-0 flex flex-col items-center p-2 sm:p-4 md:p-6 overflow-y-auto no-scrollbar">
+        <div className="w-full flex-1 flex flex-col items-center my-auto min-h-min">
+          {children}
+        </div>
       </main>
 
       {/* Game Over / Victory Modal - Enhanced scale for Totem Touch Displays */}
