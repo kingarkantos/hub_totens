@@ -44,6 +44,7 @@ export interface GameDefinition {
   slug: string;
   name: string;
   category: string;
+  categoryId?: string;
   description: string;
   icon: string;
   estimatedTime: string;

@@ -20,6 +20,10 @@ import { ConnectPairsGame } from './ConnectPairsGame';
 import { SpeedTriviaGame } from './SpeedTriviaGame';
 import { SpotErrorGame } from './SpotErrorGame';
 import { MapEpiGame } from './MapEpiGame';
+import { MathBlitzGame } from './MathBlitzGame';
+import { HigherLowerGame } from './HigherLowerGame';
+import { ReactionTimeGame } from './ReactionTimeGame';
+import { BullseyeGame } from './BullseyeGame';
 
 interface GamePreviewModalProps {
   game: GameDefinition | null;
@@ -70,6 +74,14 @@ export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({ game, onClos
         return <SpotErrorGame onExit={onClose} customContent={customContent} />;
       case 'map_epi':
         return <MapEpiGame onExit={onClose} />;
+      case 'math_blitz':
+        return <MathBlitzGame onExit={onClose} customContent={customContent} />;
+      case 'higher_lower':
+        return <HigherLowerGame onExit={onClose} customContent={customContent} />;
+      case 'reaction_time':
+        return <ReactionTimeGame onExit={onClose} customContent={customContent} />;
+      case 'bullseye':
+        return <BullseyeGame onExit={onClose} customContent={customContent} />;
       default:
         return (
           <div className="p-12 text-center text-slate-400">

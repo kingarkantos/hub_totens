@@ -44,6 +44,10 @@ export const getDefaultTimeForGame = (id: string): number => {
     case 'hangman': return 60;
     case 'map_epi': return 60;
     case 'wordsearch': return 90;
+    case 'math_blitz': return 30;
+    case 'higher_lower': return 45;
+    case 'reaction_time': return 30;
+    case 'bullseye': return 40;
     case 'wheel': return 0;
     case 'genius': return 0;
     default: return 30;

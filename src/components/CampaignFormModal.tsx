@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw, Shuffle, Clock } from 'lucide-react';
 import { Campaign, GameDefinition, ThemeId, CustomColorsConfig } from '../types';
 import { THEME_LIST, THEMES } from '../lib/themes';
-import { GAMES_CATALOG } from '../lib/gamesCatalog';
+import { GAMES_CATALOG, GAME_CATEGORIES } from '../lib/gamesCatalog';
 import { GamePreviewModal } from '../games/GamePreviewModal';
 import { GameContentEditorModal, getContentCount } from './GameContentEditorModal';
 import { sound } from '../lib/audio';
@@ -72,6 +72,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
   const [orderMode, setOrderMode] = useState<'random' | 'ordered'>(
     campaignToEdit?.games_config?.order_mode || 'random'
   );
+  const [gameCategoryFilter, setGameCategoryFilter] = useState<string>('all');
 
   const initialCustomColors: CustomColorsConfig = campaignToEdit?.games_config?.custom_colors || {
     enabled: false,
@@ -977,7 +978,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
 
             {/* Interactive Games Catalog Section (Grid with Previews & Content) */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-sm font-bold text-red-600 uppercase tracking-wider">
                   <Play className="w-4 h-4" />
                   <span>4. Lista de Jogos do Totem (Selecione &amp; Alimente Conteúdo)</span>
@@ -1010,9 +1011,99 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                 </div>
               </div>
 
+              {/* Category Filter Pills & Category Quick Action */}
+              <div className="p-3 rounded-2xl bg-slate-100/80 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setGameCategoryFilter('all');
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 ${
+                      gameCategoryFilter === 'all'
+                        ? 'bg-red-600 text-white shadow-xs'
+                        : 'bg-white text-slate-700 hover:bg-slate-200/80 border border-slate-200'
+                    }`}
+                  >
+                    <span>Todos</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                      gameCategoryFilter === 'all' ? 'bg-black/25 text-white' : 'bg-slate-100 text-slate-600'
+                    }`}>
+                      {GAMES_CATALOG.length}
+                    </span>
+                  </button>
+
+                  {GAME_CATEGORIES.map((cat) => {
+                    const isSelected = gameCategoryFilter === cat.id;
+                    const catGames = GAMES_CATALOG.filter((g) => g.categoryId === cat.id || g.category === cat.name);
+                    const count = catGames.length;
+                    const selectedCount = catGames.filter((g) => selectedGames.includes(g.id)).length;
+                    if (count === 0) return null;
+
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setGameCategoryFilter(cat.id);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 ${
+                          isSelected
+                            ? 'bg-red-600 text-white shadow-xs'
+                            : 'bg-white text-slate-700 hover:bg-slate-200/80 border border-slate-200'
+                        }`}
+                      >
+                        <span>{cat.name}</span>
+                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                          isSelected ? 'bg-black/25 text-white' : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {selectedCount}/{count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Category Selection Helper */}
+                {gameCategoryFilter !== 'all' && (() => {
+                  const catGames = GAMES_CATALOG.filter(
+                    (g) => g.categoryId === gameCategoryFilter || g.category === gameCategoryFilter
+                  );
+                  const allCatSelected = catGames.every((g) => selectedGames.includes(g.id));
+
+                  return (
+                    <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-auto border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          if (allCatSelected) {
+                            // Unselect this category
+                            const ids = catGames.map((g) => g.id);
+                            setSelectedGames((prev) => prev.filter((id) => !ids.includes(id)));
+                          } else {
+                            // Select all in this category
+                            const ids = catGames.map((g) => g.id);
+                            setSelectedGames((prev) => Array.from(new Set([...prev, ...ids])));
+                          }
+                        }}
+                        className="px-3 py-1 rounded-lg bg-white border border-slate-300 hover:border-red-400 active:scale-95 text-[11px] font-bold text-slate-700 transition-all flex items-center gap-1.5"
+                      >
+                        <Check className="w-3.5 h-3.5 text-red-600" />
+                        <span>{allCatSelected ? 'Desmarcar Categoria' : 'Marcar Esta Categoria'}</span>
+                      </button>
+                    </div>
+                  );
+                })()}
+              </div>
+
               {/* Games Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-                {GAMES_CATALOG.map((game) => {
+                {GAMES_CATALOG.filter(
+                  (g) => gameCategoryFilter === 'all' || g.categoryId === gameCategoryFilter || g.category === gameCategoryFilter
+                ).map((game) => {
                   const isSelected = selectedGames.includes(game.id);
                   const hasCustomContent = !!gamesConfig[game.id];
 
