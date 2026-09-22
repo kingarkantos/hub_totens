@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Maximize, Minimize, Trophy, Play, Sparkles, ArrowLeft, Volume2, VolumeX, Flame, ShieldAlert, Home } from 'lucide-react';
+import { Maximize, Minimize, Trophy, Play, Sparkles, ArrowLeft, Volume2, VolumeX, Flame, ShieldAlert, Home, ChevronDown } from 'lucide-react';
 import { Campaign, GameDefinition, ThemeDefinition, CustomColorsConfig } from '../types';
 import { supabase, TABLES } from '../lib/supabase';
 import { THEMES } from '../lib/themes';
@@ -31,6 +31,104 @@ import { MathBlitzGame } from '../games/MathBlitzGame';
 import { HigherLowerGame } from '../games/HigherLowerGame';
 import { ReactionTimeGame } from '../games/ReactionTimeGame';
 import { BullseyeGame } from '../games/BullseyeGame';
+
+interface ScrollableDescriptionProps {
+  description: string;
+  alignClass: string;
+  sizeClass: string;
+}
+
+const ScrollableDescription: React.FC<ScrollableDescriptionProps> = ({
+  description,
+  alignClass,
+  sizeClass,
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [canScroll, setCanScroll] = useState(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const checkOverflow = () => {
+      const isOverflowing = el.scrollHeight > el.clientHeight + 10;
+      setCanScroll(isOverflowing);
+    };
+
+    checkOverflow();
+
+    const ro = new ResizeObserver(() => {
+      checkOverflow();
+    });
+    ro.observe(el);
+
+    const timer = setTimeout(checkOverflow, 250);
+
+    return () => {
+      ro.disconnect();
+      clearTimeout(timer);
+    };
+  }, [description]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (e.currentTarget.scrollTop > 15) {
+      setHasScrolled(true);
+    }
+  };
+
+  const handleIndicatorClick = () => {
+    if (containerRef.current) {
+      containerRef.current.scrollBy({ top: 140, behavior: 'smooth' });
+      setHasScrolled(true);
+    }
+  };
+
+  return (
+    <div className="relative mt-4 w-full max-w-2xl sm:max-w-3xl">
+      <div
+        ref={containerRef}
+        onScroll={handleScroll}
+        onTouchMove={() => setHasScrolled(true)}
+        onWheel={(e) => {
+          if (e.deltaY > 5) setHasScrolled(true);
+        }}
+        className={`max-h-[35vh] sm:max-h-[42vh] overflow-y-auto px-6 py-5 rounded-3xl bg-black/50 backdrop-blur-xl border border-white/20 shadow-2xl text-slate-200 font-medium leading-relaxed whitespace-pre-line no-scrollbar ${alignClass} ${sizeClass}`}
+      >
+        {description}
+      </div>
+
+      {/* Sombra sutil de fade na borda inferior indicando continuidade */}
+      {canScroll && (
+        <div
+          className={`absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-black/85 via-black/40 to-transparent rounded-b-3xl pointer-events-none transition-opacity duration-300 ${
+            hasScrolled ? 'opacity-0' : 'opacity-100'
+          }`}
+        />
+      )}
+
+      {/* Pill informativo animado para o usuário deslizar */}
+      {canScroll && (
+        <div
+          className={`absolute bottom-2.5 left-1/2 -translate-x-1/2 z-20 transition-all duration-300 ease-out ${
+            hasScrolled
+              ? 'opacity-0 translate-y-3 pointer-events-none'
+              : 'opacity-100 translate-y-0 pointer-events-auto'
+          }`}
+        >
+          <button
+            type="button"
+            onClick={handleIndicatorClick}
+            className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-950/90 hover:bg-black text-white border border-white/30 shadow-2xl backdrop-blur-md text-xs font-semibold tracking-wide cursor-pointer active:scale-95 transition-all select-none group"
+          >
+            <span className="text-slate-200">Deslize para ler mais</span>
+            <ChevronDown className="w-3.5 h-3.5 text-amber-400 group-hover:translate-y-0.5 animate-bounce" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface TotemCampaignViewProps {
   slug: string;
@@ -397,9 +495,11 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
 
               if (hasMultipleLines) {
                 return (
-                  <div className={`mt-4 w-full max-w-2xl sm:max-w-3xl max-h-[35vh] sm:max-h-[42vh] overflow-y-auto px-6 py-5 rounded-3xl bg-black/50 backdrop-blur-xl border border-white/20 shadow-2xl text-slate-200 font-medium leading-relaxed whitespace-pre-line no-scrollbar ${alignClass} ${sizeClass}`}>
-                    {campaign.description}
-                  </div>
+                  <ScrollableDescription
+                    description={campaign.description}
+                    alignClass={alignClass}
+                    sizeClass={sizeClass}
+                  />
                 );
               }
 
