@@ -1,3 +1,5 @@
+import { supabase, BUCKETS } from './supabase';
+
 export interface CampaignAIContext {
   campaignName: string;
   clientName: string;
@@ -234,3 +236,88 @@ IMPORTANTE: Responda ESTRITAMENTE em formato JSON válido, sem comentários, sem
     return JSON.parse(cleaned);
   }
 }
+
+/**
+ * Generates a themed promotional image using AI (Pollinations Flux + Gemini prompt optimization)
+ * Automatically uploads to Supabase Storage for reliable totem kiosk caching.
+ */
+export async function generateImageWithAI(
+  userPrompt: string,
+  context?: Partial<CampaignAIContext>,
+  apiKey: string = DEFAULT_GEMINI_KEY
+): Promise<string> {
+  let visualPrompt = userPrompt;
+
+  // 1. Refine prompt with Gemini if available to maximize image visual quality
+  if (apiKey) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                {
+                  text: `Translate and transform the following description into a concise (max 30 words) English visual prompt for a photo/illustration AI generator:
+"${userPrompt}"
+Brand/Theme: ${context?.clientName || ''} ${context?.campaignName || ''}. Clean, commercial quality, vibrant colors, 4k. Return ONLY the English prompt, no quotes.`,
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 60,
+          },
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const refined = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        if (refined && refined.length > 5) {
+          visualPrompt = refined.replace(/["\n]/g, ' ');
+        }
+      }
+    } catch (e) {
+      console.warn('Gemini prompt enhancement skipped:', e);
+    }
+  }
+
+  // 2. Pollinations AI Flux Generator
+  const encodedPrompt = encodeURIComponent(visualPrompt);
+  const seed = Math.floor(Math.random() * 899999) + 100000;
+  const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=768&nologo=true&seed=${seed}&model=flux`;
+
+  // 3. Persist image to Supabase Storage if possible for permanent kiosk hosting
+  try {
+    const imgResponse = await fetch(pollinationsUrl);
+    if (imgResponse.ok) {
+      const blob = await imgResponse.blob();
+      const fileName = `quiz_ai_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
+      const filePath = `quiz_images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(BUCKETS.SPLASHES)
+        .upload(filePath, blob, { contentType: 'image/jpeg', upsert: true });
+
+      if (!uploadError) {
+        const { data: publicData } = supabase.storage
+          .from(BUCKETS.SPLASHES)
+          .getPublicUrl(filePath);
+
+        if (publicData?.publicUrl) {
+          return publicData.publicUrl;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to upload AI image to Supabase storage, using direct URL:', err);
+  }
+
+  return pollinationsUrl;
+}
+

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw, Image as ImageIcon, Loader2, Wand2 } from 'lucide-react';
 import { supabase, BUCKETS } from '../lib/supabase';
 import { GameDefinition } from '../types';
 import {
@@ -23,7 +23,7 @@ import {
   GeniusPadCustom,
 } from '../types/gameContent';
 import { parseGameCSV, downloadSampleCsv } from '../lib/csvParser';
-import { generateGameContentWithAI, CampaignAIContext } from '../lib/gemini';
+import { generateGameContentWithAI, generateImageWithAI, CampaignAIContext } from '../lib/gemini';
 import { sound } from '../lib/audio';
 
 export const getDefaultTimeForGame = (id: string): number => {
@@ -300,8 +300,46 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [uploadingImgIdx, setUploadingImgIdx] = useState<number | null>(null);
+  const [generatingImgIdx, setGeneratingImgIdx] = useState<number | null>(null);
+  const [activeAiImgModalIdx, setActiveAiImgModalIdx] = useState<number | null>(null);
+  const [aiImgPrompt, setAiImgPrompt] = useState('');
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiCustomPrompt, setAiCustomPrompt] = useState('');
+
+  const handleOpenAIGeneratePrompt = (qIdx: number, defaultPrompt: string) => {
+    sound.playClick();
+    if (activeAiImgModalIdx === qIdx) {
+      setActiveAiImgModalIdx(null);
+    } else {
+      setActiveAiImgModalIdx(qIdx);
+      setAiImgPrompt(defaultPrompt || '');
+    }
+  };
+
+  const handleGenerateImageForQuestion = async (qIdx: number, promptText: string) => {
+    const questionsList = (Array.isArray(content) ? content : []) as QuizQuestionItem[];
+    const finalPrompt = promptText.trim() || questionsList[qIdx]?.question || 'Quiz question illustration';
+    setGeneratingImgIdx(qIdx);
+    setErrorMsg('');
+    sound.playEngineRev();
+
+    try {
+      const generatedUrl = await generateImageWithAI(finalPrompt, campaignContext);
+      if (generatedUrl) {
+        setContent(questionsList.map((it: QuizQuestionItem, i: number) => i === qIdx ? { ...it, imageUrl: generatedUrl, image_url: generatedUrl } : it));
+        setHasCustomEdits(true);
+        setActiveAiImgModalIdx(null);
+        sound.playSuccess();
+        setSuccessMsg(`Imagem gerada com Inteligência Artificial para a Questão ${qIdx + 1}!`);
+      }
+    } catch (err: any) {
+      console.error('Error generating image with AI:', err);
+      sound.playError();
+      setErrorMsg(err.message || 'Erro ao gerar imagem com IA. Tente novamente.');
+    } finally {
+      setGeneratingImgIdx(null);
+    }
+  };
 
   const getDefaultCountForGame = (id: string) => {
     switch (id) {
@@ -799,11 +837,11 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                       </div>
 
                       {(q.imageUrl || q.image_url) ? (
-                        <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-lg border border-slate-200">
+                        <div className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-xl border border-slate-200">
                           <img
                             src={q.imageUrl || q.image_url}
                             alt="Preview da Pergunta"
-                            className="w-16 h-12 object-contain rounded-md border border-slate-300 bg-white"
+                            className="w-16 h-12 object-contain rounded-lg border border-slate-300 bg-white"
                           />
                           <div className="flex-1 min-w-0">
                             <span className="text-[10px] font-mono text-slate-600 truncate block">
@@ -813,6 +851,29 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                               <Check className="w-3 h-3 stroke-[3]" /> Imagem anexada com sucesso
                             </span>
                           </div>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenAIGeneratePrompt(qIdx, q.question)}
+                              className="px-2.5 py-1 text-[11px] font-bold text-purple-700 bg-purple-100 hover:bg-purple-200 rounded-lg flex items-center gap-1 transition-colors"
+                              title="Trocar ou gerar outra imagem com IA"
+                            >
+                              <Sparkles className="w-3 h-3 text-purple-600" />
+                              <span>Regerar com IA</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                sound.playClick();
+                                setContent(questions.map((it, i) => i === qIdx ? { ...it, imageUrl: undefined, image_url: undefined } : it));
+                                setHasCustomEdits(true);
+                              }}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                              title="Remover imagem"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         <div className="flex flex-col sm:flex-row items-center gap-2">
@@ -821,7 +882,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                               type="file"
                               accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
                               className="hidden"
-                              disabled={uploadingImgIdx === qIdx}
+                              disabled={uploadingImgIdx === qIdx || generatingImgIdx === qIdx}
                               onChange={async (e) => {
                                 const file = e.target.files?.[0];
                                 if (!file) return;
@@ -881,10 +942,20 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                             )}
                           </label>
 
+                          <button
+                            type="button"
+                            disabled={generatingImgIdx === qIdx || uploadingImgIdx === qIdx}
+                            onClick={() => handleOpenAIGeneratePrompt(qIdx, q.question)}
+                            className="w-full sm:w-auto px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all flex-shrink-0"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                            <span>Gerar com IA</span>
+                          </button>
+
                           <div className="w-full sm:flex-1 flex items-center">
                             <input
                               type="url"
-                              placeholder="Ou cole o link direto da imagem (https://...)"
+                              placeholder="Ou cole o link direto (https://...)"
                               value={q.imageUrl || q.image_url || ''}
                               onChange={(e) => {
                                 const val = e.target.value;
@@ -894,6 +965,63 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                               className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500"
                             />
                           </div>
+                        </div>
+                      )}
+
+                      {/* Caixa interativa para geração com IA */}
+                      {activeAiImgModalIdx === qIdx && (
+                        <div className="p-3 bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl space-y-2.5 animate-in fade-in zoom-in-95 duration-200 shadow-sm">
+                          <div className="flex items-center justify-between">
+                            <span className="flex items-center gap-1.5 text-xs font-black text-purple-950">
+                              <Sparkles className="w-4 h-4 text-purple-600" />
+                              <span>Gerador de Imagem com Inteligência Artificial</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setActiveAiImgModalIdx(null)}
+                              className="text-xs font-bold text-slate-400 hover:text-slate-600 px-1.5 py-0.5 rounded-md hover:bg-white"
+                            >
+                              ✕ Fechar
+                            </button>
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <input
+                              type="text"
+                              value={aiImgPrompt}
+                              onChange={(e) => setAiImgPrompt(e.target.value)}
+                              placeholder="Descreva a imagem que a IA deve gerar para esta pergunta..."
+                              className="flex-1 px-3 py-2 bg-white border border-purple-300 rounded-xl text-xs text-slate-900 font-medium placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleGenerateImageForQuestion(qIdx, aiImgPrompt);
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              disabled={generatingImgIdx === qIdx}
+                              onClick={() => handleGenerateImageForQuestion(qIdx, aiImgPrompt)}
+                              className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-95 text-white font-black text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md transition-all flex-shrink-0 disabled:opacity-50"
+                            >
+                              {generatingImgIdx === qIdx ? (
+                                <>
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  <span>Gerando com IA...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Wand2 className="w-3.5 h-3.5" />
+                                  <span>Gerar Imagem</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+
+                          <p className="text-[10px] text-purple-700/80 leading-normal">
+                            💡 <strong>Dica:</strong> A IA cria ilustrações e fotos comerciais realistas automaticamente. O enunciado da pergunta já vem pré-preenchido, mas você pode personalizá-lo para refinar detalhes.
+                          </p>
                         </div>
                       )}
                     </div>
