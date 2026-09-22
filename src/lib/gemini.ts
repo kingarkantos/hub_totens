@@ -268,7 +268,7 @@ IMPORTANTE: Responda ESTRITAMENTE em formato JSON válido, sem comentários, sem
 }
 
 /**
- * Generates a themed promotional image using AI (Pollinations Flux + Gemini prompt optimization)
+ * Generates a themed promotional image directly with Google Gemini (gemini-2.5-flash-image)
  * Automatically uploads to Supabase Storage for reliable totem kiosk caching.
  */
 export async function generateImageWithAI(
@@ -277,98 +277,79 @@ export async function generateImageWithAI(
   apiKey?: string
 ): Promise<string> {
   const effectiveKey = await getEffectiveGeminiKey(apiKey);
-  let visualPrompt = '';
-
-  // 1. Refine prompt with Gemini to generate an exact visual commercial scene
-  if (effectiveKey) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${effectiveKey}`;
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [
-                {
-                  text: `You are an expert commercial art director for interactive marketing touch kiosks.
-Transform the following quiz question or topic into a vivid, photorealistic or sleek modern 3D scene description in English for text-to-image AI.
-
-Topic / Question: "${userPrompt}"
-Brand / Client: ${context?.clientName || 'Modern Brand'}
-Campaign: ${context?.campaignName || 'Interactive Quiz'}
-
-STRICT MANDATORY RULES:
-- Focus DIRECTLY and EXCLUSIVELY on the concrete subject matter of the topic (e.g. futuristic eco-friendly vehicle, zero emissions technology, solar/wind clean energy, modern engineering, electric motors, sustainable resources, high-tech digital dashboards).
-- ABSOLUTELY NEVER generate dark fantasy, gothic, emo, anime, horror, or portraits of random people.
-- The image MUST be clean, bright, professional, high-end commercial advertising photography or 3D product render.
-- Output ONLY the final English prompt (maximum 35 words), without quotation marks or explanations.`,
-                },
-              ],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 80,
-          },
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const refined = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-        if (refined && refined.length > 5) {
-          visualPrompt = refined.replace(/["\n]/g, ' ');
-        }
-      }
-    } catch (e) {
-      console.warn('Gemini prompt enhancement error:', e);
-    }
+  if (!effectiveKey) {
+    throw new Error('Chave da API Gemini não configurada. Configure em Configurações do Hub.');
   }
 
-  // Fallback if Gemini key is missing or failed
-  if (!visualPrompt) {
-    const cleanTopic = userPrompt
-      .replace(/^(qual|quais|o que|como|quando|onde|por que|porque|selecione|assinale)\s+(é|são|o|a|os|as|um|uma)?/gi, '')
-      .replace(/[?.,!]/g, '')
-      .trim();
+  // 1. Build high quality commercial prompt for Gemini Image Generator
+  const promptText = `Generate a realistic, high quality, commercial advertising illustration or photography for an interactive totem kiosk quiz question.
+Theme / Subject: "${userPrompt}"
+Brand / Context: ${context?.clientName || 'General'} - ${context?.campaignName || 'Campaign'}
+Style: Bright, pristine, corporate commercial quality, photorealistic or sleek 3D studio render. Clean lighting, 4k. No text, no watermark, no dark or gothic elements.`;
 
-    visualPrompt = `Commercial photograph of ${cleanTopic || 'modern automotive and sustainable technology'}, high quality, ${context?.clientName || 'modern brand'}, clean bright studio lighting, 8k resolution`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${effectiveKey}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [{ text: promptText }],
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Erro ao gerar imagem com Gemini (${response.status}): ${errText}`);
   }
 
-  // 2. Pollinations AI Flux Generator
-  const finalPrompt = `${visualPrompt}, commercial advertising photography, modern sleek aesthetic, high quality, 8k resolution, crisp details, sharp focus, clean lighting`;
-  const encodedPrompt = encodeURIComponent(finalPrompt);
-  const seed = Math.floor(Math.random() * 899999) + 100000;
-  const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=768&nologo=true&seed=${seed}&model=flux`;
+  const data = await response.json();
+  const inlinePart = data.candidates?.[0]?.content?.parts?.find(
+    (p: any) => p.inlineData && p.inlineData.data
+  );
 
-  // 3. Persist image to Supabase Storage if possible for permanent kiosk hosting
+  if (!inlinePart?.inlineData?.data) {
+    throw new Error('O Gemini não retornou dados de imagem para este enunciado.');
+  }
+
+  const mimeType = inlinePart.inlineData.mimeType || 'image/png';
+  const base64Data = inlinePart.inlineData.data;
+  const dataUrl = `data:${mimeType};base64,${base64Data}`;
+
+  // 2. Upload to Supabase Storage for permanent public URL
   try {
-    const imgResponse = await fetch(pollinationsUrl);
-    if (imgResponse.ok) {
-      const blob = await imgResponse.blob();
-      const fileName = `quiz_ai_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
-      const filePath = `quiz_images/${fileName}`;
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: mimeType });
 
-      const { error: uploadError } = await supabase.storage
+    const ext = mimeType.includes('jpeg') || mimeType.includes('jpg') ? 'jpg' : 'png';
+    const fileName = `quiz_gemini_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+    const filePath = `quiz_images/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKETS.SPLASHES)
+      .upload(filePath, blob, { contentType: mimeType, upsert: true });
+
+    if (!uploadError) {
+      const { data: publicData } = supabase.storage
         .from(BUCKETS.SPLASHES)
-        .upload(filePath, blob, { contentType: 'image/jpeg', upsert: true });
+        .getPublicUrl(filePath);
 
-      if (!uploadError) {
-        const { data: publicData } = supabase.storage
-          .from(BUCKETS.SPLASHES)
-          .getPublicUrl(filePath);
-
-        if (publicData?.publicUrl) {
-          return publicData.publicUrl;
-        }
+      if (publicData?.publicUrl) {
+        return publicData.publicUrl;
       }
     }
   } catch (err) {
-    console.warn('Failed to upload AI image to Supabase storage, using direct URL:', err);
+    console.warn('Could not upload image to Supabase, returning data URL:', err);
   }
 
-  return pollinationsUrl;
+  return dataUrl;
 }
 
