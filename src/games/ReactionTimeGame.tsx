@@ -22,6 +22,7 @@ export const ReactionTimeGame: React.FC<ReactionTimeGameProps> = ({
   splashImageUrl,
   isLight,
   themeMode,
+  gameLayout,
 }) => {
   const [stage, setStage] = useState<Stage>('idle');
   const [litCount, setLitCount] = useState(0); // 0 to 5 lights
@@ -170,6 +171,7 @@ export const ReactionTimeGame: React.FC<ReactionTimeGameProps> = ({
       splashImageUrl={splashImageUrl}
       isLight={isLight}
       themeMode={themeMode}
+      gameLayout={gameLayout}
     >
       <div 
         onClick={handleTouch}

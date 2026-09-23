@@ -369,6 +369,7 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
         return (
           <button
             onClick={handleStartPlay}
+            style={{ '--glow-color': 'rgba(245, 158, 11, 0.7)' } as React.CSSProperties}
             className="group relative py-6 px-12 sm:px-16 rounded-3xl bg-gradient-to-b from-amber-300 via-amber-400 to-amber-500 border-4 border-amber-100 text-amber-950 font-black text-2xl sm:text-3xl tracking-wider uppercase shadow-[0_12px_0_#b45309,0_25px_35px_rgba(0,0,0,0.6)] active:translate-y-2 active:shadow-[0_4px_0_#b45309] hover:brightness-105 transition-all flex items-center gap-4 animate-bounce"
           >
             <div className="p-2 rounded-2xl bg-amber-950/15 border border-amber-950/20">
@@ -382,6 +383,7 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
         return (
           <button
             onClick={handleStartPlay}
+            style={{ '--glow-color': 'rgba(34, 211, 238, 0.85)' } as React.CSSProperties}
             className="relative py-6 px-12 sm:px-16 rounded-full bg-slate-950/90 border-2 border-cyan-400 text-cyan-300 font-black text-2xl sm:text-3xl tracking-widest uppercase shadow-[0_0_35px_rgba(34,211,238,0.7),inset_0_0_20px_rgba(34,211,238,0.3)] active:scale-95 transition-all flex items-center gap-4 animate-totem-pulse"
           >
             <Play className="w-8 h-8 fill-cyan-400 text-cyan-400 drop-shadow-[0_0_8px_#22d3ee]" />
@@ -393,7 +395,8 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
         return (
           <button
             onClick={handleStartPlay}
-            className="relative py-6 px-12 sm:px-16 rounded-none bg-black border-4 border-yellow-400 text-yellow-300 font-mono font-black text-2xl sm:text-3xl tracking-widest uppercase shadow-[0_0_25px_#facc15,6px_6px_0px_#ca8a04] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center gap-4"
+            style={{ '--glow-color': 'rgba(250, 204, 21, 0.8)' } as React.CSSProperties}
+            className="relative py-6 px-12 sm:px-16 rounded-none bg-black border-4 border-yellow-400 text-yellow-300 font-mono font-black text-2xl sm:text-3xl tracking-widest uppercase shadow-[0_0_25px_#facc15,6px_6px_0px_#ca8a04] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center gap-4 animate-totem-pulse"
           >
             <Play className="w-8 h-8 fill-yellow-400 text-yellow-400" />
             <span className="tracking-widest">▶ TOQUE PARA JOGAR</span>
@@ -406,8 +409,9 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
             onClick={handleStartPlay}
             style={{
               clipPath: 'polygon(18px 0%, 100% 0%, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0% 100%, 0% 18px)',
-            }}
-            className="relative py-6 px-12 sm:px-16 bg-emerald-950/90 border-2 border-emerald-400 text-emerald-300 font-mono font-black text-2xl sm:text-3xl tracking-widest uppercase shadow-[0_0_30px_rgba(16,185,129,0.6)] active:scale-95 transition-all flex items-center gap-4"
+              '--glow-color': 'rgba(16, 185, 129, 0.8)',
+            } as React.CSSProperties}
+            className="relative py-6 px-12 sm:px-16 bg-emerald-950/90 border-2 border-emerald-400 text-emerald-300 font-mono font-black text-2xl sm:text-3xl tracking-widest uppercase shadow-[0_0_30px_rgba(16,185,129,0.6)] active:scale-95 transition-all flex items-center gap-4 animate-totem-pulse"
           >
             <Play className="w-8 h-8 fill-emerald-400 text-emerald-400" />
             <span>TOQUE PARA JOGAR</span>
@@ -418,7 +422,8 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
         return (
           <button
             onClick={handleStartPlay}
-            className="relative py-6 px-12 sm:px-16 rounded-3xl bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 border-2 border-yellow-100 text-slate-950 font-black text-2xl sm:text-3xl tracking-wider uppercase shadow-[0_0_40px_rgba(245,158,11,0.6),0_15px_30px_rgba(0,0,0,0.5)] active:scale-95 transition-all flex items-center gap-4"
+            style={{ '--glow-color': 'rgba(245, 158, 11, 0.8)' } as React.CSSProperties}
+            className="relative py-6 px-12 sm:px-16 rounded-3xl bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 border-2 border-yellow-100 text-slate-950 font-black text-2xl sm:text-3xl tracking-wider uppercase shadow-[0_0_40px_rgba(245,158,11,0.6),0_15px_30px_rgba(0,0,0,0.5)] active:scale-95 transition-all flex items-center gap-4 animate-totem-pulse"
           >
             <Play className="w-8 h-8 fill-slate-950 text-slate-950" />
             <span className="drop-shadow-xs">TOQUE PARA JOGAR</span>
@@ -429,6 +434,7 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
         return (
           <button
             onClick={handleStartPlay}
+            style={{ '--glow-color': 'rgba(255, 255, 255, 0.6)' } as React.CSSProperties}
             className="relative py-6 px-12 sm:px-16 rounded-3xl backdrop-blur-2xl bg-white/20 border-2 border-white/60 text-white font-black text-2xl sm:text-3xl tracking-wider uppercase shadow-[0_0_40px_rgba(255,255,255,0.3),inset_0_0_20px_rgba(255,255,255,0.2)] active:scale-95 transition-all flex items-center gap-4 animate-totem-pulse"
           >
             <Play className="w-8 h-8 fill-white text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
@@ -442,9 +448,10 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
           <button
             onClick={handleStartPlay}
             style={{
+              '--glow-color': theme.glowColor || theme.primary,
               boxShadow: `0 0 50px ${theme.glowColor}, 0 20px 40px rgba(0,0,0,0.6)`,
               ...customButtonGradientStyle,
-            }}
+            } as React.CSSProperties}
             className={`py-6 px-12 sm:px-16 rounded-3xl ${!isCustomActive ? `bg-gradient-to-r ${theme.buttonGradient}` : ''} text-white font-black text-2xl sm:text-3xl tracking-wider uppercase border-2 border-white/40 active:scale-95 transition-all flex items-center gap-4 animate-totem-pulse`}
           >
             <Play className="w-8 h-8 fill-current" />

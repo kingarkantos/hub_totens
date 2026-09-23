@@ -28,6 +28,9 @@ export const TargetGame: React.FC<TargetGameProps> = ({
   clientName,
   splashImageUrl,
   customContent,
+  isLight,
+  themeMode,
+  gameLayout,
 }) => {
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
@@ -103,6 +106,9 @@ export const TargetGame: React.FC<TargetGameProps> = ({
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       themePrimary={themePrimary}
       theme={theme}
+      isLight={isLight}
+      themeMode={themeMode}
+      gameLayout={gameLayout}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
       clientName={clientName}

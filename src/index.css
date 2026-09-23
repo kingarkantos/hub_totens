@@ -45,11 +45,11 @@
 @keyframes totem-pulse {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 0 20px rgba(220, 38, 38, 0.6);
+    box-shadow: 0 0 20px var(--glow-color, rgba(255, 255, 255, 0.4));
   }
   50% {
-    transform: scale(1.05);
-    box-shadow: 0 0 45px rgba(220, 38, 38, 0.9);
+    transform: scale(1.04);
+    box-shadow: 0 0 45px var(--glow-color, rgba(255, 255, 255, 0.8));
   }
 }
 

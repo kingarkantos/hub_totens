@@ -21,6 +21,7 @@ export const PuzzleGame: React.FC<PuzzleGameProps> = ({
   customContent,
   isLight,
   themeMode,
+  gameLayout,
 }) => {
   const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
   // 3x3 sliding puzzle where 0 is the empty tile
@@ -123,6 +124,7 @@ export const PuzzleGame: React.FC<PuzzleGameProps> = ({
       splashImageUrl={splashImageUrl}
       isLight={isLightMode}
       themeMode={isLightMode ? 'light' : 'dark'}
+      gameLayout={gameLayout}
     >
       <div className="w-full max-w-xl sm:max-w-2xl lg:max-w-3xl flex-1 flex flex-col items-center justify-between py-4 sm:py-8 px-2 sm:px-6 my-auto gap-6 sm:gap-8 select-none animate-in fade-in duration-300">
         <div className={`w-full flex justify-between text-sm sm:text-lg font-black px-5 py-3.5 rounded-2xl border-2 ${

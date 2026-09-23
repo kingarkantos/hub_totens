@@ -58,6 +58,7 @@ export const HigherLowerGame: React.FC<HigherLowerGameProps> = ({
   isLight,
   themeMode,
   totalTimeLimit,
+  gameLayout,
 }) => {
   const initialTime = totalTimeLimit !== undefined && totalTimeLimit > 0 ? totalTimeLimit : 45;
   const [timeLeft, setTimeLeft] = useState(initialTime);
@@ -157,6 +158,7 @@ export const HigherLowerGame: React.FC<HigherLowerGameProps> = ({
       splashImageUrl={splashImageUrl}
       isLight={isLight}
       themeMode={themeMode}
+      gameLayout={gameLayout}
     >
       <div className="relative w-full h-full flex flex-col items-center justify-between p-4 sm:p-8 max-w-4xl mx-auto">
         {/* Top HUD: Lives & Streak */}

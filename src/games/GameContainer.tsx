@@ -115,11 +115,11 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           '--glow-color': theme?.glowColor || themePrimary,
           ...customBgStyle,
         } as React.CSSProperties}
-        className={`fixed inset-0 w-full h-full flex flex-col bg-gradient-to-b ${
+        className={`absolute inset-0 w-full h-full flex flex-col bg-gradient-to-b ${
           theme?.bgGradient || (isLightMode ? 'from-slate-100 via-slate-50 to-slate-200' : 'from-slate-950 via-slate-900 to-black')
         } ${theme?.textColor || (isLightMode ? 'text-slate-900' : 'text-white')} ${theme?.fontClass || ''} select-none overflow-hidden z-40 transition-colors duration-500`}
       >
-        {/* Dynamic Backgrounds According to 5 Layouts */}
+        {/* Dynamic Backgrounds According to Layouts */}
         {currentLayout === 'modern_glass' && (
           <>
             <div
@@ -200,6 +200,44 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           </>
         )}
 
+        {currentLayout === 'pixel_retro' && (
+          <>
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0)_50%,rgba(0,0,0,0.5)_50%)] bg-[length:100%_4px] opacity-40 z-10" />
+            <div className="absolute top-4 left-6 text-yellow-400 font-mono text-xs font-black tracking-widest opacity-40 pointer-events-none">1UP: 009900</div>
+            <div className="absolute top-4 right-6 text-yellow-400 font-mono text-xs font-black tracking-widest opacity-40 pointer-events-none">HIGH: 999990</div>
+            <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-96 h-96 bg-yellow-500/15 rounded-full blur-[120px] pointer-events-none" />
+          </>
+        )}
+
+        {currentLayout === 'cyber_matrix' && (
+          <>
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:20px_20px] opacity-20" />
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_15px_#10b981]" />
+            <div className="absolute -top-20 right-10 w-96 h-96 bg-emerald-600/20 blur-[130px] pointer-events-none" />
+          </>
+        )}
+
+        {currentLayout === 'synthwave_grid' && (
+          <>
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-purple-950/30 via-pink-950/20 to-black/80" />
+            <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-gradient-to-b from-pink-500/25 to-purple-600/10 blur-[120px] pointer-events-none" />
+          </>
+        )}
+
+        {currentLayout === 'golden_casino' && (
+          <>
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-600/15 via-stone-950/60 to-black" />
+            <div className="absolute -top-20 left-1/3 w-96 h-96 bg-amber-500/20 rounded-full blur-[140px] pointer-events-none" />
+          </>
+        )}
+
+        {currentLayout === 'bubble_toon' && (
+          <>
+            <div className="absolute -top-16 -left-16 w-80 h-80 bg-pink-400/25 rounded-full blur-[90px] pointer-events-none" />
+            <div className="absolute -bottom-16 -right-16 w-80 h-80 bg-sky-400/25 rounded-full blur-[90px] pointer-events-none" />
+          </>
+        )}
+
         {/* Top Campaign Brand Ribbon with Logo and Client Name */}
         {(splashImageUrl || clientName || campaignName) && (
           <div className={`w-full flex items-center justify-center py-2 px-4 flex-shrink-0 z-30 ${isLightMode ? 'bg-white/85 border-b border-slate-200/80 shadow-xs' : 'bg-black/40 border-b border-white/10'} backdrop-blur-md`}>
@@ -247,6 +285,16 @@ export const GameContainer: React.FC<GameContainerProps> = ({
             ? 'bg-black/30 border-b border-white/10 backdrop-blur-2xl'
             : currentLayout === 'spatial_3d'
             ? 'bg-slate-950/85 border-b border-purple-500/30 backdrop-blur-2xl shadow-xl'
+            : currentLayout === 'pixel_retro'
+            ? 'bg-black border-b-4 border-yellow-400 font-mono shadow-[0_4px_0_#ca8a04]'
+            : currentLayout === 'cyber_matrix'
+            ? 'bg-black/95 border-b-2 border-emerald-400/80 font-mono shadow-[0_0_20px_rgba(16,185,129,0.3)]'
+            : currentLayout === 'synthwave_grid'
+            ? 'bg-purple-950/90 border-b-2 border-pink-500/50 shadow-[0_4px_25px_rgba(244,63,94,0.3)]'
+            : currentLayout === 'golden_casino'
+            ? 'bg-stone-950 border-b-4 border-amber-300 shadow-[0_4px_20px_rgba(245,158,11,0.3)]'
+            : currentLayout === 'bubble_toon'
+            ? 'bg-pink-950/60 border-b-4 border-pink-300 shadow-lg'
             : isLightMode 
             ? 'bg-white/95 border-b border-slate-200/80 shadow-xs text-slate-900 backdrop-blur-md' 
             : 'bg-black/40 border-b border-white/10 text-white backdrop-blur-md'
@@ -271,6 +319,16 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                   ? 'bg-white/10 hover:bg-white/20 text-white border border-white/15'
                   : currentLayout === 'spatial_3d'
                   ? 'bg-purple-950/60 hover:bg-purple-900/60 text-purple-200 border border-purple-400/40'
+                  : currentLayout === 'pixel_retro'
+                  ? 'bg-black text-yellow-300 border-2 border-yellow-400 font-mono shadow-[2px_2px_0_#ca8a04]'
+                  : currentLayout === 'cyber_matrix'
+                  ? 'bg-black/90 text-emerald-300 border border-emerald-400 font-mono shadow-[0_0_10px_rgba(16,185,129,0.3)]'
+                  : currentLayout === 'synthwave_grid'
+                  ? 'bg-pink-500/20 text-pink-300 border border-pink-400 shadow-[0_0_12px_rgba(244,63,94,0.3)]'
+                  : currentLayout === 'golden_casino'
+                  ? 'bg-amber-400 text-stone-950 font-black border border-yellow-200 shadow-md'
+                  : currentLayout === 'bubble_toon'
+                  ? 'bg-pink-400 text-white font-black border-2 border-pink-200 shadow-sm'
                   : isLightMode
                   ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200'
                   : 'bg-white/10 hover:bg-white/20 text-white border border-white/10'

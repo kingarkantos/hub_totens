@@ -20,6 +20,9 @@ export const SafeGame: React.FC<SafeGameProps> = ({
   clientName,
   splashImageUrl,
   customContent,
+  isLight,
+  themeMode,
+  gameLayout,
 }) => {
   const [targetDigits, setTargetDigits] = useState<number[]>([3, 7, 5]);
   const [currentDials, setCurrentDials] = useState<number[]>([0, 0, 0]);
@@ -103,6 +106,9 @@ export const SafeGame: React.FC<SafeGameProps> = ({
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       themePrimary={themePrimary}
       theme={theme}
+      isLight={isLight}
+      themeMode={themeMode}
+      gameLayout={gameLayout}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
       clientName={clientName}

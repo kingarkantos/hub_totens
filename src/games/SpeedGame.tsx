@@ -19,6 +19,9 @@ export const SpeedGame: React.FC<SpeedGameProps> = ({
   clientName,
   splashImageUrl,
   customContent,
+  isLight,
+  themeMode,
+  gameLayout,
 }) => {
   const [stage, setStage] = useState<'countdown' | 'racing' | 'finished'>('countdown');
   const [trafficLights, setTrafficLights] = useState<number>(1); // 1 = red, 2 = yellow, 3 = green
@@ -102,6 +105,9 @@ export const SpeedGame: React.FC<SpeedGameProps> = ({
       customScoreLabel="Pts"
       themePrimary={themePrimary}
       theme={theme}
+      isLight={isLight}
+      themeMode={themeMode}
+      gameLayout={gameLayout}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
       clientName={clientName}

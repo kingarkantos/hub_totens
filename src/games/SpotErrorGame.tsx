@@ -48,6 +48,7 @@ export const SpotErrorGame: React.FC<SpotErrorGameProps> = ({
   customContent,
   isLight,
   themeMode,
+  gameLayout,
 }) => {
   const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
   const scenario = customContent || DEFAULT_SCENARIO;
@@ -130,6 +131,7 @@ export const SpotErrorGame: React.FC<SpotErrorGameProps> = ({
       splashImageUrl={splashImageUrl}
       isLight={isLightMode}
       themeMode={isLightMode ? 'light' : 'dark'}
+      gameLayout={gameLayout}
     >
       <div className="flex flex-col flex-1 w-full max-w-4xl lg:max-w-5xl mx-auto justify-between py-4 sm:py-8 px-2 sm:px-6 gap-5 sm:gap-8 select-none animate-in fade-in duration-300">
         {/* Header with Title and Count */}

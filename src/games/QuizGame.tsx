@@ -344,6 +344,16 @@ export const QuizGame: React.FC<QuizGameProps> = ({
                 ? 'rounded-[36px] border-4 border-amber-400/80 bg-gradient-to-b from-slate-900/95 via-slate-900 to-amber-950/30 shadow-[0_20px_50px_rgba(245,158,11,0.3)] pt-8 pb-6 px-6 sm:px-8'
                 : activeLayout === 'spatial_3d'
                 ? 'rounded-3xl border-2 border-purple-500/40 bg-gradient-to-b from-slate-900/90 via-purple-950/30 to-slate-900/90 shadow-[0_25px_60px_-15px_rgba(147,51,234,0.35)] p-6 sm:p-8'
+                : activeLayout === 'pixel_retro'
+                ? 'rounded-none border-4 border-yellow-400 bg-black shadow-[6px_6px_0_#ca8a04] p-6 sm:p-8 font-mono'
+                : activeLayout === 'cyber_matrix'
+                ? 'rounded-xl border-2 border-emerald-400 bg-black/95 shadow-[0_0_25px_rgba(16,185,129,0.3)] p-6 sm:p-8 font-mono'
+                : activeLayout === 'synthwave_grid'
+                ? 'rounded-3xl border-2 border-pink-500/70 bg-purple-950/85 shadow-[0_0_35px_rgba(244,63,94,0.3)] p-6 sm:p-8'
+                : activeLayout === 'golden_casino'
+                ? 'rounded-3xl border-4 border-amber-300 bg-stone-950 shadow-[0_15px_40px_rgba(245,158,11,0.3)] p-6 sm:p-8'
+                : activeLayout === 'bubble_toon'
+                ? 'rounded-[40px] border-4 border-pink-300/80 bg-slate-900/95 shadow-[0_15px_30px_rgba(244,114,182,0.3)] p-6 sm:p-8'
                 : isLightMode
                 ? 'rounded-3xl bg-white/95 border-2 border-slate-200 shadow-xl p-6 sm:p-8'
                 : 'rounded-3xl bg-slate-900/85 backdrop-blur-xl border-2 border-white/20 shadow-xl p-6 sm:p-8'
@@ -541,6 +551,96 @@ export const QuizGame: React.FC<QuizGameProps> = ({
                 } else {
                   btnStyle = 'rounded-full border border-white/5 bg-slate-950/30 text-slate-600 opacity-30 px-5 py-3.5';
                   badgeStyle = 'w-10 h-10 rounded-full bg-slate-800 text-slate-600';
+                }
+              }
+            } else if (activeLayout === 'pixel_retro') {
+              btnStyle =
+                'border-4 border-yellow-400 bg-black text-yellow-300 font-mono shadow-[4px_4px_0_#ca8a04] active:translate-x-1 active:translate-y-1 rounded-none px-4 py-3.5 hover:bg-zinc-900';
+              badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-yellow-400 text-black border-2 border-black font-mono font-black rounded-none flex items-center justify-center';
+              if (answered) {
+                if (opt.isCorrect) {
+                  btnStyle = 'border-4 border-emerald-400 bg-emerald-950 text-emerald-300 font-mono shadow-[4px_4px_0_#10b981] rounded-none px-4 py-3.5 scale-[1.01]';
+                  badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-emerald-400 text-black border-2 border-black font-mono font-black rounded-none flex items-center justify-center';
+                  icon = <CheckCircle2 className="w-6 h-6 text-emerald-300 flex-shrink-0" />;
+                } else if (idx === selectedOption) {
+                  btnStyle = 'border-4 border-rose-500 bg-rose-950 text-rose-300 font-mono shadow-[4px_4px_0_#f43f5e] rounded-none px-4 py-3.5';
+                  badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-rose-500 text-white border-2 border-black font-mono font-black rounded-none flex items-center justify-center';
+                  icon = <XCircle className="w-6 h-6 text-rose-300 flex-shrink-0" />;
+                } else {
+                  btnStyle = 'border-2 border-zinc-800 bg-black text-zinc-600 font-mono opacity-30 rounded-none px-4 py-3.5';
+                  badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-zinc-800 text-zinc-600 border border-zinc-700 rounded-none flex items-center justify-center';
+                }
+              }
+            } else if (activeLayout === 'cyber_matrix') {
+              btnStyle =
+                'border-2 border-emerald-400/80 bg-black/90 text-emerald-200 font-mono shadow-[0_0_15px_rgba(16,185,129,0.3)] rounded-xl px-4 py-3.5 hover:bg-emerald-950/40';
+              badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-emerald-500/20 text-emerald-300 border border-emerald-400 font-mono font-black rounded-lg flex items-center justify-center';
+              if (answered) {
+                if (opt.isCorrect) {
+                  btnStyle = 'border-2 border-emerald-400 bg-emerald-900/80 text-white font-mono shadow-[0_0_25px_#10b981] rounded-xl px-4 py-3.5 scale-[1.01]';
+                  badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-emerald-400 text-black font-mono font-black rounded-lg flex items-center justify-center';
+                  icon = <CheckCircle2 className="w-6 h-6 text-emerald-300 flex-shrink-0" />;
+                } else if (idx === selectedOption) {
+                  btnStyle = 'border-2 border-rose-500 bg-rose-950/80 text-rose-200 font-mono shadow-[0_0_20px_#f43f5e] rounded-xl px-4 py-3.5';
+                  badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-rose-500 text-white font-mono font-black rounded-lg flex items-center justify-center';
+                  icon = <XCircle className="w-6 h-6 text-rose-300 flex-shrink-0" />;
+                } else {
+                  btnStyle = 'border border-zinc-800 bg-black text-zinc-600 font-mono opacity-30 rounded-xl px-4 py-3.5';
+                  badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-zinc-900 text-zinc-600 border border-zinc-800 rounded-lg flex items-center justify-center';
+                }
+              }
+            } else if (activeLayout === 'synthwave_grid') {
+              btnStyle =
+                'border-2 border-pink-500/70 bg-purple-950/80 text-pink-100 shadow-[0_0_15px_rgba(236,72,153,0.35)] rounded-2xl px-5 py-3.5 hover:border-cyan-400';
+              badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black rounded-xl flex items-center justify-center';
+              if (answered) {
+                if (opt.isCorrect) {
+                  btnStyle = 'border-2 border-cyan-400 bg-cyan-950/90 text-cyan-200 shadow-[0_0_25px_#22d3ee] rounded-2xl px-5 py-3.5 scale-[1.01]';
+                  badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-cyan-400 text-black font-black rounded-xl flex items-center justify-center';
+                  icon = <CheckCircle2 className="w-6 h-6 text-cyan-300 flex-shrink-0" />;
+                } else if (idx === selectedOption) {
+                  btnStyle = 'border-2 border-rose-500 bg-rose-950/90 text-rose-200 shadow-[0_0_20px_#f43f5e] rounded-2xl px-5 py-3.5';
+                  badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-rose-500 text-white font-black rounded-xl flex items-center justify-center';
+                  icon = <XCircle className="w-6 h-6 text-rose-300 flex-shrink-0" />;
+                } else {
+                  btnStyle = 'border border-purple-900 bg-slate-950/40 text-slate-600 opacity-30 rounded-2xl px-5 py-3.5';
+                  badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-slate-900 text-slate-600 rounded-xl flex items-center justify-center';
+                }
+              }
+            } else if (activeLayout === 'golden_casino') {
+              btnStyle =
+                'border-4 border-amber-300 bg-gradient-to-b from-stone-900 to-stone-950 text-amber-100 shadow-[0_6px_0_#78350f,0_8px_20px_rgba(0,0,0,0.5)] active:translate-y-1 rounded-2xl px-5 py-3.5 hover:brightness-110';
+              badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 border border-yellow-100 font-black rounded-xl flex items-center justify-center';
+              if (answered) {
+                if (opt.isCorrect) {
+                  btnStyle = 'border-4 border-amber-200 bg-gradient-to-b from-emerald-700 to-emerald-900 text-white shadow-xl rounded-2xl px-5 py-3.5 scale-[1.01]';
+                  badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-white text-emerald-900 font-black rounded-xl flex items-center justify-center';
+                  icon = <CheckCircle2 className="w-6 h-6 text-white flex-shrink-0" />;
+                } else if (idx === selectedOption) {
+                  btnStyle = 'border-4 border-rose-400 bg-gradient-to-b from-rose-700 to-rose-900 text-white shadow-xl rounded-2xl px-5 py-3.5';
+                  badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-white text-rose-900 font-black rounded-xl flex items-center justify-center';
+                  icon = <XCircle className="w-6 h-6 text-white flex-shrink-0" />;
+                } else {
+                  btnStyle = 'border-2 border-stone-800 bg-stone-950 text-stone-600 opacity-30 rounded-2xl px-5 py-3.5';
+                  badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-stone-900 text-stone-600 rounded-xl flex items-center justify-center';
+                }
+              }
+            } else if (activeLayout === 'bubble_toon') {
+              btnStyle =
+                'border-4 border-pink-300/80 bg-slate-900/90 text-pink-100 shadow-[0_8px_20px_rgba(244,114,182,0.3)] rounded-full px-6 py-3.5 hover:scale-102';
+              badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-pink-400 text-white border-2 border-pink-200 font-black rounded-full flex items-center justify-center';
+              if (answered) {
+                if (opt.isCorrect) {
+                  btnStyle = 'border-4 border-emerald-300 bg-emerald-600 text-white shadow-lg rounded-full px-6 py-3.5 scale-[1.01]';
+                  badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-white text-emerald-700 font-black rounded-full flex items-center justify-center';
+                  icon = <CheckCircle2 className="w-6 h-6 text-white flex-shrink-0" />;
+                } else if (idx === selectedOption) {
+                  btnStyle = 'border-4 border-rose-300 bg-rose-600 text-white shadow-lg rounded-full px-6 py-3.5';
+                  badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-white text-rose-700 font-black rounded-full flex items-center justify-center';
+                  icon = <XCircle className="w-6 h-6 text-white flex-shrink-0" />;
+                } else {
+                  btnStyle = 'border-2 border-slate-800 bg-slate-950/40 text-slate-600 opacity-30 rounded-full px-6 py-3.5';
+                  badgeStyle = 'w-9 h-9 sm:w-10 sm:h-10 bg-slate-900 text-slate-600 rounded-full flex items-center justify-center';
                 }
               }
             } else {

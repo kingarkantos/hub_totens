@@ -8,7 +8,12 @@ export type ThemeId =
   | 'ultra-dark'
   | 'candy-pastel'
   | 'high-tech-silver'
-  | 'solar-blaze';
+  | 'solar-blaze'
+  | 'synthwave-retro'
+  | 'cosmic-galaxy'
+  | 'tokyo-drift'
+  | 'royal-amethyst'
+  | 'arctic-ice';
 
 export interface ThemeDefinition {
   id: ThemeId;

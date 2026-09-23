@@ -845,7 +845,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2 text-sm font-bold text-red-600 uppercase tracking-wider">
                   <Layers className="w-4 h-4" />
-                  <span>3. Estilo Visual do Design System (10 Temas)</span>
+                  <span>3. Estilo Visual do Design System (15 Temas)</span>
                 </div>
                 <span className="text-xs text-slate-500">
                   Tema Selecionado: <strong className="text-slate-900">{THEME_LIST.find((t) => t.id === themeId)?.name}</strong>
@@ -1338,7 +1338,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2 text-sm font-bold text-red-600 uppercase tracking-wider">
                   <Palette className="w-4 h-4" />
-                  <span>Design &amp; Layout dos Jogos (5 Estilos Exclusivos)</span>
+                  <span>Design &amp; Layout dos Jogos (12 Estilos Exclusivos)</span>
                 </div>
                 <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
                   Layout Selecionado: <strong>{GAME_LAYOUTS.find((l) => l.id === gameLayout)?.name}</strong>
@@ -1348,7 +1348,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                 Cada jogo da campanha terá este design visual exclusivo aplicado (containers, bordas, animações, efeitos e iluminação).
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
                 {GAME_LAYOUTS.map((layoutDef) => {
                   const isSelected = layoutDef.id === gameLayout;
                   return (
@@ -1358,14 +1358,20 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                       onClick={() => {
                         sound.playClick();
                         setGameLayout(layoutDef.id);
-                        setGamesConfig((prev) => ({
-                          ...prev,
-                          game_layout: layoutDef.id,
-                        }));
+                        setGamesConfig((prev) => {
+                          const updated: Record<string, any> = {
+                            ...prev,
+                            game_layout: layoutDef.id,
+                          };
+                          GAMES_CATALOG.forEach((g) => {
+                            updated[`${g.id}_layout`] = layoutDef.id;
+                          });
+                          return updated;
+                        });
                       }}
                       className={`p-3.5 rounded-xl border-2 text-left transition-all flex flex-col justify-between gap-3 active:scale-95 ${
                         isSelected
-                          ? 'border-red-500 bg-red-50/60 shadow-sm'
+                          ? 'border-red-500 bg-red-50/60 shadow-sm ring-2 ring-red-500/20'
                           : 'border-slate-200 bg-slate-50/70 hover:bg-slate-100 hover:border-slate-300'
                       }`}
                     >
@@ -1700,9 +1706,13 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           game={previewingGame}
           onClose={() => setPreviewingGame(null)}
           customContent={gamesConfig[previewingGame.id]}
-          gameLayout={gamesConfig[`${previewingGame.id}_layout`] || gamesConfig?.game_layout || gameLayout || 'modern_glass'}
+          gameLayout={gameLayout || gamesConfig[`${previewingGame.id}_layout`] || gamesConfig?.game_layout || 'modern_glass'}
           orderMode={gamesConfig[`${previewingGame.id}_order_mode`] || 'random'}
           questionsCount={Number(gamesConfig[`${previewingGame.id}_questions_count`]) || undefined}
+          theme={THEMES[themeId]}
+          themePrimary={THEMES[themeId]?.primary || customColors.primary}
+          themeMode={themeMode}
+          isLight={themeMode === 'light'}
           onLayoutChange={(newLayout) => {
             setGameLayout(newLayout);
             setGamesConfig((prev) => ({

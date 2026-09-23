@@ -27,6 +27,9 @@ export const CatcherGame: React.FC<CatcherGameProps> = ({
   clientName,
   splashImageUrl,
   customContent,
+  isLight,
+  themeMode,
+  gameLayout,
 }) => {
   const [basketX, setBasketX] = useState(50); // percentage 10 - 90
   const [score, setScore] = useState(0);
@@ -142,6 +145,9 @@ export const CatcherGame: React.FC<CatcherGameProps> = ({
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       themePrimary={themePrimary}
       theme={theme}
+      isLight={isLight}
+      themeMode={themeMode}
+      gameLayout={gameLayout}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
       clientName={clientName}

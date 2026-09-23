@@ -29,6 +29,7 @@ export const BullseyeGame: React.FC<BullseyeGameProps> = ({
   splashImageUrl,
   isLight,
   themeMode,
+  gameLayout,
 }) => {
   const totalShots = 5;
   const [shotsLeft, setShotsLeft] = useState(totalShots);
@@ -159,6 +160,7 @@ export const BullseyeGame: React.FC<BullseyeGameProps> = ({
       splashImageUrl={splashImageUrl}
       isLight={isLight}
       themeMode={themeMode}
+      gameLayout={gameLayout}
     >
       <div className="relative w-full h-full flex flex-col items-center justify-between p-4 sm:p-6 max-w-4xl mx-auto select-none">
         {/* Top HUD: Shots remaining */}

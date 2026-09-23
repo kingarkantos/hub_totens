@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Play, Palette } from 'lucide-react';
-import { GameDefinition } from '../types';
+import { GameDefinition, ThemeDefinition } from '../types';
 import { GameLayoutId, GAME_LAYOUTS } from '../types/gameLayouts';
 import { GameLayoutProvider } from '../context/GameLayoutContext';
 import { WheelGame } from './WheelGame';
@@ -35,6 +35,10 @@ interface GamePreviewModalProps {
   onLayoutChange?: (layout: GameLayoutId) => void;
   orderMode?: 'random' | 'ordered';
   questionsCount?: number;
+  theme?: ThemeDefinition;
+  themePrimary?: string;
+  themeMode?: 'light' | 'dark';
+  isLight?: boolean;
 }
 
 export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
@@ -45,6 +49,10 @@ export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
   onLayoutChange,
   orderMode = 'random',
   questionsCount,
+  theme,
+  themePrimary,
+  themeMode,
+  isLight,
 }) => {
   if (!game) return null;
 
@@ -69,6 +77,10 @@ export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
     gameLayout: activeLayout,
     orderMode,
     questionsCount,
+    theme,
+    themePrimary,
+    themeMode,
+    isLight,
   };
 
   const renderGame = () => {

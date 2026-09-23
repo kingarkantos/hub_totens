@@ -38,6 +38,7 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({
   customContent,
   isLight,
   themeMode,
+  gameLayout,
 }) => {
   const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
   const ICONS = customContent && customContent.length >= 4 ? customContent : DEFAULT_ICONS;
@@ -143,6 +144,7 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({
       splashImageUrl={splashImageUrl}
       isLight={isLightMode}
       themeMode={isLightMode ? 'light' : 'dark'}
+      gameLayout={gameLayout}
     >
       <div className="w-full max-w-3xl sm:max-w-4xl lg:max-w-5xl flex-1 flex flex-col items-center justify-between gap-6 py-4 sm:py-8 px-2 sm:px-6 my-auto select-none animate-in fade-in duration-300">
         <div className={`w-full flex justify-between text-sm sm:text-lg font-black px-4 py-3 rounded-2xl border-2 ${

@@ -79,6 +79,7 @@ export const MathBlitzGame: React.FC<MathBlitzGameProps> = ({
   isLight,
   themeMode,
   totalTimeLimit,
+  gameLayout,
 }) => {
   const initialTime = totalTimeLimit !== undefined && totalTimeLimit > 0 ? totalTimeLimit : 30;
   const [timeLeft, setTimeLeft] = useState(initialTime);
@@ -173,6 +174,7 @@ export const MathBlitzGame: React.FC<MathBlitzGameProps> = ({
       splashImageUrl={splashImageUrl}
       isLight={isLight}
       themeMode={themeMode}
+      gameLayout={gameLayout}
     >
       <div className="relative w-full h-full flex flex-col items-center justify-between p-4 sm:p-8 max-w-4xl mx-auto">
         {/* Top HUD: Combo and Stats */}

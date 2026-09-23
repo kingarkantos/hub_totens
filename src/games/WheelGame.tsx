@@ -31,6 +31,9 @@ export const WheelGame: React.FC<WheelGameProps> = ({
   clientName,
   splashImageUrl,
   customContent,
+  isLight,
+  themeMode,
+  gameLayout,
 }) => {
   const PRIZES = customContent && customContent.length >= 3 ? customContent : DEFAULT_PRIZES;
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -199,6 +202,9 @@ export const WheelGame: React.FC<WheelGameProps> = ({
       customScoreLabel="Pts"
       themePrimary={themePrimary}
       theme={theme}
+      isLight={isLight}
+      themeMode={themeMode}
+      gameLayout={gameLayout}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
       clientName={clientName}
