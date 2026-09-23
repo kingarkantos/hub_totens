@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Maximize, Minimize, Trophy, Play, Sparkles, ArrowLeft, Volume2, VolumeX, Flame, ShieldAlert, Home } from 'lucide-react';
+import { Maximize, Minimize, Trophy, Play, Sparkles, ArrowLeft, Volume2, VolumeX, Flame, ShieldAlert, Home, ChevronDown } from 'lucide-react';
 import { Campaign, GameDefinition, ThemeDefinition, CustomColorsConfig } from '../types';
 import { supabase, TABLES } from '../lib/supabase';
 import { THEMES } from '../lib/themes';
-import { GAMES_CATALOG } from '../lib/gamesCatalog';
+import { GAMES_CATALOG, GAME_CATEGORIES } from '../lib/gamesCatalog';
 import { sound } from '../lib/audio';
 import { LeaderboardModal } from '../components/LeaderboardModal';
 import { GameCardThumbnail } from '../components/GameCardThumbnail';
@@ -28,6 +28,108 @@ import { ConnectPairsGame } from '../games/ConnectPairsGame';
 import { SpeedTriviaGame } from '../games/SpeedTriviaGame';
 import { SpotErrorGame } from '../games/SpotErrorGame';
 import { MapEpiGame } from '../games/MapEpiGame';
+import { MathBlitzGame } from '../games/MathBlitzGame';
+import { HigherLowerGame } from '../games/HigherLowerGame';
+import { ReactionTimeGame } from '../games/ReactionTimeGame';
+import { BullseyeGame } from '../games/BullseyeGame';
+
+interface ScrollableDescriptionProps {
+  description: string;
+  alignClass: string;
+  sizeClass: string;
+}
+
+const ScrollableDescription: React.FC<ScrollableDescriptionProps> = ({
+  description,
+  alignClass,
+  sizeClass,
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [canScroll, setCanScroll] = useState(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const checkOverflow = () => {
+      const isOverflowing = el.scrollHeight > el.clientHeight + 10;
+      setCanScroll(isOverflowing);
+    };
+
+    checkOverflow();
+
+    const ro = new ResizeObserver(() => {
+      checkOverflow();
+    });
+    ro.observe(el);
+
+    const timer = setTimeout(checkOverflow, 250);
+
+    return () => {
+      ro.disconnect();
+      clearTimeout(timer);
+    };
+  }, [description]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (e.currentTarget.scrollTop > 15) {
+      setHasScrolled(true);
+    }
+  };
+
+  const handleIndicatorClick = () => {
+    if (containerRef.current) {
+      containerRef.current.scrollBy({ top: 140, behavior: 'smooth' });
+      setHasScrolled(true);
+    }
+  };
+
+  return (
+    <div className="relative mt-4 w-full max-w-2xl sm:max-w-3xl">
+      <div
+        ref={containerRef}
+        onScroll={handleScroll}
+        onTouchMove={() => setHasScrolled(true)}
+        onWheel={(e) => {
+          if (e.deltaY > 5) setHasScrolled(true);
+        }}
+        className={`max-h-[35vh] sm:max-h-[42vh] overflow-y-auto px-6 py-5 rounded-3xl bg-black/50 backdrop-blur-xl border border-white/20 shadow-2xl text-slate-200 font-medium leading-relaxed whitespace-pre-line no-scrollbar ${alignClass} ${sizeClass}`}
+      >
+        {description}
+      </div>
+
+      {/* Sombra sutil de fade na borda inferior indicando continuidade */}
+      {canScroll && (
+        <div
+          className={`absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-black/85 via-black/40 to-transparent rounded-b-3xl pointer-events-none transition-opacity duration-300 ${
+            hasScrolled ? 'opacity-0' : 'opacity-100'
+          }`}
+        />
+      )}
+
+      {/* Pill informativo animado para o usuário deslizar */}
+      {canScroll && (
+        <div
+          className={`absolute bottom-2.5 left-1/2 -translate-x-1/2 z-20 transition-all duration-300 ease-out ${
+            hasScrolled
+              ? 'opacity-0 translate-y-3 pointer-events-none'
+              : 'opacity-100 translate-y-0 pointer-events-auto'
+          }`}
+        >
+          <button
+            type="button"
+            onClick={handleIndicatorClick}
+            className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-950/90 hover:bg-black text-white border border-white/30 shadow-2xl backdrop-blur-md text-xs font-semibold tracking-wide cursor-pointer active:scale-95 transition-all select-none group"
+          >
+            <span className="text-slate-200">Deslize para ler mais</span>
+            <ChevronDown className="w-3.5 h-3.5 text-amber-400 group-hover:translate-y-0.5 animate-bounce" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface TotemCampaignViewProps {
   slug: string;
@@ -38,6 +140,7 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
   const [loading, setLoading] = useState(true);
   const [inSplash, setInSplash] = useState(true);
   const [activeGame, setActiveGame] = useState<GameDefinition | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [idleSeconds, setIdleSeconds] = useState(90);
@@ -244,6 +347,14 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
 
   const gamesList = GAMES_CATALOG.filter((g) => campaign.selected_games.includes(g.id));
 
+  const availableCategories = GAME_CATEGORIES.filter((cat) =>
+    gamesList.some((g) => g.categoryId === cat.id || g.category === cat.name)
+  );
+
+  const displayedGames = selectedCategory === 'all'
+    ? gamesList
+    : gamesList.filter((g) => g.categoryId === selectedCategory || g.category === selectedCategory);
+
   // Active Game Render
   if (activeGame) {
     const orderMode = campaign.games_config?.order_mode || 'random';
@@ -309,6 +420,14 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
         return <SpotErrorGame {...commonProps} />;
       case 'map_epi':
         return <MapEpiGame {...commonProps} />;
+      case 'math_blitz':
+        return <MathBlitzGame {...commonProps} />;
+      case 'higher_lower':
+        return <HigherLowerGame {...commonProps} />;
+      case 'reaction_time':
+        return <ReactionTimeGame {...commonProps} />;
+      case 'bullseye':
+        return <BullseyeGame {...commonProps} />;
       default:
         return null;
     }
@@ -356,11 +475,42 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white drop-shadow-2xl max-w-3xl leading-tight">
               {campaign.name}
             </h1>
-            {campaign.description && (
-              <p className="text-sm sm:text-lg text-slate-300 mt-4 max-w-xl font-medium drop-shadow leading-relaxed">
-                {campaign.description}
-              </p>
-            )}
+            {campaign.description && (() => {
+              const descAlign = campaign.games_config?.description_align || 'left';
+              const descSize = campaign.games_config?.description_size || 'md';
+
+              const alignClass = descAlign === 'center'
+                ? 'text-center'
+                : descAlign === 'right'
+                ? 'text-right'
+                : descAlign === 'justify'
+                ? 'text-justify'
+                : 'text-left';
+
+              const sizeClass = descSize === 'sm'
+                ? 'text-xs sm:text-sm'
+                : descSize === 'lg'
+                ? 'text-base sm:text-lg'
+                : 'text-sm sm:text-base';
+
+              const hasMultipleLines = campaign.description.includes('\n') || campaign.description.length > 120;
+
+              if (hasMultipleLines) {
+                return (
+                  <ScrollableDescription
+                    description={campaign.description}
+                    alignClass={alignClass}
+                    sizeClass={sizeClass}
+                  />
+                );
+              }
+
+              return (
+                <p className={`mt-4 max-w-2xl font-medium drop-shadow leading-relaxed whitespace-pre-line text-slate-300 ${alignClass} ${sizeClass}`}>
+                  {campaign.description}
+                </p>
+              );
+            })()}
           </div>
 
           {/* Central Interactive Touch CTA */}
@@ -456,108 +606,190 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
             </span>
           </div>
 
+          {/* Category Filter Tabs Bar for Totem Touch */}
+          {availableCategories.length > 1 && (
+            <div className={`px-6 py-3.5 ${isLight ? 'bg-white/80 border-b border-slate-200/80 backdrop-blur-md' : 'bg-black/30 border-b border-white/10 backdrop-blur-md'} z-10 overflow-x-auto no-scrollbar`}>
+              <div className="flex items-center gap-2.5 max-w-4xl mx-auto w-full">
+                {/* "Todos" Tab */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setSelectedCategory('all');
+                  }}
+                  style={selectedCategory === 'all' ? {
+                    backgroundColor: theme.primary,
+                    boxShadow: `0 0 20px ${theme.glowColor}60`,
+                  } : {}}
+                  className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all flex-shrink-0 active:scale-95 ${
+                    selectedCategory === 'all'
+                      ? 'text-white shadow-md'
+                      : isLight
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+                      : 'bg-white/10 hover:bg-white/20 text-slate-200 border border-white/10'
+                  }`}
+                >
+                  <span>Todos os Jogos</span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${
+                    selectedCategory === 'all' ? 'bg-black/30 text-white' : isLight ? 'bg-slate-200 text-slate-800' : 'bg-white/15 text-slate-300'
+                  }`}>
+                    {gamesList.length}
+                  </span>
+                </button>
+
+                {/* Specific Category Tabs */}
+                {availableCategories.map((cat) => {
+                  const isSelected = selectedCategory === cat.id;
+                  const count = gamesList.filter((g) => g.categoryId === cat.id || g.category === cat.name).length;
+
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setSelectedCategory(cat.id);
+                      }}
+                      style={isSelected ? {
+                        backgroundColor: theme.primary,
+                        boxShadow: `0 0 20px ${theme.glowColor}60`,
+                      } : {}}
+                      className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-black flex items-center gap-2 transition-all flex-shrink-0 active:scale-95 ${
+                        isSelected
+                          ? 'text-white shadow-md'
+                          : isLight
+                          ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+                          : 'bg-white/10 hover:bg-white/20 text-slate-200 border border-white/10'
+                      }`}
+                    >
+                      <span>{cat.name}</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${
+                        isSelected ? 'bg-black/30 text-white' : isLight ? 'bg-slate-200 text-slate-800' : 'bg-white/15 text-slate-300'
+                      }`}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Games List (Stacked vertically, big and highlighted for Totems) */}
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-8 space-y-6 sm:space-y-8 no-scrollbar max-w-5xl xl:max-w-6xl mx-auto w-full">
-            {gamesList.map((game, index) => (
-              <div
-                key={game.id}
-                onClick={() => {
-                  sound.playClick();
-                  setActiveGame(game);
-                }}
-                className={`relative group rounded-[32px] sm:rounded-[36px] border-2 p-6 sm:p-8 lg:p-9 cursor-pointer transition-all duration-300 hover:scale-[1.015] hover:-translate-y-1 active:scale-98 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8 overflow-hidden ${theme.cardBg} ${theme.cardBorder}`}
-                style={{
-                  boxShadow: `0 20px 50px -15px ${theme.glowColor}30`,
-                }}
-              >
-                {/* Background decorative glow on hover */}
+            {displayedGames.length === 0 ? (
+              <div className="p-12 text-center flex flex-col items-center justify-center">
+                <p className="text-slate-400 font-bold mb-4">Nenhum jogo habilitado nesta categoria.</p>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory('all')}
+                  className="px-5 py-2.5 rounded-xl bg-white/10 text-white font-bold text-xs"
+                >
+                  Ver Todos os Jogos
+                </button>
+              </div>
+            ) : (
+              displayedGames.map((game, index) => (
                 <div
-                  style={{ backgroundColor: theme.primary }}
-                  className="absolute -right-20 -top-20 w-64 h-64 rounded-full blur-3xl opacity-20 group-hover:opacity-45 transition-opacity duration-500 pointer-events-none"
-                />
-
-                {/* Left Side: Game Number, Badge, Title & Description */}
-                <div className="flex items-start gap-5 sm:gap-7 z-10 w-full lg:flex-1">
+                  key={game.id}
+                  onClick={() => {
+                    sound.playClick();
+                    setActiveGame(game);
+                  }}
+                  className={`relative group rounded-[32px] sm:rounded-[36px] border-2 p-6 sm:p-8 lg:p-9 cursor-pointer transition-all duration-300 hover:scale-[1.015] hover:-translate-y-1 active:scale-98 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8 overflow-hidden ${theme.cardBg} ${theme.cardBorder}`}
+                  style={{
+                    boxShadow: `0 20px 50px -15px ${theme.glowColor}30`,
+                  }}
+                >
+                  {/* Background decorative glow on hover */}
                   <div
-                    style={{ color: theme.primary }}
-                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl ${
-                      isLight 
-                        ? 'bg-slate-100 border-2 border-slate-200 shadow-sm' 
-                        : 'bg-gradient-to-br from-white/15 to-white/5 border-2 border-white/20 text-amber-400 shadow-inner'
-                    } flex items-center justify-center font-black text-3xl sm:text-4xl flex-shrink-0 group-hover:scale-105 transition-transform`}
-                  >
-                    {index + 1}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      <span className={`text-[11px] sm:text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full border ${theme.badgeBg}`}>
-                        {game.category}
-                      </span>
-                      {(() => {
-                        const cfgPerQuestion = campaign.games_config?.[`${game.id}_time_limit`];
-                        const cfgTotal = campaign.games_config?.[`${game.id}_total_time_limit`];
-                        const isQuestionGame = ['quiz', 'truefalse', 'speed_trivia', 'complete_phrase'].includes(game.id);
-
-                        let timeDisplay = game.estimatedTime;
-                        if (cfgPerQuestion !== undefined) {
-                          if (cfgPerQuestion === 0) {
-                            timeDisplay = cfgTotal ? `${cfgTotal} seg total` : 'Sem tempo';
-                          } else {
-                            timeDisplay = isQuestionGame ? `${cfgPerQuestion} seg` : `${cfgPerQuestion} seg`;
-                          }
-                        } else if (cfgTotal !== undefined) {
-                          timeDisplay = `${cfgTotal} seg total`;
-                        }
-
-                        return (
-                          <span className={`text-[11px] font-mono px-2.5 py-0.5 rounded-md border ${isLight ? 'text-slate-700 bg-slate-100 border-slate-200' : 'text-slate-300 bg-black/40 border-white/10'}`}>
-                            ⏱️ {timeDisplay}
-                          </span>
-                        );
-                      })()}
-                      <span className={`text-[11px] font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                        Dificuldade: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{game.difficulty}</strong>
-                      </span>
-                      <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-400/30 flex items-center gap-1">
-                        <Sparkles className="w-3 h-3 text-amber-400" />
-                        <span>Touch</span>
-                      </span>
-                    </div>
-
-                    <h3 className={`text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight group-hover:opacity-95 transition-colors ${theme.textColor} mb-2`}>
-                      {game.name}
-                    </h3>
-
-                    <p className={`text-sm sm:text-base leading-relaxed ${isLight ? 'text-slate-600' : 'text-slate-300'} line-clamp-2 sm:line-clamp-3 font-medium max-w-2xl`}>
-                      {game.description}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Right Side: Game Miniature + Big Highlighted Play Button */}
-                <div className="z-10 w-full lg:w-auto flex flex-col sm:flex-row items-center gap-4 sm:gap-6 flex-shrink-0 justify-end">
-                  {/* Miniature Game Preview Art */}
-                  <GameCardThumbnail 
-                    game={game} 
-                    themePrimary={theme.primary} 
-                    isLight={isLight} 
+                    style={{ backgroundColor: theme.primary }}
+                    className="absolute -right-20 -top-20 w-64 h-64 rounded-full blur-3xl opacity-20 group-hover:opacity-45 transition-opacity duration-500 pointer-events-none"
                   />
 
-                  {/* Play Action Button */}
-                  <button
-                    style={{
-                      backgroundColor: theme.primary,
-                      boxShadow: `0 12px 35px -5px ${theme.glowColor}80`,
-                    }}
-                    className="w-full sm:w-auto py-4 sm:py-5 px-8 sm:px-10 rounded-2xl sm:rounded-3xl text-white font-black text-lg sm:text-xl tracking-wider uppercase shadow-xl flex items-center justify-center gap-3 transition-transform group-hover:scale-105 group-hover:brightness-110 active:scale-95 flex-shrink-0"
-                  >
-                    <Play className="w-6 h-6 fill-current" />
-                    <span>JOGAR AGORA</span>
-                  </button>
+                  {/* Left Side: Game Number, Badge, Title & Description */}
+                  <div className="flex items-start gap-5 sm:gap-7 z-10 w-full lg:flex-1">
+                    <div
+                      style={{ color: theme.primary }}
+                      className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl ${
+                        isLight 
+                          ? 'bg-slate-100 border-2 border-slate-200 shadow-sm' 
+                          : 'bg-gradient-to-br from-white/15 to-white/5 border-2 border-white/20 text-amber-400 shadow-inner'
+                      } flex items-center justify-center font-black text-3xl sm:text-4xl flex-shrink-0 group-hover:scale-105 transition-transform`}
+                    >
+                      {index + 1}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <span className={`text-[11px] sm:text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full border ${theme.badgeBg}`}>
+                          {game.category}
+                        </span>
+                        {(() => {
+                          const cfgPerQuestion = campaign.games_config?.[`${game.id}_time_limit`];
+                          const cfgTotal = campaign.games_config?.[`${game.id}_total_time_limit`];
+                          const isQuestionGame = ['quiz', 'truefalse', 'speed_trivia', 'complete_phrase', 'math_blitz'].includes(game.id);
+
+                          let timeDisplay = game.estimatedTime;
+                          if (cfgPerQuestion !== undefined) {
+                            if (cfgPerQuestion === 0) {
+                              timeDisplay = cfgTotal ? `${cfgTotal} seg total` : 'Sem tempo';
+                            } else {
+                              timeDisplay = isQuestionGame ? `${cfgPerQuestion} seg` : `${cfgPerQuestion} seg`;
+                            }
+                          } else if (cfgTotal !== undefined) {
+                            timeDisplay = `${cfgTotal} seg total`;
+                          }
+
+                          return (
+                            <span className={`text-[11px] font-mono px-2.5 py-0.5 rounded-md border ${isLight ? 'text-slate-700 bg-slate-100 border-slate-200' : 'text-slate-300 bg-black/40 border-white/10'}`}>
+                              ⏱️ {timeDisplay}
+                            </span>
+                          );
+                        })()}
+                        <span className={`text-[11px] font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Dificuldade: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{game.difficulty}</strong>
+                        </span>
+                        <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-400/30 flex items-center gap-1">
+                          <Sparkles className="w-3 h-3 text-amber-400" />
+                          <span>Touch</span>
+                        </span>
+                      </div>
+
+                      <h3 className={`text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight group-hover:opacity-95 transition-colors ${theme.textColor} mb-2`}>
+                        {game.name}
+                      </h3>
+
+                      <p className={`text-sm sm:text-base leading-relaxed ${isLight ? 'text-slate-600' : 'text-slate-300'} line-clamp-2 sm:line-clamp-3 font-medium max-w-2xl`}>
+                        {game.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right Side: Game Miniature + Big Highlighted Play Button */}
+                  <div className="z-10 w-full lg:w-auto flex flex-col sm:flex-row items-center gap-4 sm:gap-6 flex-shrink-0 justify-end">
+                    {/* Miniature Game Preview Art */}
+                    <GameCardThumbnail 
+                      game={game} 
+                      themePrimary={theme.primary} 
+                      isLight={isLight} 
+                    />
+
+                    {/* Play Action Button */}
+                    <button
+                      style={{
+                        backgroundColor: theme.primary,
+                        boxShadow: `0 12px 35px -5px ${theme.glowColor}80`,
+                      }}
+                      className="w-full sm:w-auto py-4 sm:py-5 px-8 sm:px-10 rounded-2xl sm:rounded-3xl text-white font-black text-lg sm:text-xl tracking-wider uppercase shadow-xl flex items-center justify-center gap-3 transition-transform group-hover:scale-105 group-hover:brightness-110 active:scale-95 flex-shrink-0"
+                    >
+                      <Play className="w-6 h-6 fill-current" />
+                      <span>JOGAR AGORA</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       )}

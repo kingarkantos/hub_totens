@@ -1,3 +1,5 @@
+import { supabase, BUCKETS } from './supabase';
+
 export interface CampaignAIContext {
   campaignName: string;
   clientName: string;
@@ -7,14 +9,44 @@ export interface CampaignAIContext {
   itemCount?: number;
 }
 
-const DEFAULT_GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+let cachedGeminiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+
+/**
+ * Retrieves effective Gemini API key, checking in-memory cache, env, and Supabase settings.
+ */
+export async function getEffectiveGeminiKey(explicitKey?: string): Promise<string> {
+  if (explicitKey && explicitKey.trim()) return explicitKey.trim();
+  if (cachedGeminiKey && cachedGeminiKey.trim()) return cachedGeminiKey.trim();
+
+  try {
+    const { data } = await supabase
+      .from('hubtotens_settings')
+      .select('value')
+      .eq('key', 'gemini_api_key')
+      .maybeSingle();
+
+    if (data?.value && typeof data.value === 'string' && data.value.trim()) {
+      cachedGeminiKey = data.value.trim();
+      return cachedGeminiKey;
+    }
+  } catch (err) {
+    console.warn('Could not fetch gemini_api_key from settings:', err);
+  }
+
+  return cachedGeminiKey;
+}
 
 export async function generateGameContentWithAI(
   gameId: string,
   context: CampaignAIContext,
-  apiKey: string = DEFAULT_GEMINI_KEY
+  apiKey?: string
 ): Promise<any> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const effectiveKey = await getEffectiveGeminiKey(apiKey);
+  if (!effectiveKey) {
+    throw new Error('Chave da API Gemini não configurada. Configure em Configurações do Hub.');
+  }
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${effectiveKey}`;
 
   const count = context.itemCount && context.itemCount > 0 ? context.itemCount : undefined;
 
@@ -234,3 +266,90 @@ IMPORTANTE: Responda ESTRITAMENTE em formato JSON válido, sem comentários, sem
     return JSON.parse(cleaned);
   }
 }
+
+/**
+ * Generates a themed promotional image directly with Google Gemini (gemini-2.5-flash-image)
+ * Automatically uploads to Supabase Storage for reliable totem kiosk caching.
+ */
+export async function generateImageWithAI(
+  userPrompt: string,
+  context?: Partial<CampaignAIContext>,
+  apiKey?: string
+): Promise<string> {
+  const effectiveKey = await getEffectiveGeminiKey(apiKey);
+  if (!effectiveKey) {
+    throw new Error('Chave da API Gemini não configurada. Configure em Configurações do Hub.');
+  }
+
+  // 1. Build high quality commercial prompt for Gemini Image Generator
+  const promptText = `Generate a realistic, high quality, commercial advertising illustration or photography for an interactive totem kiosk quiz question.
+Theme / Subject: "${userPrompt}"
+Brand / Context: ${context?.clientName || 'General'} - ${context?.campaignName || 'Campaign'}
+Style: Bright, pristine, corporate commercial quality, photorealistic or sleek 3D studio render. Clean lighting, 4k. No text, no watermark, no dark or gothic elements.`;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${effectiveKey}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [{ text: promptText }],
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Erro ao gerar imagem com Gemini (${response.status}): ${errText}`);
+  }
+
+  const data = await response.json();
+  const inlinePart = data.candidates?.[0]?.content?.parts?.find(
+    (p: any) => p.inlineData && p.inlineData.data
+  );
+
+  if (!inlinePart?.inlineData?.data) {
+    throw new Error('O Gemini não retornou dados de imagem para este enunciado.');
+  }
+
+  const mimeType = inlinePart.inlineData.mimeType || 'image/png';
+  const base64Data = inlinePart.inlineData.data;
+  const dataUrl = `data:${mimeType};base64,${base64Data}`;
+
+  // 2. Upload to Supabase Storage for permanent public URL
+  try {
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: mimeType });
+
+    const ext = mimeType.includes('jpeg') || mimeType.includes('jpg') ? 'jpg' : 'png';
+    const fileName = `quiz_gemini_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+    const filePath = `quiz_images/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKETS.SPLASHES)
+      .upload(filePath, blob, { contentType: mimeType, upsert: true });
+
+    if (!uploadError) {
+      const { data: publicData } = supabase.storage
+        .from(BUCKETS.SPLASHES)
+        .getPublicUrl(filePath);
+
+      if (publicData?.publicUrl) {
+        return publicData.publicUrl;
+      }
+    }
+  } catch (err) {
+    console.warn('Could not upload image to Supabase, returning data URL:', err);
+  }
+
+  return dataUrl;
+}
+

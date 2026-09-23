@@ -3,7 +3,7 @@ import { Plus, Settings, ExternalLink, Copy, Check, Edit2, Trash2, Trophy, Play,
 import { Campaign, GameDefinition } from '../types';
 import { supabase, TABLES } from '../lib/supabase';
 import { THEMES } from '../lib/themes';
-import { GAMES_CATALOG } from '../lib/gamesCatalog';
+import { GAMES_CATALOG, GAME_CATEGORIES } from '../lib/gamesCatalog';
 import { CampaignFormModal } from '../components/CampaignFormModal';
 import { SettingsModal } from '../components/SettingsModal';
 import { GamePreviewModal } from '../games/GamePreviewModal';
@@ -30,6 +30,7 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({ onNavigateToCampaign
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [previewGame, setPreviewGame] = useState<GameDefinition | null>(null);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   // Check saved session or fetch master password from Supabase
   useEffect(() => {
@@ -416,20 +417,78 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({ onNavigateToCampaign
 
         {/* 2. Interactive Games Catalog Section with Quick Previews */}
         <div className="space-y-4 pt-6 border-t border-slate-200">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
                 <Play className="w-5 h-5 text-red-600 fill-current" />
-                <span>Catálogo de 10 Jogos para Totens</span>
+                <span>Catálogo de {GAMES_CATALOG.length} Jogos para Totens</span>
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                Clique em qualquer jogo para testar a jogabilidade no emulador
+                Navegue pelas categorias e clique em qualquer jogo para testar a jogabilidade no emulador
               </p>
             </div>
+            <span className="text-xs font-black text-slate-600 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200 self-start sm:self-auto">
+              {GAMES_CATALOG.length} Desafios Disponíveis
+            </span>
           </div>
 
+          {/* Category Filter Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+            <button
+              type="button"
+              onClick={() => {
+                sound.playClick();
+                setSelectedCategory('all');
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 ${
+                selectedCategory === 'all'
+                  ? 'bg-red-600 text-white shadow-sm'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              <span>Todos</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                selectedCategory === 'all' ? 'bg-black/25 text-white' : 'bg-slate-100 text-slate-600'
+              }`}>
+                {GAMES_CATALOG.length}
+              </span>
+            </button>
+
+            {GAME_CATEGORIES.map((cat) => {
+              const isSelected = selectedCategory === cat.id;
+              const count = GAMES_CATALOG.filter((g) => g.categoryId === cat.id || g.category === cat.name).length;
+              if (count === 0) return null;
+
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setSelectedCategory(cat.id);
+                  }}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 ${
+                    isSelected
+                      ? 'bg-red-600 text-white shadow-sm'
+                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <span>{cat.name}</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    isSelected ? 'bg-black/25 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Filtered Games Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
-            {GAMES_CATALOG.map((game) => (
+            {GAMES_CATALOG.filter(
+              (g) => selectedCategory === 'all' || g.categoryId === selectedCategory || g.category === selectedCategory
+            ).map((game) => (
               <div
                 key={game.id}
                 onClick={() => {

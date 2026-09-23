@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw, Shuffle, Clock, Gamepad2, LayoutGrid, Gem, Box } from 'lucide-react';
+import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw, Shuffle, Clock, Gamepad2, LayoutGrid, Gem, Box, AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, List } from 'lucide-react';
 import { Campaign, GameDefinition, ThemeId, CustomColorsConfig, GameLayoutId, GAME_LAYOUTS } from '../types';
 import { THEME_LIST, THEMES } from '../lib/themes';
-import { GAMES_CATALOG } from '../lib/gamesCatalog';
+import { GAMES_CATALOG, GAME_CATEGORIES } from '../lib/gamesCatalog';
 import { GamePreviewModal } from '../games/GamePreviewModal';
 import { GameContentEditorModal, getContentCount } from './GameContentEditorModal';
 import { sound } from '../lib/audio';
@@ -74,6 +74,13 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
   );
   const [gameLayout, setGameLayout] = useState<GameLayoutId>(
     campaignToEdit?.games_config?.game_layout || 'modern_glass'
+  );
+  const [gameCategoryFilter, setGameCategoryFilter] = useState<string>('all');
+  const [descriptionAlign, setDescriptionAlign] = useState<'left' | 'center' | 'right' | 'justify'>(
+    campaignToEdit?.games_config?.description_align || 'left'
+  );
+  const [descriptionSize, setDescriptionSize] = useState<'sm' | 'md' | 'lg'>(
+    campaignToEdit?.games_config?.description_size || 'md'
   );
 
   const initialCustomColors: CustomColorsConfig = campaignToEdit?.games_config?.custom_colors || {
@@ -225,6 +232,8 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           theme_mode: themeMode,
           order_mode: orderMode,
           game_layout: gameLayout,
+          description_align: descriptionAlign,
+          description_size: descriptionSize,
           custom_colors: {
             ...customColors,
             bgType: customColors.enabled ? customColors.bgType : (themeMode === 'light' ? 'light' : 'dark'),
@@ -326,17 +335,151 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                   </p>
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                    Descrição ou Regras da Ativação (Opcional)
-                  </label>
+                <div className="md:col-span-2 space-y-2">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <label className="block text-xs font-bold text-slate-700 uppercase">
+                      Descrição ou Regras da Ativação (Opcional)
+                    </label>
+
+                    {/* Simple Formatting Toolbar */}
+                    <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 flex-wrap">
+                      {/* Alignment Options */}
+                      <div className="flex items-center bg-white rounded-lg p-0.5 border border-slate-200 shadow-2xs">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sound.playClick();
+                            setDescriptionAlign('left');
+                          }}
+                          className={`p-1.5 rounded-md transition-all ${
+                            descriptionAlign === 'left' ? 'bg-red-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                          }`}
+                          title="Alinhar à Esquerda"
+                        >
+                          <AlignLeft className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sound.playClick();
+                            setDescriptionAlign('center');
+                          }}
+                          className={`p-1.5 rounded-md transition-all ${
+                            descriptionAlign === 'center' ? 'bg-red-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                          }`}
+                          title="Centralizar Texto"
+                        >
+                          <AlignCenter className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sound.playClick();
+                            setDescriptionAlign('justify');
+                          }}
+                          className={`p-1.5 rounded-md transition-all ${
+                            descriptionAlign === 'justify' ? 'bg-red-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                          }`}
+                          title="Justificar Texto"
+                        >
+                          <AlignJustify className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sound.playClick();
+                            setDescriptionAlign('right');
+                          }}
+                          className={`p-1.5 rounded-md transition-all ${
+                            descriptionAlign === 'right' ? 'bg-red-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                          }`}
+                          title="Alinhar à Direita"
+                        >
+                          <AlignRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <span className="w-px h-4 bg-slate-300 mx-0.5" />
+
+                      {/* Text Style Helpers */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setDescription((prev) => prev ? `${prev}\n- ` : '- ');
+                        }}
+                        className="px-2 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-red-600 text-[11px] font-bold flex items-center gap-1 shadow-2xs active:scale-95"
+                        title="Inserir item de lista com marcador (- item)"
+                      >
+                        <List className="w-3.5 h-3.5 text-red-600" />
+                        <span>Lista (- )</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setDescription((prev) => prev ? `${prev} **Destaque** ` : '**Destaque** ');
+                        }}
+                        className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-red-600 text-xs font-black shadow-2xs active:scale-95"
+                        title="Inserir Negrito (**texto**)"
+                      >
+                        <Bold className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setDescription((prev) => prev ? `${prev} *Itálico* ` : '*Itálico* ');
+                        }}
+                        className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-red-600 text-xs font-black shadow-2xs active:scale-95"
+                        title="Inserir Itálico (*texto*)"
+                      >
+                        <Italic className="w-3.5 h-3.5" />
+                      </button>
+
+                      <span className="w-px h-4 bg-slate-300 mx-0.5" />
+
+                      {/* Font Size Selector */}
+                      <div className="flex items-center gap-1 text-[10px] font-bold">
+                        <span className="text-slate-400 uppercase text-[9px] mr-0.5">Tam:</span>
+                        {(['sm', 'md', 'lg'] as const).map((sz) => (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => {
+                              sound.playClick();
+                              setDescriptionSize(sz);
+                            }}
+                            className={`px-1.5 py-0.5 rounded-md transition-all ${
+                              descriptionSize === sz
+                                ? 'bg-red-600 text-white font-black'
+                                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            {sz === 'sm' ? 'P' : sz === 'md' ? 'M' : 'G'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
                   <textarea
-                    rows={2}
-                    placeholder="Ex: Ativação interativa de estande no Salão do Automóvel..."
+                    rows={6}
+                    placeholder="Ex: Ativação interativa de estande no Salão do Automóvel...&#10;- Regra 1: Toque na tela para iniciar&#10;- Regra 2: Cada acerto pontua no ranking"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500 focus:bg-white text-sm"
+                    style={{
+                      textAlign: descriptionAlign === 'justify' ? 'justify' : descriptionAlign,
+                    }}
+                    className={`w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500 focus:bg-white text-sm font-medium leading-relaxed shadow-inner ${
+                      descriptionAlign === 'center' ? 'text-center' : descriptionAlign === 'right' ? 'text-right' : descriptionAlign === 'justify' ? 'text-justify' : 'text-left'
+                    }`}
                   />
+                  <p className="text-[11px] text-slate-500">
+                    Dica: Quebras de linha e tópicos iniciados com hífen (<code className="bg-slate-200 px-1 py-0.5 rounded text-slate-800">- item</code>) serão preservados exatamente como formatado na tela de início do totem.
+                  </p>
                 </div>
               </div>
             </div>
@@ -1046,7 +1189,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
 
             {/* Interactive Games Catalog Section (Grid with Previews & Content) */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-sm font-bold text-red-600 uppercase tracking-wider">
                   <Play className="w-4 h-4" />
                   <span>4. Lista de Jogos do Totem (Selecione &amp; Alimente Conteúdo)</span>
@@ -1079,9 +1222,99 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                 </div>
               </div>
 
+              {/* Category Filter Pills & Category Quick Action */}
+              <div className="p-3 rounded-2xl bg-slate-100/80 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setGameCategoryFilter('all');
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 ${
+                      gameCategoryFilter === 'all'
+                        ? 'bg-red-600 text-white shadow-xs'
+                        : 'bg-white text-slate-700 hover:bg-slate-200/80 border border-slate-200'
+                    }`}
+                  >
+                    <span>Todos</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                      gameCategoryFilter === 'all' ? 'bg-black/25 text-white' : 'bg-slate-100 text-slate-600'
+                    }`}>
+                      {GAMES_CATALOG.length}
+                    </span>
+                  </button>
+
+                  {GAME_CATEGORIES.map((cat) => {
+                    const isSelected = gameCategoryFilter === cat.id;
+                    const catGames = GAMES_CATALOG.filter((g) => g.categoryId === cat.id || g.category === cat.name);
+                    const count = catGames.length;
+                    const selectedCount = catGames.filter((g) => selectedGames.includes(g.id)).length;
+                    if (count === 0) return null;
+
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setGameCategoryFilter(cat.id);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 ${
+                          isSelected
+                            ? 'bg-red-600 text-white shadow-xs'
+                            : 'bg-white text-slate-700 hover:bg-slate-200/80 border border-slate-200'
+                        }`}
+                      >
+                        <span>{cat.name}</span>
+                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                          isSelected ? 'bg-black/25 text-white' : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {selectedCount}/{count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Category Selection Helper */}
+                {gameCategoryFilter !== 'all' && (() => {
+                  const catGames = GAMES_CATALOG.filter(
+                    (g) => g.categoryId === gameCategoryFilter || g.category === gameCategoryFilter
+                  );
+                  const allCatSelected = catGames.every((g) => selectedGames.includes(g.id));
+
+                  return (
+                    <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-auto border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          if (allCatSelected) {
+                            // Unselect this category
+                            const ids = catGames.map((g) => g.id);
+                            setSelectedGames((prev) => prev.filter((id) => !ids.includes(id)));
+                          } else {
+                            // Select all in this category
+                            const ids = catGames.map((g) => g.id);
+                            setSelectedGames((prev) => Array.from(new Set([...prev, ...ids])));
+                          }
+                        }}
+                        className="px-3 py-1 rounded-lg bg-white border border-slate-300 hover:border-red-400 active:scale-95 text-[11px] font-bold text-slate-700 transition-all flex items-center gap-1.5"
+                      >
+                        <Check className="w-3.5 h-3.5 text-red-600" />
+                        <span>{allCatSelected ? 'Desmarcar Categoria' : 'Marcar Esta Categoria'}</span>
+                      </button>
+                    </div>
+                  );
+                })()}
+              </div>
+
               {/* Games Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-                {GAMES_CATALOG.map((game) => {
+                {GAMES_CATALOG.filter(
+                  (g) => gameCategoryFilter === 'all' || g.categoryId === gameCategoryFilter || g.category === gameCategoryFilter
+                ).map((game) => {
                   const isSelected = selectedGames.includes(game.id);
                   const hasCustomContent = !!gamesConfig[game.id];
 

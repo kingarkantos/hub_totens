@@ -139,26 +139,26 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = ({
       clientName={clientName}
       splashImageUrl={splashImageUrl}
     >
-      <div className="flex flex-col flex-1 w-full max-w-3xl lg:max-w-4xl mx-auto justify-between py-4 sm:py-8 px-2 sm:px-6 gap-5 sm:gap-8 select-none animate-in fade-in duration-300">
+      <div className="flex flex-col w-full max-w-3xl lg:max-w-4xl mx-auto my-auto py-2 sm:py-4 px-2 sm:px-4 gap-3 sm:gap-5 select-none animate-in fade-in duration-300">
         {/* Step indicator */}
-        <div className="flex items-center justify-between bg-black/40 border-2 border-white/20 rounded-2xl px-5 py-3.5 shadow-sm backdrop-blur-md">
-          <span className="text-sm sm:text-base font-black uppercase text-amber-300 flex items-center gap-2">
+        <div className="flex items-center justify-between bg-black/40 border-2 border-white/20 rounded-2xl px-4 py-2.5 shadow-sm backdrop-blur-md">
+          <span className="text-xs sm:text-base font-black uppercase text-amber-300 flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
             Frase {currentIdx + 1} de {phrases.length}
           </span>
-          <span className="text-xs sm:text-sm font-black text-slate-300 flex items-center gap-2">
-            <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
+          <span className="text-xs sm:text-sm font-black text-slate-300 flex items-center gap-1.5">
+            <HelpCircle className="w-4 h-4 text-amber-400" />
             Selecione o termo correto
           </span>
         </div>
 
         {/* Phrase Sentence Box */}
-        <div className="my-auto py-2">
-          <div className="bg-slate-900/85 backdrop-blur-xl rounded-3xl p-8 sm:p-12 md:p-14 border-2 border-white/20 shadow-2xl text-center">
-            <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-amber-300/90 mb-4 block">
+        <div className="my-auto py-1">
+          <div className="bg-slate-900/85 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-10 border-2 border-white/20 shadow-xl text-center">
+            <span className="text-[11px] sm:text-xs font-black uppercase tracking-widest text-amber-300/90 mb-2 sm:mb-3 block">
               Complete a lacuna com a opção ideal:
             </span>
-            <p className="text-2xl sm:text-4xl md:text-5xl font-black text-white leading-relaxed sm:leading-relaxed">
+            <p className="text-xl sm:text-3xl md:text-4xl font-black text-white leading-relaxed sm:leading-relaxed">
               {parts[0]}
               <span
                 className={`inline-block px-5 sm:px-7 py-2 sm:py-3 mx-2 sm:mx-3 rounded-2xl sm:rounded-3xl border-b-4 font-black transition-all ${

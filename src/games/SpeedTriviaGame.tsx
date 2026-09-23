@@ -152,25 +152,25 @@ export const SpeedTriviaGame: React.FC<SpeedTriviaGameProps> = ({
       clientName={clientName}
       splashImageUrl={splashImageUrl}
     >
-      <div className="flex flex-col flex-1 w-full max-w-3xl lg:max-w-4xl mx-auto justify-between py-4 sm:py-8 px-2 sm:px-6 gap-5 sm:gap-8 select-none animate-in fade-in duration-300">
+      <div className="flex flex-col w-full max-w-3xl lg:max-w-4xl mx-auto my-auto py-2 sm:py-4 px-2 sm:px-4 gap-3 sm:gap-5 select-none animate-in fade-in duration-300">
         {/* Speed Bar & Multiplier Header */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between px-2">
-            <span className="text-sm sm:text-base font-black uppercase text-amber-300 flex items-center gap-2">
-              <Zap className="w-5 h-5 fill-amber-400 text-amber-400 animate-pulse" />
+        <div className="space-y-2">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs sm:text-base font-black uppercase text-amber-300 flex items-center gap-2">
+              <Zap className="w-4 h-4 sm:w-5 sm:h-5 fill-amber-400 text-amber-400 animate-pulse" />
               Pergunta {currentIdx + 1} de {questions.length}
             </span>
 
             {streak > 1 && (
-              <span className="text-xs sm:text-sm font-black text-white bg-gradient-to-r from-amber-500 to-red-500 px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-md animate-pulse">
-                <Flame className="w-4 h-4 fill-yellow-300" />
+              <span className="text-xs sm:text-sm font-black text-white bg-gradient-to-r from-amber-500 to-red-500 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md animate-pulse">
+                <Flame className="w-3.5 h-3.5 fill-yellow-300" />
                 Multiplicador x{streak}!
               </span>
             )}
           </div>
 
           {/* High voltage animated progress bar */}
-          <div className="h-4 sm:h-5 w-full bg-slate-900 rounded-full overflow-hidden p-0.5 border-2 border-white/20 shadow-inner">
+          <div className="h-3 sm:h-4 w-full bg-slate-900 rounded-full overflow-hidden p-0.5 border-2 border-white/20 shadow-inner">
             <div
               className={`h-full rounded-full transition-all duration-1000 ${
                 questionTime > 4
@@ -183,19 +183,19 @@ export const SpeedTriviaGame: React.FC<SpeedTriviaGameProps> = ({
         </div>
 
         {/* Question Card */}
-        <div className="my-auto py-2">
-          <div className="bg-slate-900/85 backdrop-blur-xl rounded-3xl p-8 sm:p-12 md:p-14 border-2 border-white/20 shadow-2xl text-center">
-            <span className="inline-block text-xs sm:text-sm font-black uppercase tracking-widest text-amber-300/90 mb-4">
+        <div className="my-auto py-1">
+          <div className="bg-slate-900/85 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-10 border-2 border-white/20 shadow-xl text-center">
+            <span className="inline-block text-[11px] sm:text-xs font-black uppercase tracking-widest text-amber-300/90 mb-2 sm:mb-3">
               Responda rápido para pontuar mais:
             </span>
-            <h3 className="text-2xl sm:text-4xl md:text-5xl font-black text-white leading-snug sm:leading-normal tracking-tight">
+            <h3 className="text-xl sm:text-3xl md:text-4xl font-black text-white leading-snug sm:leading-normal tracking-tight">
               {activeQ.question}
             </h3>
           </div>
         </div>
 
         {/* 4 Lightning Options - Large Touch Friendly Buttons */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-1">
           {activeQ.options.map((opt, i) => {
             const isChosen = selectedOpt === i;
             const isCorrectAnswer = i === activeQ.correct;

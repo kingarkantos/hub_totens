@@ -359,7 +359,9 @@ export const GameContainer: React.FC<GameContainerProps> = ({
             <div className="absolute inset-6 pointer-events-none rounded-3xl border border-purple-500/30 shadow-[0_0_50px_rgba(168,85,247,0.15)]" />
           )}
 
-          {children}
+          <div className="w-full flex-1 flex flex-col items-center my-auto min-h-min">
+            {children}
+          </div>
         </main>
 
         {/* Game Over / Victory Modal */}

@@ -193,38 +193,38 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
       clientName={clientName}
       splashImageUrl={splashImageUrl}
     >
-      <div className="flex flex-col flex-1 w-full max-w-3xl lg:max-w-4xl mx-auto justify-between py-4 sm:py-8 px-2 sm:px-6 gap-5 sm:gap-8 select-none animate-in fade-in duration-300">
+      <div className="flex flex-col w-full max-w-3xl lg:max-w-4xl mx-auto my-auto py-2 sm:py-4 px-2 sm:px-4 gap-3 sm:gap-5 select-none animate-in fade-in duration-300">
         {/* Progress & Streak Header */}
-        <div className={`flex items-center justify-between rounded-2xl px-5 py-3.5 shadow-sm border-2 ${
+        <div className={`flex items-center justify-between rounded-2xl px-4 py-2.5 shadow-sm border-2 ${
           isLightMode 
             ? 'bg-blue-50 border-blue-200/80 text-blue-900' 
             : 'bg-slate-900/90 border-blue-500/30 text-blue-300'
         }`}>
-          <span className="text-sm sm:text-base font-black uppercase tracking-wider flex items-center gap-2">
+          <span className="text-xs sm:text-base font-black uppercase tracking-wider flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
             Afirmação {currentIdx + 1} de {statements.length}
           </span>
           {streak > 1 && (
-            <span className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-600/50 px-4 py-1.5 rounded-full flex items-center gap-1.5 animate-bounce shadow-xs">
-              <Zap className="w-4 h-4 fill-amber-500" />
+            <span className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-600/50 px-3 py-1 rounded-full flex items-center gap-1.5 animate-bounce shadow-xs">
+              <Zap className="w-3.5 h-3.5 fill-amber-500" />
               Combo x{streak}!
             </span>
           )}
         </div>
 
         {/* Statement Card */}
-        <div className="my-auto py-2">
-          <div className={`rounded-3xl p-8 sm:p-12 md:p-14 border-2 shadow-2xl text-center backdrop-blur-xl transition-all ${
+        <div className="my-auto py-1">
+          <div className={`rounded-3xl p-5 sm:p-8 md:p-10 border-2 shadow-xl text-center backdrop-blur-xl transition-all ${
             isLightMode
               ? 'bg-white/95 border-slate-200 shadow-slate-200/60'
               : 'bg-slate-900/85 border-white/20 shadow-black/50'
           }`}>
-            <span className={`inline-block text-xs sm:text-sm font-black uppercase tracking-widest mb-4 ${
+            <span className={`inline-block text-[11px] sm:text-xs font-black uppercase tracking-widest mb-2 sm:mb-3 ${
               isLightMode ? 'text-slate-400' : 'text-slate-400'
             }`}>
               Julgue a afirmação abaixo:
             </span>
-            <h3 className={`text-2xl sm:text-4xl md:text-5xl font-black leading-snug sm:leading-normal tracking-tight ${
+            <h3 className={`text-xl sm:text-3xl md:text-4xl font-black leading-snug sm:leading-normal tracking-tight ${
               isLightMode ? 'text-slate-900' : 'text-white'
             }`}>
               "{currentItem.statement}"
@@ -233,26 +233,26 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
             {/* Explanation reveal */}
             {answered && (
               <div
-                className={`mt-6 sm:mt-8 p-5 sm:p-7 rounded-2xl sm:rounded-3xl border-2 text-left transition-all animate-fadeIn ${
+                className={`mt-4 sm:mt-6 p-4 sm:p-5 rounded-2xl border-2 text-left transition-all animate-fadeIn ${
                   selectedAnswer === currentItem.isTrue
                     ? isLightMode ? 'bg-emerald-50 border-emerald-300 text-emerald-950' : 'bg-emerald-950/70 border-emerald-500 text-emerald-200'
                     : isLightMode ? 'bg-rose-50 border-rose-300 text-rose-950' : 'bg-rose-950/70 border-rose-500 text-rose-200'
                 }`}
               >
-                <div className="flex items-center gap-2.5 font-black text-base sm:text-xl mb-2">
+                <div className="flex items-center gap-2 font-black text-sm sm:text-lg mb-1.5">
                   {selectedAnswer === currentItem.isTrue ? (
                     <>
-                      <Check className="w-6 h-6 text-emerald-500 stroke-[3]" />
+                      <Check className="w-5 h-5 text-emerald-500 stroke-[3]" />
                       Você acertou!
                     </>
                   ) : (
                     <>
-                      <X className="w-6 h-6 text-rose-500 stroke-[3]" />
+                      <X className="w-5 h-5 text-rose-500 stroke-[3]" />
                       Resposta incorreta!
                     </>
                   )}
                 </div>
-                <p className="text-sm sm:text-lg font-bold leading-relaxed">
+                <p className="text-xs sm:text-base font-bold leading-relaxed">
                   {currentItem.explanation}
                 </p>
               </div>
@@ -262,21 +262,21 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
 
         {/* Action Buttons */}
         {!answered ? (
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 pt-2">
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 pt-1">
             <button
               type="button"
               onClick={() => handleAnswer(true)}
-              className="py-8 sm:py-10 min-h-[110px] sm:min-h-[135px] bg-emerald-600 hover:bg-emerald-500 text-white rounded-3xl font-black text-xl sm:text-3xl shadow-xl shadow-emerald-900/40 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-all active:scale-95 border-b-4 border-emerald-800"
+              className="py-5 sm:py-7 min-h-[75px] sm:min-h-[90px] bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl sm:rounded-3xl font-black text-lg sm:text-2xl shadow-lg shadow-emerald-900/40 flex flex-col items-center justify-center gap-1.5 sm:gap-2 transition-all active:scale-95 border-b-4 border-emerald-800"
             >
-              <ThumbsUp className="w-9 h-9 sm:w-12 sm:h-12 stroke-[2.5]" />
+              <ThumbsUp className="w-7 h-7 sm:w-9 sm:h-9 stroke-[2.5]" />
               VERDADEIRO
             </button>
             <button
               type="button"
               onClick={() => handleAnswer(false)}
-              className="py-8 sm:py-10 min-h-[110px] sm:min-h-[135px] bg-rose-600 hover:bg-rose-500 text-white rounded-3xl font-black text-xl sm:text-3xl shadow-xl shadow-rose-900/40 flex flex-col items-center justify-center gap-2 sm:gap-3 transition-all active:scale-95 border-b-4 border-rose-800"
+              className="py-5 sm:py-7 min-h-[75px] sm:min-h-[90px] bg-rose-600 hover:bg-rose-500 text-white rounded-2xl sm:rounded-3xl font-black text-lg sm:text-2xl shadow-lg shadow-rose-900/40 flex flex-col items-center justify-center gap-1.5 sm:gap-2 transition-all active:scale-95 border-b-4 border-rose-800"
             >
-              <ThumbsDown className="w-9 h-9 sm:w-12 sm:h-12 stroke-[2.5]" />
+              <ThumbsDown className="w-7 h-7 sm:w-9 sm:h-9 stroke-[2.5]" />
               FALSO
             </button>
           </div>

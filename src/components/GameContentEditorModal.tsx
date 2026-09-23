@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw } from 'lucide-react';
+import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw, Image as ImageIcon, Loader2, Wand2, Eye, ZoomIn, ExternalLink } from 'lucide-react';
+import { supabase, BUCKETS } from '../lib/supabase';
 import { GameDefinition } from '../types';
 import {
   GAME_CONTENT_SCHEMAS,
@@ -22,7 +23,7 @@ import {
   GeniusPadCustom,
 } from '../types/gameContent';
 import { parseGameCSV, downloadSampleCsv } from '../lib/csvParser';
-import { generateGameContentWithAI, CampaignAIContext } from '../lib/gemini';
+import { generateGameContentWithAI, generateImageWithAI, CampaignAIContext } from '../lib/gemini';
 import { sound } from '../lib/audio';
 
 export const getDefaultTimeForGame = (id: string): number => {
@@ -44,6 +45,10 @@ export const getDefaultTimeForGame = (id: string): number => {
     case 'hangman': return 60;
     case 'map_epi': return 60;
     case 'wordsearch': return 90;
+    case 'math_blitz': return 30;
+    case 'higher_lower': return 45;
+    case 'reaction_time': return 30;
+    case 'bullseye': return 40;
     case 'wheel': return 0;
     case 'genius': return 0;
     default: return 30;
@@ -294,8 +299,48 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
 
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [uploadingImgIdx, setUploadingImgIdx] = useState<number | null>(null);
+  const [generatingImgIdx, setGeneratingImgIdx] = useState<number | null>(null);
+  const [activeAiImgModalIdx, setActiveAiImgModalIdx] = useState<number | null>(null);
+  const [aiImgPrompt, setAiImgPrompt] = useState('');
+  const [previewModalImg, setPreviewModalImg] = useState<string | null>(null);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiCustomPrompt, setAiCustomPrompt] = useState('');
+
+  const handleOpenAIGeneratePrompt = (qIdx: number, defaultPrompt: string) => {
+    sound.playClick();
+    if (activeAiImgModalIdx === qIdx) {
+      setActiveAiImgModalIdx(null);
+    } else {
+      setActiveAiImgModalIdx(qIdx);
+      setAiImgPrompt(defaultPrompt || '');
+    }
+  };
+
+  const handleGenerateImageForQuestion = async (qIdx: number, promptText: string) => {
+    const questionsList = (Array.isArray(content) ? content : []) as QuizQuestionItem[];
+    const finalPrompt = promptText.trim() || questionsList[qIdx]?.question || 'Quiz question illustration';
+    setGeneratingImgIdx(qIdx);
+    setErrorMsg('');
+    sound.playEngineRev();
+
+    try {
+      const generatedUrl = await generateImageWithAI(finalPrompt, campaignContext);
+      if (generatedUrl) {
+        setContent(questionsList.map((it: QuizQuestionItem, i: number) => i === qIdx ? { ...it, imageUrl: generatedUrl, image_url: generatedUrl } : it));
+        setHasCustomEdits(true);
+        setActiveAiImgModalIdx(null);
+        sound.playSuccess();
+        setSuccessMsg(`Imagem gerada com Inteligência Artificial para a Questão ${qIdx + 1}!`);
+      }
+    } catch (err: any) {
+      console.error('Error generating image with AI:', err);
+      sound.playError();
+      setErrorMsg(err.message || 'Erro ao gerar imagem com IA. Tente novamente.');
+    } finally {
+      setGeneratingImgIdx(null);
+    }
+  };
 
   const getDefaultCountForGame = (id: string) => {
     switch (id) {
@@ -767,6 +812,243 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                         }}
                         className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-bold focus:outline-none focus:border-red-500"
                       />
+                    </div>
+
+                    {/* Question Image Attachment */}
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 space-y-2">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700">
+                          <ImageIcon className="w-3.5 h-3.5 text-blue-600" />
+                          <span>Imagem Ilustrativa da Pergunta (Opcional)</span>
+                        </div>
+                        {(q.imageUrl || q.image_url) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              sound.playClick();
+                              setContent(questions.map((it, i) => i === qIdx ? { ...it, imageUrl: undefined, image_url: undefined } : it));
+                              setHasCustomEdits(true);
+                            }}
+                            className="text-[10px] text-rose-600 hover:text-rose-700 font-bold flex items-center gap-1 hover:underline"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            <span>Remover Imagem</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {(q.imageUrl || q.image_url) ? (
+                        <div className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                          <div
+                            onClick={() => {
+                              sound.playClick();
+                              setPreviewModalImg(q.imageUrl || q.image_url || null);
+                            }}
+                            className="relative group cursor-pointer w-16 h-12 rounded-lg overflow-hidden border border-slate-300 bg-white flex-shrink-0 shadow-xs hover:border-blue-500 hover:ring-2 hover:ring-blue-400/40 transition-all"
+                            title="Clique para ver imagem ampliada"
+                          >
+                            <img
+                              src={q.imageUrl || q.image_url}
+                              alt="Preview da Pergunta"
+                              className="w-full h-full object-contain group-hover:scale-105 transition-transform"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                              <Eye className="w-4 h-4 text-white drop-shadow" />
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-[10px] font-mono text-slate-600 truncate block">
+                              {q.imageUrl || q.image_url}
+                            </span>
+                            <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1 mt-0.5">
+                              <Check className="w-3 h-3 stroke-[3]" /> Imagem anexada com sucesso
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                sound.playClick();
+                                setPreviewModalImg(q.imageUrl || q.image_url || null);
+                              }}
+                              className="px-2.5 py-1 text-[11px] font-bold text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-lg flex items-center gap-1 transition-colors"
+                              title="Clique para visualizar imagem em tamanho real"
+                            >
+                              <Eye className="w-3 h-3 text-blue-600" />
+                              <span>Ver</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenAIGeneratePrompt(qIdx, q.question)}
+                              className="px-2.5 py-1 text-[11px] font-bold text-purple-700 bg-purple-100 hover:bg-purple-200 rounded-lg flex items-center gap-1 transition-colors"
+                              title="Trocar ou gerar outra imagem com IA"
+                            >
+                              <Sparkles className="w-3 h-3 text-purple-600" />
+                              <span>Regerar com IA</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                sound.playClick();
+                                setContent(questions.map((it, i) => i === qIdx ? { ...it, imageUrl: undefined, image_url: undefined } : it));
+                                setHasCustomEdits(true);
+                              }}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                              title="Remover imagem"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col sm:flex-row items-center gap-2">
+                          <label className="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer flex items-center justify-center gap-1.5 border border-slate-200 active:scale-95 transition-all flex-shrink-0">
+                            <input
+                              type="file"
+                              accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                              className="hidden"
+                              disabled={uploadingImgIdx === qIdx || generatingImgIdx === qIdx}
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                setUploadingImgIdx(qIdx);
+                                sound.playClick();
+                                try {
+                                  const fileExt = file.name.split('.').pop() || 'jpg';
+                                  const fileName = `quiz_${Date.now()}_${Math.random().toString(36).substring(2, 6)}.${fileExt}`;
+                                  const filePath = `quiz_images/${fileName}`;
+
+                                  const { error } = await supabase.storage
+                                    .from(BUCKETS.SPLASHES)
+                                    .upload(filePath, file, { contentType: file.type || 'image/jpeg', upsert: true });
+
+                                  if (error) {
+                                    const reader = new FileReader();
+                                    reader.onload = () => {
+                                      const base64Url = reader.result as string;
+                                      setContent(questions.map((it, i) => i === qIdx ? { ...it, imageUrl: base64Url } : it));
+                                      setHasCustomEdits(true);
+                                      sound.playSuccess();
+                                    };
+                                    reader.readAsDataURL(file);
+                                  } else {
+                                    const { data: publicUrlData } = supabase.storage
+                                      .from(BUCKETS.SPLASHES)
+                                      .getPublicUrl(filePath);
+                                    const url = publicUrlData?.publicUrl || '';
+                                    setContent(questions.map((it, i) => i === qIdx ? { ...it, imageUrl: url } : it));
+                                    setHasCustomEdits(true);
+                                    sound.playSuccess();
+                                  }
+                                } catch (err) {
+                                  const reader = new FileReader();
+                                  reader.onload = () => {
+                                    const base64Url = reader.result as string;
+                                    setContent(questions.map((it, i) => i === qIdx ? { ...it, imageUrl: base64Url } : it));
+                                    setHasCustomEdits(true);
+                                    sound.playSuccess();
+                                  };
+                                  reader.readAsDataURL(file);
+                                } finally {
+                                  setUploadingImgIdx(null);
+                                }
+                              }}
+                            />
+                            {uploadingImgIdx === qIdx ? (
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                                <span>Enviando...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="w-3.5 h-3.5 text-blue-600" />
+                                <span>Subir Imagem</span>
+                              </>
+                            )}
+                          </label>
+
+                          <button
+                            type="button"
+                            disabled={generatingImgIdx === qIdx || uploadingImgIdx === qIdx}
+                            onClick={() => handleOpenAIGeneratePrompt(qIdx, q.question)}
+                            className="w-full sm:w-auto px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all flex-shrink-0"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                            <span>Gerar com IA</span>
+                          </button>
+
+                          <div className="w-full sm:flex-1 flex items-center">
+                            <input
+                              type="url"
+                              placeholder="Ou cole o link direto (https://...)"
+                              value={q.imageUrl || q.image_url || ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setContent(questions.map((it, i) => i === qIdx ? { ...it, imageUrl: val } : it));
+                                setHasCustomEdits(true);
+                              }}
+                              className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Caixa interativa para geração com IA */}
+                      {activeAiImgModalIdx === qIdx && (
+                        <div className="p-3 bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl space-y-2.5 animate-in fade-in zoom-in-95 duration-200 shadow-sm">
+                          <div className="flex items-center justify-between">
+                            <span className="flex items-center gap-1.5 text-xs font-black text-purple-950">
+                              <Sparkles className="w-4 h-4 text-purple-600" />
+                              <span>Gerador de Imagem com Inteligência Artificial</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setActiveAiImgModalIdx(null)}
+                              className="text-xs font-bold text-slate-400 hover:text-slate-600 px-1.5 py-0.5 rounded-md hover:bg-white"
+                            >
+                              ✕ Fechar
+                            </button>
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <input
+                              type="text"
+                              value={aiImgPrompt}
+                              onChange={(e) => setAiImgPrompt(e.target.value)}
+                              placeholder="Descreva a imagem que a IA deve gerar para esta pergunta..."
+                              className="flex-1 px-3 py-2 bg-white border border-purple-300 rounded-xl text-xs text-slate-900 font-medium placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleGenerateImageForQuestion(qIdx, aiImgPrompt);
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              disabled={generatingImgIdx === qIdx}
+                              onClick={() => handleGenerateImageForQuestion(qIdx, aiImgPrompt)}
+                              className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-95 text-white font-black text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md transition-all flex-shrink-0 disabled:opacity-50"
+                            >
+                              {generatingImgIdx === qIdx ? (
+                                <>
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  <span>Gerando com IA...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Wand2 className="w-3.5 h-3.5" />
+                                  <span>Gerar Imagem</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+
+                          <p className="text-[10px] text-purple-700/80 leading-normal">
+                            💡 <strong>Dica:</strong> A IA cria ilustrações e fotos comerciais realistas automaticamente. O enunciado da pergunta já vem pré-preenchido, mas você pode personalizá-lo para refinar detalhes.
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-1.5">
@@ -3132,6 +3414,70 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Lightbox / Full-size Image Preview Modal */}
+      {previewModalImg && (
+        <div 
+          onClick={() => setPreviewModalImg(null)}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 sm:p-8 animate-in fade-in duration-200"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="relative max-w-4xl max-h-[92vh] w-full bg-slate-900 border-2 border-white/20 rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col items-center animate-in zoom-in-95 duration-200 text-white"
+          >
+            {/* Top Bar with actions */}
+            <div className="w-full flex items-center justify-between pb-3 mb-3 border-b border-white/10">
+              <span className="text-xs sm:text-sm font-bold flex items-center gap-2 text-slate-200">
+                <ImageIcon className="w-4 h-4 text-blue-400" />
+                <span>Visualização da Imagem da Pergunta</span>
+              </span>
+
+              <div className="flex items-center gap-2">
+                <a
+                  href={previewModalImg}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Abrir em Nova Aba</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setPreviewModalImg(null)}
+                  className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors"
+                  title="Fechar visualização"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Big Image Display */}
+            <div className="w-full max-h-[72vh] flex items-center justify-center overflow-hidden rounded-2xl bg-black/40 border border-white/10 p-2">
+              <img
+                src={previewModalImg}
+                alt="Imagem da Pergunta em Tamanho Real"
+                className="max-h-[68vh] max-w-full object-contain rounded-xl shadow-lg"
+              />
+            </div>
+
+            {/* Bottom info & close button */}
+            <div className="w-full pt-3 mt-3 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
+              <span className="truncate max-w-[280px] sm:max-w-md font-mono text-[10px]">
+                {previewModalImg}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPreviewModalImg(null)}
+                className="px-4 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold transition-all text-xs"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

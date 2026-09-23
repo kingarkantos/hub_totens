@@ -222,9 +222,9 @@ export const QuizGame: React.FC<QuizGameProps> = ({
       clientName={clientName}
       splashImageUrl={splashImageUrl}
     >
-      <div className="w-full max-w-3xl lg:max-w-4xl flex-1 flex flex-col justify-between py-4 sm:py-8 px-2 sm:px-6 gap-4 sm:gap-6 animate-in fade-in duration-300">
+      <div className="w-full max-w-3xl lg:max-w-4xl my-auto flex flex-col py-2 sm:py-4 px-2 sm:px-4 gap-3 sm:gap-4 animate-in fade-in duration-300">
         {/* Top Progress & Status */}
-        <div className={`w-full flex items-center justify-between px-2 text-sm sm:text-base font-black ${isLightMode ? 'text-slate-700' : 'text-slate-300'}`}>
+        <div className={`w-full flex items-center justify-between px-2 text-xs sm:text-sm md:text-base font-black ${isLightMode ? 'text-slate-700' : 'text-slate-300'}`}>
           <span className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
             Questão {currentIdx + 1} de {questions.length}
@@ -233,14 +233,14 @@ export const QuizGame: React.FC<QuizGameProps> = ({
             {questions.map((_, i) => (
               <div
                 key={i}
-                className={`h-2 sm:h-3 rounded-full transition-all duration-300 ${
+                className={`h-2 sm:h-2.5 rounded-full transition-all duration-300 ${
                   i === currentIdx
-                    ? 'bg-amber-500 w-8 sm:w-12 shadow-md shadow-amber-500/40'
+                    ? 'bg-amber-500 w-7 sm:w-10 shadow-md shadow-amber-500/40'
                     : i < currentIdx
-                    ? 'bg-emerald-500 w-4 sm:w-6'
+                    ? 'bg-emerald-500 w-3.5 sm:w-5'
                     : isLightMode
-                    ? 'bg-slate-300 w-4 sm:w-6'
-                    : 'bg-white/20 w-4 sm:w-6'
+                    ? 'bg-slate-300 w-3.5 sm:w-5'
+                    : 'bg-white/20 w-3.5 sm:w-5'
                 }`}
               />
             ))}
@@ -249,7 +249,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({
 
         {/* Large Prominent Question Card */}
         <div
-          className={`w-full p-6 sm:p-10 rounded-3xl backdrop-blur-xl border-2 text-center shadow-2xl transition-all ${
+          className={`w-full p-4 sm:p-6 md:p-7 rounded-2xl sm:rounded-3xl backdrop-blur-xl border-2 text-center shadow-xl transition-all ${
             isLightMode 
               ? 'bg-white/95 border-slate-200/90 shadow-slate-200/60' 
               : 'bg-slate-900/85 border-white/20 shadow-black/40'
@@ -259,36 +259,48 @@ export const QuizGame: React.FC<QuizGameProps> = ({
               ? (themePrimary ? `${themePrimary}60` : undefined)
               : (themePrimary ? `${themePrimary}80` : undefined),
             boxShadow: themePrimary 
-              ? `0 20px 50px -15px ${themePrimary}25` 
+              ? `0 15px 35px -10px ${themePrimary}25` 
               : undefined,
           }}
         >
           <span 
             style={{ color: themePrimary }}
-            className={`inline-block text-xs sm:text-sm font-black uppercase tracking-widest mb-3 ${!themePrimary && (isLightMode ? 'text-red-600' : 'text-amber-300/90')}`}
+            className={`inline-block text-[11px] sm:text-xs font-black uppercase tracking-widest mb-1.5 sm:mb-2 ${!themePrimary && (isLightMode ? 'text-red-600' : 'text-amber-300/90')}`}
           >
             Selecione a resposta correta:
           </span>
-          <h3 className={`text-xl sm:text-3xl md:text-4xl font-black leading-snug sm:leading-normal tracking-tight ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
+
+          {/* Question Image (if provided) */}
+          {(currentQ.imageUrl || currentQ.image_url) && (
+            <div className="w-full max-h-36 sm:max-h-52 rounded-xl overflow-hidden mb-3 border border-white/20 bg-black/20 flex items-center justify-center shadow-md">
+              <img
+                src={currentQ.imageUrl || currentQ.image_url}
+                alt="Imagem da Pergunta"
+                className="max-h-36 sm:max-h-52 w-auto object-contain rounded-lg"
+              />
+            </div>
+          )}
+
+          <h3 className={`text-lg sm:text-2xl md:text-3xl font-black leading-snug tracking-tight ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
             {currentQ.question}
           </h3>
         </div>
 
         {/* Large Tactile Option Buttons (Randomized A, B, C, D) */}
-        <div className="w-full flex flex-col gap-3.5 sm:gap-5 flex-1 justify-center">
+        <div className="w-full flex flex-col gap-2.5 sm:gap-3">
           {shuffledOptions.map((opt, idx) => {
             let btnStyle = isLightMode
-              ? 'bg-white border-slate-200 hover:border-slate-400 hover:bg-slate-50 text-slate-900 shadow-md'
-              : 'bg-slate-900/85 border-white/15 hover:bg-slate-800/90 hover:border-white/40 text-white';
+              ? 'bg-white border-slate-200 hover:border-slate-400 hover:bg-slate-50 text-slate-900 shadow-sm'
+              : 'bg-slate-900/85 border-white/15 hover:bg-slate-800/90 hover:border-white/40 text-white shadow-md';
             let icon = null;
 
             if (answered) {
               if (opt.isCorrect) {
                 btnStyle = 'bg-emerald-600 border-emerald-400 text-white shadow-xl shadow-emerald-950/60 scale-[1.01]';
-                icon = <CheckCircle2 className="w-7 h-7 sm:w-8 sm:h-8 text-white flex-shrink-0" />;
+                icon = <CheckCircle2 className="w-6 h-6 sm:w-7 sm:h-7 text-white flex-shrink-0" />;
               } else if (idx === selectedOption) {
                 btnStyle = 'bg-rose-600 border-rose-400 text-white shadow-xl shadow-rose-950/60';
-                icon = <XCircle className="w-7 h-7 sm:w-8 sm:h-8 text-white flex-shrink-0" />;
+                icon = <XCircle className="w-6 h-6 sm:w-7 sm:h-7 text-white flex-shrink-0" />;
               } else {
                 btnStyle = isLightMode
                   ? 'bg-slate-100/60 border-slate-200/50 text-slate-400 opacity-40'
@@ -301,10 +313,10 @@ export const QuizGame: React.FC<QuizGameProps> = ({
                 key={idx}
                 onClick={() => handleSelect(idx)}
                 disabled={answered}
-                className={`w-full p-5 sm:p-7 min-h-[85px] sm:min-h-[105px] rounded-2xl sm:rounded-3xl border-2 font-black text-lg sm:text-2xl flex items-center justify-between gap-4 transition-all active:scale-[0.98] shadow-lg ${btnStyle}`}
+                className={`w-full p-3.5 sm:p-4 md:p-4.5 min-h-[58px] sm:min-h-[68px] rounded-2xl border-2 font-bold text-base sm:text-lg md:text-xl flex items-center justify-between gap-3 sm:gap-4 transition-all active:scale-[0.98] ${btnStyle}`}
               >
-                <div className="flex items-center gap-4 sm:gap-6 text-left flex-1">
-                  <span className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center font-mono text-lg sm:text-2xl font-black flex-shrink-0 ${
+                <div className="flex items-center gap-3 sm:gap-4 text-left flex-1">
+                  <span className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-mono text-base sm:text-lg font-black flex-shrink-0 ${
                     isLightMode && !answered
                       ? 'bg-slate-100 text-slate-800 border border-slate-200 shadow-xs'
                       : 'bg-white/10 text-white shadow-inner'
