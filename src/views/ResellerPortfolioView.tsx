@@ -6,21 +6,13 @@ import {
   Globe, 
   MapPin, 
   Play, 
-  ExternalLink, 
-  CheckCircle2, 
   MessageCircle, 
-  Gamepad2, 
-  Layers, 
-  ArrowRight,
   ChevronRight,
-  Award,
-  Clock,
-  Flame
+  ArrowRight
 } from 'lucide-react';
-import { Reseller, Campaign, GameDefinition } from '../types';
+import { Reseller, GameDefinition } from '../types';
 import { resellersService } from '../lib/resellersService';
 import { GAMES_CATALOG, GAME_CATEGORIES } from '../lib/gamesCatalog';
-import { supabase, TABLES } from '../lib/supabase';
 import { GamePreviewModal } from '../games/GamePreviewModal';
 import { GameCardThumbnail } from '../components/GameCardThumbnail';
 import { sound } from '../lib/audio';
@@ -35,7 +27,6 @@ export const ResellerPortfolioView: React.FC<ResellerPortfolioViewProps> = ({
   onNavigate,
 }) => {
   const [reseller, setReseller] = useState<Reseller | null>(null);
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [previewGame, setPreviewGame] = useState<GameDefinition | null>(null);
@@ -49,22 +40,6 @@ export const ResellerPortfolioView: React.FC<ResellerPortfolioViewProps> = ({
         const found = await resellersService.getResellerBySlug(slug);
         if (!isMounted) return;
         setReseller(found);
-
-        if (found) {
-          // Fetch campaigns associated with this reseller
-          const { data } = await supabase
-            .from(TABLES.CAMPAIGNS)
-            .select('*');
-
-          if (data && isMounted) {
-            const matches = (data as Campaign[]).filter((c) => {
-              const rId = c.reseller_id || c.games_config?.reseller_id;
-              const rName = c.reseller_name || c.games_config?.reseller_name;
-              return rId === found.id || rName === found.company_name || rName === found.name;
-            });
-            setCampaigns(matches);
-          }
-        }
       } catch (err) {
         console.error('Error loading portfolio:', err);
       } finally {
@@ -122,7 +97,9 @@ export const ResellerPortfolioView: React.FC<ResellerPortfolioViewProps> = ({
   const filteredGames =
     selectedCategory === 'all'
       ? availableGames
-      : availableGames.filter((g) => g.category === selectedCategory);
+      : availableGames.filter(
+          (g) => g.categoryId === selectedCategory || g.category === selectedCategory
+        );
 
   const whatsappClean = reseller.contact_whatsapp?.replace(/\D/g, '') || '';
   const whatsappUrl = whatsappClean
@@ -292,10 +269,6 @@ export const ResellerPortfolioView: React.FC<ResellerPortfolioViewProps> = ({
         <section className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-blue-500 mb-1">
-                <Gamepad2 className="w-4 h-4" />
-                <span>Experiências Gamificadas</span>
-              </div>
               <h3 className="text-2xl md:text-3xl font-black">
                 Catálogo de Jogos Interativos Touch
               </h3>
@@ -335,9 +308,11 @@ export const ResellerPortfolioView: React.FC<ResellerPortfolioViewProps> = ({
               </button>
 
               {GAME_CATEGORIES.map((cat) => {
-                const count = availableGames.filter((g) => g.category === cat.id).length;
+                const count = availableGames.filter(
+                  (g) => g.category === cat.name || g.categoryId === cat.id || g.category === cat.id
+                ).length;
                 if (count === 0) return null;
-                const isCatSelected = selectedCategory === cat.id;
+                const isCatSelected = selectedCategory === cat.id || selectedCategory === cat.name;
 
                 return (
                   <button
@@ -368,7 +343,7 @@ export const ResellerPortfolioView: React.FC<ResellerPortfolioViewProps> = ({
             </div>
           </div>
 
-          {/* Games Grid - High Quality Visual Cards with Thumbnails */}
+          {/* Games Grid - Premium Interactive Visual Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredGames.map((game) => {
               return (
@@ -378,144 +353,95 @@ export const ResellerPortfolioView: React.FC<ResellerPortfolioViewProps> = ({
                     sound.playClick();
                     setPreviewGame(game);
                   }}
-                  className={`group relative rounded-3xl border p-5 flex flex-col justify-between transition-all duration-300 cursor-pointer overflow-hidden ${
+                  className={`group relative rounded-3xl border flex flex-col justify-between transition-all duration-300 cursor-pointer overflow-hidden ${
                     isDark
-                      ? 'bg-slate-900/90 border-slate-800 hover:border-slate-700 hover:shadow-2xl hover:shadow-blue-500/10'
-                      : 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-xl'
+                      ? 'bg-slate-900/90 border-slate-800/90 hover:border-slate-700 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1'
+                      : 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-xl hover:-translate-y-1'
                   }`}
                 >
-                  {/* Subtle top color bar */}
-                  <div
-                    className="absolute top-0 left-0 right-0 h-1 transition-all group-hover:h-1.5"
-                    style={{ backgroundColor: primaryColor }}
-                  />
+                  {/* Top Animated Game Preview Banner */}
+                  <div className="relative w-full h-44 bg-gradient-to-br from-slate-950 to-slate-900 overflow-hidden flex items-center justify-center border-b border-white/5">
+                    {/* Themed ambient glow */}
+                    <div
+                      className="absolute inset-0 opacity-20 group-hover:opacity-35 transition-opacity blur-xl"
+                      style={{
+                        background: `radial-gradient(circle at center, ${primaryColor} 0%, transparent 70%)`,
+                      }}
+                    />
 
-                  <div>
-                    {/* Top row with Game Miniature Preview */}
-                    <div className="flex items-start justify-between gap-4 mb-4">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-md border"
-                          style={{
-                            backgroundColor: `${primaryColor}20`,
-                            borderColor: `${primaryColor}40`,
-                          }}
-                        >
-                          {game.icon}
-                        </div>
-                        <div>
-                          <h4 className="font-black text-lg leading-tight group-hover:text-blue-400 transition-colors">
-                            {game.name}
-                          </h4>
-                          <span
-                            className={`text-xs font-semibold uppercase tracking-wider ${
-                              isDark ? 'text-slate-400' : 'text-slate-500'
-                            }`}
-                          >
-                            {game.category}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Animated miniature card thumbnail */}
-                      <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-white/10 shadow-sm">
-                        <GameCardThumbnail game={game} themePrimary={primaryColor} isLight={!isDark} />
-                      </div>
+                    {/* Animated Miniature Preview */}
+                    <div className="relative z-10 w-full h-full p-2 flex items-center justify-center">
+                      <GameCardThumbnail game={game} themePrimary={primaryColor} isLight={!isDark} />
                     </div>
 
-                    <p
-                      className={`text-xs leading-relaxed line-clamp-3 mb-4 ${
-                        isDark ? 'text-slate-400' : 'text-slate-600'
-                      }`}
-                    >
-                      {game.description}
-                    </p>
+                    {/* Category Tag */}
+                    <div className="absolute top-3 left-3 z-20">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md text-white/90 border border-white/10 shadow-sm">
+                        {game.category}
+                      </span>
+                    </div>
+
+                    {/* Time Tag */}
+                    <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+                      <span className="text-[10px] font-mono font-bold px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md text-white/80 border border-white/10 shadow-sm">
+                        ⏱️ {game.estimatedTime}
+                      </span>
+                    </div>
+
+                    {/* Hover Play Button Overlay */}
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity z-20 flex items-center justify-center">
+                      <div 
+                        className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-xl shadow-black/50 transform scale-75 group-hover:scale-100 transition-transform"
+                        style={{ backgroundColor: primaryColor }}
+                      >
+                        <Play className="w-5 h-5 fill-current ml-0.5" />
+                      </div>
+                    </div>
                   </div>
 
-                  <div
-                    className={`pt-3 border-t flex items-center justify-between text-xs font-bold ${
-                      isDark ? 'border-slate-800/80 text-blue-400' : 'border-slate-100 text-blue-600'
-                    }`}
-                  >
-                    <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                      <Play className="w-3.5 h-3.5 fill-current" />
-                      Testar Jogo Interativo
-                    </span>
-                    <ChevronRight className="w-4 h-4 opacity-70 group-hover:translate-x-1 transition-transform" />
+                  {/* Card Body */}
+                  <div className="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <h4 className="font-black text-lg md:text-xl tracking-tight leading-snug group-hover:text-blue-400 transition-colors">
+                          {game.name}
+                        </h4>
+                        <span className={`text-[11px] font-semibold shrink-0 ${
+                          game.difficulty === 'Fácil'
+                            ? 'text-emerald-400'
+                            : game.difficulty === 'Médio'
+                            ? 'text-amber-400'
+                            : 'text-rose-400'
+                        }`}>
+                          {game.difficulty}
+                        </span>
+                      </div>
+
+                      <p
+                        className={`text-xs leading-relaxed line-clamp-2 ${
+                          isDark ? 'text-slate-400' : 'text-slate-600'
+                        }`}
+                      >
+                        {game.description}
+                      </p>
+                    </div>
+
+                    {/* Card Action Button */}
+                    <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between">
+                      <span className={`text-xs font-bold flex items-center gap-1.5 ${
+                        isDark ? 'text-blue-400' : 'text-blue-600'
+                      }`}>
+                        <Play className="w-3.5 h-3.5 fill-current" />
+                        <span>Testar Jogo Interativo</span>
+                      </span>
+                      <ChevronRight className="w-4 h-4 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                    </div>
                   </div>
                 </div>
               );
             })}
           </div>
         </section>
-
-        {/* Section: Showcase of Client Campaigns */}
-        {campaigns.length > 0 && (
-          <section className="space-y-6 pt-6 border-t border-slate-800/80">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-blue-500 mb-1">
-                <Layers className="w-4 h-4" />
-                <span>Casos Reais & Ativações</span>
-              </div>
-              <h3 className="text-2xl md:text-3xl font-black">
-                Campanhas Vinculadas a este Parceiro ({campaigns.length})
-              </h3>
-              <p
-                className={`text-sm mt-1 ${
-                  isDark ? 'text-slate-400' : 'text-slate-600'
-                }`}
-              >
-                Conheça as campanhas e totens operados por {reseller.name}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {campaigns.map((camp) => (
-                <div
-                  key={camp.id}
-                  className={`p-6 rounded-3xl border flex flex-col justify-between transition-all ${
-                    isDark
-                      ? 'bg-slate-900 border-slate-800 hover:border-slate-700'
-                      : 'bg-white border-slate-200 hover:border-slate-300'
-                  }`}
-                >
-                  <div>
-                    <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                      {camp.client_name}
-                    </span>
-                    <h4 className="text-xl font-black mt-2">{camp.name}</h4>
-                    {camp.description && (
-                      <p
-                        className={`text-xs mt-1 line-clamp-2 ${
-                          isDark ? 'text-slate-400' : 'text-slate-600'
-                        }`}
-                      >
-                        {camp.description}
-                      </p>
-                    )}
-                    <div className="mt-3 flex items-center gap-2 text-xs opacity-75 font-mono">
-                      <span>🎮 {camp.selected_games?.length || 0} jogos configurados</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between">
-                    <span className="text-xs font-mono opacity-60">
-                      Link Totem: /{camp.slug}
-                    </span>
-                    <a
-                      href={`/${camp.slug}`}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-white shadow-md transition-all hover:brightness-110"
-                      style={{ backgroundColor: primaryColor }}
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      <span>Abrir Totem</span>
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* Footer Contact CTA */}
         <section
