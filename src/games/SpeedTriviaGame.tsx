@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 import { Zap, CheckCircle2, XCircle, Flame } from 'lucide-react';
@@ -49,11 +49,30 @@ export const SpeedTriviaGame: React.FC<SpeedTriviaGameProps> = ({
   campaignName,
   clientName,
   splashImageUrl,
+  orderMode = 'random',
+  questionsCount,
   customContent,
 }) => {
-  const questions = useMemo(() => {
+  const rawQuestions = useMemo(() => {
     return customContent && customContent.length > 0 ? customContent : DEFAULT_QUESTIONS;
   }, [customContent]);
+
+  const prepareQuestions = useCallback(() => {
+    let list = [...rawQuestions];
+    if (orderMode !== 'ordered') {
+      list = list.sort(() => Math.random() - 0.5);
+    }
+    if (questionsCount && questionsCount > 0 && questionsCount < list.length) {
+      list = list.slice(0, questionsCount);
+    }
+    return list;
+  }, [rawQuestions, orderMode, questionsCount]);
+
+  const [questions, setQuestions] = useState<SpeedTriviaCustomItem[]>(() => prepareQuestions());
+
+  useEffect(() => {
+    setQuestions(prepareQuestions());
+  }, [prepareQuestions]);
 
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
@@ -132,6 +151,7 @@ export const SpeedTriviaGame: React.FC<SpeedTriviaGameProps> = ({
       gameOver={gameOver}
       gameWon={gameWon}
       onRestart={() => {
+        setQuestions(prepareQuestions());
         setCurrentIdx(0);
         setScore(0);
         setCorrectCount(0);

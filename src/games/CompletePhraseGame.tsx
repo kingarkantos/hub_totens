@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 import { CheckCircle2, XCircle, ArrowRight, HelpCircle } from 'lucide-react';
@@ -42,11 +42,30 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = ({
   campaignName,
   clientName,
   splashImageUrl,
+  orderMode = 'random',
+  questionsCount,
   customContent,
 }) => {
-  const phrases = useMemo(() => {
+  const rawPhrases = useMemo(() => {
     return customContent && customContent.length > 0 ? customContent : DEFAULT_PHRASES;
   }, [customContent]);
+
+  const preparePhrases = useCallback(() => {
+    let list = [...rawPhrases];
+    if (orderMode !== 'ordered') {
+      list = list.sort(() => Math.random() - 0.5);
+    }
+    if (questionsCount && questionsCount > 0 && questionsCount < list.length) {
+      list = list.slice(0, questionsCount);
+    }
+    return list;
+  }, [rawPhrases, orderMode, questionsCount]);
+
+  const [phrases, setPhrases] = useState<CompletePhraseCustomItem[]>(() => preparePhrases());
+
+  useEffect(() => {
+    setPhrases(preparePhrases());
+  }, [preparePhrases]);
 
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
@@ -120,6 +139,7 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = ({
       gameOver={gameOver}
       gameWon={gameWon}
       onRestart={() => {
+        setPhrases(preparePhrases());
         setCurrentIdx(0);
         setScore(0);
         setCorrectCount(0);

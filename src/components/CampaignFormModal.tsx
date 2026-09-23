@@ -72,9 +72,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
     (campaignToEdit?.games_config?.custom_colors?.bgType === 'light' ? 'light' : 'dark') || 
     'dark';
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>(initialThemeMode);
-  const [orderMode, setOrderMode] = useState<'random' | 'ordered'>(
-    campaignToEdit?.games_config?.order_mode || 'random'
-  );
+  // Per-game orderMode and questionsCount are configured in each game's content editor modal
   const [gameLayout, setGameLayout] = useState<GameLayoutId>(
     campaignToEdit?.games_config?.game_layout || 'modern_glass'
   );
@@ -256,7 +254,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           reseller_id: selectedResellerId || undefined,
           reseller_name: chosenReseller?.company_name || undefined,
           theme_mode: themeMode,
-          order_mode: orderMode,
+          order_mode: gamesConfig?.order_mode || 'random',
           game_layout: gameLayout,
           description_align: descriptionAlign,
           description_size: descriptionSize,
@@ -1446,10 +1444,20 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                             timeDisplay = `${cfgTotal}s total`;
                           }
 
+                          const qCount = gamesConfig[`${game.id}_questions_count`];
+                          const gOrder = gamesConfig[`${game.id}_order_mode`];
+
                           return (
-                            <span className="text-[10px] text-slate-500 font-mono">
-                              ⏱️ {timeDisplay}
-                            </span>
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-[10px] text-slate-500 font-mono">
+                                ⏱️ {timeDisplay}
+                              </span>
+                              {qCount && qCount > 0 ? (
+                                <span className="text-[9px] font-bold text-purple-700 bg-purple-50 px-1 py-0.2 rounded border border-purple-200 w-fit">
+                                  {qCount} por partida ({gOrder === 'ordered' ? 'fixas' : 'sorteadas'})
+                                </span>
+                              ) : null}
+                            </div>
                           );
                         })()}
 
@@ -1496,51 +1504,6 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
               </div>
             </div>
 
-            {/* Order Mode Section (Aleatório vs Sequencial) */}
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-purple-100 text-purple-600 flex-shrink-0">
-                  <Shuffle className="w-6 h-6" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900">Ordem dos Desafios & Perguntas</h4>
-                  <p className="text-xs text-slate-500">
-                    Defina se ao abrir jogos como Quiz as perguntas virão em ordem aleatória a cada partida ou na ordem cadastrada.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1.5 bg-slate-200/80 p-1 rounded-xl w-full sm:w-auto flex-shrink-0">
-                <button
-                  type="button"
-                  onClick={() => {
-                    sound.playClick();
-                    setOrderMode('random');
-                  }}
-                  className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-black transition-all ${
-                    orderMode === 'random'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  🎲 Aleatório (Recomendado)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    sound.playClick();
-                    setOrderMode('ordered');
-                  }}
-                  className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-black transition-all ${
-                    orderMode === 'ordered'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  🔢 Sequencial (Fixa)
-                </button>
-              </div>
-            </div>
 
             {/* Ranking Toggle Section */}
             <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
@@ -1599,6 +1562,8 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           onClose={() => setPreviewingGame(null)}
           customContent={gamesConfig[previewingGame.id]}
           gameLayout={gamesConfig[`${previewingGame.id}_layout`] || gamesConfig?.game_layout || gameLayout || 'modern_glass'}
+          orderMode={gamesConfig[`${previewingGame.id}_order_mode`] || 'random'}
+          questionsCount={Number(gamesConfig[`${previewingGame.id}_questions_count`]) || undefined}
           onLayoutChange={(newLayout) => {
             setGameLayout(newLayout);
             setGamesConfig((prev) => ({
@@ -1618,6 +1583,8 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           currentTimeLimit={gamesConfig[`${editingContentGame.id}_time_limit`]}
           currentTotalTimeLimit={gamesConfig[`${editingContentGame.id}_total_time_limit`]}
           currentLayout={gamesConfig[`${editingContentGame.id}_layout`] || gamesConfig?.game_layout || gameLayout || 'modern_glass'}
+          currentOrderMode={gamesConfig[`${editingContentGame.id}_order_mode`] || 'random'}
+          currentQuestionsCount={Number(gamesConfig[`${editingContentGame.id}_questions_count`]) || 0}
           campaignContext={{
             campaignName: name,
             clientName: clientName,
@@ -1625,13 +1592,15 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
             themeName: THEMES[themeId]?.name,
           }}
           onClose={() => setEditingContentGame(null)}
-          onSave={async (gameId, updatedContent, timeLimit, totalTimeLimit, layout) => {
+          onSave={async (gameId, updatedContent, timeLimit, totalTimeLimit, layout, gameOrderMode, gameQuestionsCount) => {
             const nextGamesConfig = {
               ...gamesConfig,
               [gameId]: updatedContent,
               [`${gameId}_time_limit`]: timeLimit,
               [`${gameId}_total_time_limit`]: totalTimeLimit,
               [`${gameId}_layout`]: layout,
+              [`${gameId}_order_mode`]: gameOrderMode,
+              [`${gameId}_questions_count`]: gameQuestionsCount,
             };
             setGamesConfig(nextGamesConfig);
             setEditingContentGame(null);
@@ -1639,7 +1608,6 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
             const completeGamesConfig = {
               ...nextGamesConfig,
               theme_mode: themeMode,
-              order_mode: orderMode,
               game_layout: layout || gameLayout,
               custom_colors: {
                 ...customColors,

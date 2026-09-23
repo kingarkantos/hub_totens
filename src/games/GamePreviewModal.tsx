@@ -33,6 +33,8 @@ interface GamePreviewModalProps {
   customContent?: any;
   gameLayout?: GameLayoutId;
   onLayoutChange?: (layout: GameLayoutId) => void;
+  orderMode?: 'random' | 'ordered';
+  questionsCount?: number;
 }
 
 export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
@@ -41,6 +43,8 @@ export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
   customContent,
   gameLayout = 'modern_glass',
   onLayoutChange,
+  orderMode = 'random',
+  questionsCount,
 }) => {
   if (!game) return null;
 
@@ -63,6 +67,8 @@ export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
     onExit: onClose,
     customContent,
     gameLayout: activeLayout,
+    orderMode,
+    questionsCount,
   };
 
   const renderGame = () => {

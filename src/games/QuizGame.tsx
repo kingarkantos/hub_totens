@@ -59,6 +59,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({
   isLight,
   themeMode,
   orderMode = 'random',
+  questionsCount,
   timeLimit,
   totalTimeLimit,
 }) => {
@@ -71,11 +72,23 @@ export const QuizGame: React.FC<QuizGameProps> = ({
     return customContent && customContent.length > 0 ? customContent : DEFAULT_QUESTIONS;
   }, [customContent]);
 
-  // Questions in random or sequential order
-  const [questions, setQuestions] = useState<QuizQuestionItem[]>(() => {
-    if (orderMode === 'ordered') return [...rawQuestions];
-    return [...rawQuestions].sort(() => Math.random() - 0.5);
-  });
+  const prepareQuestions = useCallback(() => {
+    let list = [...rawQuestions];
+    if (orderMode !== 'ordered') {
+      list = list.sort(() => Math.random() - 0.5);
+    }
+    if (questionsCount && questionsCount > 0 && questionsCount < list.length) {
+      list = list.slice(0, questionsCount);
+    }
+    return list;
+  }, [rawQuestions, orderMode, questionsCount]);
+
+  // Questions in random or sequential order with optional subset slice
+  const [questions, setQuestions] = useState<QuizQuestionItem[]>(() => prepareQuestions());
+
+  useEffect(() => {
+    setQuestions(prepareQuestions());
+  }, [prepareQuestions]);
 
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
@@ -177,11 +190,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({
   };
 
   const restart = () => {
-    if (orderMode === 'ordered') {
-      setQuestions([...rawQuestions]);
-    } else {
-      setQuestions([...rawQuestions].sort(() => Math.random() - 0.5));
-    }
+    setQuestions(prepareQuestions());
     setCurrentIdx(0);
     setScore(0);
     setCorrectCount(0);

@@ -99,6 +99,7 @@ export interface BaseGameProps {
   isLight?: boolean;
   themeMode?: 'light' | 'dark';
   orderMode?: 'random' | 'ordered';
+  questionsCount?: number;
   timeLimit?: number;
   totalTimeLimit?: number;
   gameLayout?: import('./gameLayouts').GameLayoutId;

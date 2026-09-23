@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw, Image as ImageIcon, Loader2, Wand2, Eye, ZoomIn, ExternalLink } from 'lucide-react';
+import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw, Image as ImageIcon, Loader2, Wand2, Eye, ZoomIn, ExternalLink, Shuffle } from 'lucide-react';
 import { supabase, BUCKETS } from '../lib/supabase';
 import { GameDefinition } from '../types';
 import { GameLayoutId, GAME_LAYOUTS } from '../types/gameLayouts';
@@ -255,9 +255,19 @@ interface GameContentEditorModalProps {
   currentTimeLimit?: number;
   currentTotalTimeLimit?: number;
   currentLayout?: GameLayoutId;
+  currentOrderMode?: 'random' | 'ordered';
+  currentQuestionsCount?: number;
   campaignContext: CampaignAIContext;
   onClose: () => void;
-  onSave: (gameId: string, updatedContent: any, timeLimit?: number, totalTimeLimit?: number, layout?: GameLayoutId) => void;
+  onSave: (
+    gameId: string,
+    updatedContent: any,
+    timeLimit?: number,
+    totalTimeLimit?: number,
+    layout?: GameLayoutId,
+    orderMode?: 'random' | 'ordered',
+    questionsCount?: number
+  ) => void;
 }
 
 export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
@@ -266,18 +276,33 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
   currentTimeLimit,
   currentTotalTimeLimit,
   currentLayout,
+  currentOrderMode,
+  currentQuestionsCount,
   campaignContext,
   onClose,
   onSave,
 }) => {
   const meta = GAME_CONTENT_SCHEMAS[game.id];
   const isQuestionGame = ['quiz', 'truefalse', 'speed_trivia', 'complete_phrase'].includes(game.id);
+  const isPoolGame = isQuestionGame || ['hangman', 'wordsearch'].includes(game.id);
   const defaultTime = getDefaultTimeForGame(game.id);
 
   // Layout choice for this game
   const [selectedLayout, setSelectedLayout] = useState<GameLayoutId>(() => {
     if (currentLayout) return currentLayout;
     return 'modern_glass';
+  });
+
+  // Order mode for question/pool games (Aleatório vs Sequencial)
+  const [orderMode, setOrderMode] = useState<'random' | 'ordered'>(() => {
+    if (currentOrderMode) return currentOrderMode;
+    return 'random';
+  });
+
+  // Quantity of questions to pick per match (0 = All)
+  const [questionsCount, setQuestionsCount] = useState<number>(() => {
+    if (currentQuestionsCount !== undefined) return currentQuestionsCount;
+    return 0; // 0 means all questions
   });
 
   // Time per question or single-action time
@@ -473,7 +498,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
     } catch (e) {
       console.warn('Audio play error:', e);
     }
-    onSave(game.id, content, timeLimit, totalTimeLimit, selectedLayout);
+    onSave(game.id, content, timeLimit, totalTimeLimit, selectedLayout, orderMode, questionsCount);
   };
 
   // -------------------------------------------------------------
@@ -3128,6 +3153,147 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* SEÇÃO: ORDEM E QUANTIDADE DE PERGUNTAS / ITENS POR PARTIDA */}
+          {isPoolGame && (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wide flex items-center gap-2">
+                    <Shuffle className="w-4 h-4 text-purple-600" />
+                    <span>Ordem &amp; Sorteio de Perguntas</span>
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Defina se as perguntas serão sorteadas aleatoriamente a cada partida ou fixas na ordem cadastrada.
+                  </p>
+                </div>
+
+                {/* Mode Selector Buttons */}
+                <div className="flex items-center gap-1.5 bg-slate-200/80 p-1 rounded-xl w-full sm:w-auto flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setOrderMode('random');
+                    }}
+                    className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                      orderMode === 'random'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <span>🎲 Aleatório (Sorteio)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setOrderMode('ordered');
+                    }}
+                    className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                      orderMode === 'ordered'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <span>🔢 Sequencial (Fixa)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Subset / Quantity Selector */}
+              <div className="pt-3 border-t border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <span className="text-xs font-bold text-slate-800 block">
+                    Quantidade de perguntas a utilizar por partida:
+                  </span>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    {orderMode === 'random'
+                      ? `Você pode ter um banco amplo (ex: ${Math.max(currentCount, 25)} perguntas) e sortear um grupo menor (ex: 5) para cada partida.`
+                      : 'Exibe as primeiras N perguntas cadastradas, ou todas se deixar o total.'}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                  {/* Stepper with number input */}
+                  <div className="flex items-center rounded-xl bg-white border border-slate-300 p-1 shadow-2xs">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setQuestionsCount((prev) => Math.max(0, (prev || currentCount || 5) - 1));
+                      }}
+                      className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs flex items-center justify-center active:scale-95"
+                    >
+                      -
+                    </button>
+                    <div className="px-2.5 flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        max={currentCount || 999}
+                        value={questionsCount === 0 ? '' : questionsCount}
+                        placeholder={currentCount > 0 ? String(currentCount) : 'Todas'}
+                        onChange={(e) => {
+                          const val = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value) || 0);
+                          setQuestionsCount(val);
+                        }}
+                        className="w-12 text-center font-black text-xs text-slate-900 bg-transparent focus:outline-none font-mono"
+                      />
+                      <span className="text-[11px] text-slate-400 font-bold whitespace-nowrap">
+                        {questionsCount === 0 ? 'Todas' : 'perguntas'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setQuestionsCount((prev) => (prev === 0 ? 5 : prev + 1));
+                      }}
+                      className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs flex items-center justify-center active:scale-95"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  {/* Quick shortcuts */}
+                  <div className="flex items-center gap-1">
+                    {[5, 10, 15].map((qty) => (
+                      <button
+                        key={qty}
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setQuestionsCount(qty);
+                        }}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                          questionsCount === qty
+                            ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {qty}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setQuestionsCount(0);
+                      }}
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                        questionsCount === 0
+                          ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      Todas ({currentCount || 'todas'})
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* SEÇÃO: SELETOR DE LAYOUT VISUAL DO JOGO */}
           <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5 shadow-xs">

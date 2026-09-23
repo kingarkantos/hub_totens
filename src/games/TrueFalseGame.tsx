@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 import { Check, X, ThumbsUp, ThumbsDown, Zap, ArrowRight } from 'lucide-react';
@@ -50,6 +50,7 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
   isLight,
   themeMode,
   orderMode = 'random',
+  questionsCount,
   timeLimit,
   totalTimeLimit,
   customContent,
@@ -59,10 +60,22 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
     return customContent && customContent.length > 0 ? customContent : DEFAULT_STATEMENTS;
   }, [customContent]);
 
-  const [statements, setStatements] = useState<TrueFalseCustomItem[]>(() => {
-    if (orderMode === 'ordered') return [...rawStatements];
-    return [...rawStatements].sort(() => Math.random() - 0.5);
-  });
+  const prepareStatements = useCallback(() => {
+    let list = [...rawStatements];
+    if (orderMode !== 'ordered') {
+      list = list.sort(() => Math.random() - 0.5);
+    }
+    if (questionsCount && questionsCount > 0 && questionsCount < list.length) {
+      list = list.slice(0, questionsCount);
+    }
+    return list;
+  }, [rawStatements, orderMode, questionsCount]);
+
+  const [statements, setStatements] = useState<TrueFalseCustomItem[]>(() => prepareStatements());
+
+  useEffect(() => {
+    setStatements(prepareStatements());
+  }, [prepareStatements]);
 
   const isUnlimitedQuestionTime = timeLimit === 0;
   const questionSeconds = timeLimit !== undefined && timeLimit > 0 ? timeLimit : (timeLimit === 0 ? 0 : 15);
@@ -159,9 +172,7 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
     setAnswered(false);
     setGameOver(false);
     setGameWon(false);
-    if (orderMode !== 'ordered') {
-      setStatements([...rawStatements].sort(() => Math.random() - 0.5));
-    }
+    setStatements(prepareStatements());
   };
 
   const activeTimeDisplay = !isUnlimitedQuestionTime

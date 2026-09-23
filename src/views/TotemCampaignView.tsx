@@ -358,7 +358,8 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
 
   // Active Game Render
   if (activeGame) {
-    const orderMode = campaign.games_config?.order_mode || 'random';
+    const orderMode = campaign.games_config?.[`${activeGame.id}_order_mode`] || campaign.games_config?.order_mode || 'random';
+    const questionsCount = Number(campaign.games_config?.[`${activeGame.id}_questions_count`]) || undefined;
     const gameTimer = campaign.games_config?.[`${activeGame.id}_time_limit`];
     const gameTotalTimer = campaign.games_config?.[`${activeGame.id}_total_time_limit`];
 
@@ -372,6 +373,7 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
       isLight,
       themeMode: (isLight ? 'light' : 'dark') as 'light' | 'dark',
       orderMode: orderMode as 'random' | 'ordered',
+      questionsCount,
       timeLimit: gameTimer !== undefined ? Number(gameTimer) : undefined,
       totalTimeLimit: gameTotalTimer !== undefined ? Number(gameTotalTimer) : undefined,
       customBgStyle,
