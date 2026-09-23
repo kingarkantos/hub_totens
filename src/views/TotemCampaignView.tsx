@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Maximize, Minimize, Trophy, Play, Sparkles, ArrowLeft, Volume2, VolumeX, Flame, ShieldAlert, Home, ChevronDown } from 'lucide-react';
+import { Maximize, Minimize, Trophy, Play, ArrowLeft, Volume2, VolumeX, Flame, ShieldAlert, Home, ChevronDown } from 'lucide-react';
 import { Campaign, GameDefinition, ThemeDefinition, CustomColorsConfig } from '../types';
 import { supabase, TABLES } from '../lib/supabase';
 import { THEMES } from '../lib/themes';
@@ -468,10 +468,11 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
 
           {/* Top Brand Logo / Client */}
           <div className="relative z-10 pt-8 flex flex-col items-center animate-in slide-in-from-top-6 duration-700">
-            <div className="px-5 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md text-xs sm:text-sm font-black tracking-widest uppercase mb-3 flex items-center gap-2 shadow-xl">
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <span>{campaign.client_name}</span>
-            </div>
+            {campaign.client_name && (
+              <span className="text-xs sm:text-sm font-black tracking-widest uppercase text-white/80 mb-2">
+                {campaign.client_name}
+              </span>
+            )}
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white drop-shadow-2xl max-w-3xl leading-tight">
               {campaign.name}
             </h1>
@@ -749,10 +750,6 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
                         })()}
                         <span className={`text-[11px] font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                           Dificuldade: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{game.difficulty}</strong>
-                        </span>
-                        <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-400/30 flex items-center gap-1">
-                          <Sparkles className="w-3 h-3 text-amber-400" />
-                          <span>Touch</span>
                         </span>
                       </div>
 

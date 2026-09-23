@@ -5,7 +5,6 @@ import {
   Mail, 
   Globe, 
   MapPin, 
-  Sparkles, 
   Play, 
   ExternalLink, 
   CheckCircle2, 
@@ -13,7 +12,6 @@ import {
   Gamepad2, 
   Layers, 
   ArrowRight,
-  ShieldCheck,
   ChevronRight,
   Award,
   Clock,
@@ -174,15 +172,9 @@ export const ResellerPortfolioView: React.FC<ResellerPortfolioViewProps> = ({
               </div>
             )}
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="font-black text-lg md:text-xl tracking-tight leading-none">
-                  {reseller.name}
-                </h1>
-                <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                  <ShieldCheck className="w-3 h-3" />
-                  Credenciado
-                </span>
-              </div>
+              <h1 className="font-black text-lg md:text-xl tracking-tight leading-none">
+                {reseller.name}
+              </h1>
               <p
                 className={`text-xs mt-0.5 ${
                   isDark ? 'text-slate-400' : 'text-slate-500'
@@ -223,11 +215,6 @@ export const ResellerPortfolioView: React.FC<ResellerPortfolioViewProps> = ({
           }`}
         >
           <div className="relative z-10 max-w-3xl space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Catálogo Exclusivo de Jogos para Totens</span>
-            </div>
-
             <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-tight">
               Ativações Interativas que Impressionam e Convertem
             </h2>
