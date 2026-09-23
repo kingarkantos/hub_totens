@@ -9,6 +9,7 @@ import { LeaderboardModal } from '../components/LeaderboardModal';
 import { GameCardThumbnail } from '../components/GameCardThumbnail';
 import { GameLayoutProvider } from '../context/GameLayoutContext';
 import { BackgroundEffectOverlay, BackgroundEffectId } from '../components/BackgroundEffectOverlay';
+import { GameLayoutId } from '../types/gameLayouts';
 
 // Games
 import { WheelGame } from '../games/WheelGame';
@@ -39,16 +40,183 @@ interface ScrollableDescriptionProps {
   description: string;
   alignClass: string;
   sizeClass: string;
+  layout?: GameLayoutId;
 }
+
+interface SplashDescriptionStyleConfig {
+  wrapperClass: string;
+  cardClass: string;
+  badge?: {
+    text: string;
+    className: string;
+  };
+  fadeClass: string;
+  indicatorClass: string;
+  style?: React.CSSProperties;
+}
+
+const getSplashDescriptionStyle = (layout: GameLayoutId = 'modern_glass'): SplashDescriptionStyleConfig => {
+  switch (layout) {
+    case 'cartoon_comic':
+      return {
+        wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
+        cardClass: 'rounded-3xl border-4 border-black bg-white/95 text-slate-900 shadow-[8px_8px_0_#000] font-bold p-6 sm:p-7 leading-relaxed backdrop-blur-md',
+        badge: {
+          text: 'DESAFIO INTERATIVO 💬',
+          className: 'bg-yellow-400 text-slate-950 border-2 border-black font-black uppercase text-xs tracking-wider px-4 py-1 rounded-full shadow-[2px_2px_0_#000]',
+        },
+        fadeClass: 'from-white via-white/80 to-transparent',
+        indicatorClass: 'bg-yellow-400 text-black border-2 border-black font-black shadow-[2px_2px_0_#000]',
+      };
+
+    case 'cartoon_pop':
+      return {
+        wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
+        cardClass: 'rounded-3xl border-4 border-amber-400/90 bg-amber-950/85 backdrop-blur-xl text-amber-50 shadow-[0_10px_0_#92400e,0_20px_40px_rgba(0,0,0,0.6)] font-bold p-6 sm:p-7 leading-relaxed',
+        badge: {
+          text: 'DESAFIO ESPECIAL ⭐',
+          className: 'bg-gradient-to-r from-amber-400 to-orange-400 text-amber-950 border-2 border-amber-300 font-black uppercase text-xs tracking-wider px-4 py-1 rounded-full shadow-md',
+        },
+        fadeClass: 'from-amber-950 via-amber-950/70 to-transparent',
+        indicatorClass: 'bg-amber-400 text-amber-950 border-2 border-amber-600 font-black shadow-md',
+      };
+
+    case 'neon_arcade':
+      return {
+        wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
+        cardClass: 'rounded-[32px] border-2 border-cyan-400 bg-slate-950/90 backdrop-blur-2xl text-cyan-100 shadow-[0_0_35px_rgba(6,182,212,0.4),inset_0_0_20px_rgba(6,182,212,0.15)] p-6 sm:p-7 leading-relaxed',
+        badge: {
+          text: 'NEON MISSION // BRIEFING 🕹️',
+          className: 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/60 font-mono font-bold uppercase text-xs tracking-widest px-4 py-1 rounded-full shadow-[0_0_12px_rgba(6,182,212,0.4)]',
+        },
+        fadeClass: 'from-slate-950 via-slate-950/80 to-transparent',
+        indicatorClass: 'bg-slate-900 border border-cyan-400 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.4)] font-mono',
+      };
+
+    case 'bento_tech':
+      return {
+        wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
+        cardClass: 'border-2 border-emerald-500/80 bg-slate-950/95 backdrop-blur-2xl text-emerald-200 font-mono shadow-[0_0_30px_rgba(16,185,129,0.3)] p-6 sm:p-7 leading-relaxed',
+        badge: {
+          text: 'SYS_DIRECTIVE // 01 ⚡',
+          className: 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 font-mono font-bold uppercase text-xs tracking-widest px-3.5 py-1 rounded-sm shadow-sm',
+        },
+        fadeClass: 'from-slate-950 via-slate-950/80 to-transparent',
+        indicatorClass: 'bg-slate-950 border border-emerald-400 text-emerald-300 font-mono shadow-[0_0_12px_rgba(16,185,129,0.3)]',
+        style: {
+          clipPath: 'polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px)',
+        },
+      };
+
+    case 'neumorphic_luxe':
+      return {
+        wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
+        cardClass: 'rounded-[32px] border-2 border-amber-400/60 bg-gradient-to-b from-slate-900/95 via-amber-950/40 to-slate-950/95 backdrop-blur-2xl text-amber-100 shadow-[0_20px_50px_rgba(245,158,11,0.25)] p-6 sm:p-7 leading-relaxed',
+        badge: {
+          text: 'SHOW VIP // REGULAMENTO 🏆',
+          className: 'bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 border border-amber-200 font-black uppercase text-xs tracking-wider px-4 py-1 rounded-full shadow-md',
+        },
+        fadeClass: 'from-slate-950 via-slate-950/80 to-transparent',
+        indicatorClass: 'bg-slate-900 border border-amber-400 text-amber-300 shadow-md',
+      };
+
+    case 'pixel_retro':
+      return {
+        wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
+        cardClass: 'rounded-none border-4 border-yellow-400 bg-black/95 text-yellow-300 font-mono shadow-[6px_6px_0_#ca8a04] p-6 sm:p-7 leading-relaxed',
+        badge: {
+          text: '▶ STAGE BRIEFING 👾',
+          className: 'bg-yellow-400 text-black border-2 border-black font-mono font-black uppercase text-xs tracking-wider px-4 py-1',
+        },
+        fadeClass: 'from-black via-black/80 to-transparent',
+        indicatorClass: 'bg-yellow-400 text-black border-2 border-black font-mono font-bold shadow-[2px_2px_0_#ca8a04]',
+      };
+
+    case 'cyber_matrix':
+      return {
+        wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
+        cardClass: 'rounded-xl border-2 border-emerald-400/90 bg-black/95 text-emerald-300 font-mono shadow-[0_0_30px_rgba(16,185,129,0.35)] p-6 sm:p-7 leading-relaxed',
+        badge: {
+          text: '> ROOT_INSTRUCTION.LOG 💻',
+          className: 'bg-emerald-950/90 text-emerald-300 border border-emerald-400 font-mono font-bold uppercase text-xs tracking-wider px-4 py-1 rounded-sm shadow-[0_0_10px_rgba(16,185,129,0.3)]',
+        },
+        fadeClass: 'from-black via-black/80 to-transparent',
+        indicatorClass: 'bg-black border border-emerald-400 text-emerald-300 font-mono',
+      };
+
+    case 'synthwave_grid':
+      return {
+        wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
+        cardClass: 'rounded-3xl border-2 border-pink-400/80 bg-purple-950/85 backdrop-blur-2xl text-pink-100 shadow-[0_0_35px_rgba(244,63,94,0.35)] p-6 sm:p-7 leading-relaxed',
+        badge: {
+          text: 'SYNTHWAVE // INFO 🌴',
+          className: 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border border-pink-300/40 font-black uppercase text-xs tracking-wider px-4 py-1 rounded-full shadow-md',
+        },
+        fadeClass: 'from-purple-950 via-purple-950/80 to-transparent',
+        indicatorClass: 'bg-purple-900 border border-pink-400 text-pink-200 shadow-md',
+      };
+
+    case 'golden_casino':
+      return {
+        wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
+        cardClass: 'rounded-3xl border-4 border-amber-300 bg-stone-950/95 backdrop-blur-xl text-amber-100 shadow-[0_0_40px_rgba(245,158,11,0.4)] p-6 sm:p-7 leading-relaxed',
+        badge: {
+          text: 'REGULAMENTO OFICIAL ✦ 💎',
+          className: 'bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 text-slate-950 border border-yellow-100 font-black uppercase text-xs tracking-wider px-4 py-1 rounded-full shadow-lg',
+        },
+        fadeClass: 'from-stone-950 via-stone-950/80 to-transparent',
+        indicatorClass: 'bg-stone-900 border border-amber-300 text-amber-300 shadow-md font-bold',
+      };
+
+    case 'bubble_toon':
+      return {
+        wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
+        cardClass: 'rounded-[36px] border-4 border-pink-300/80 bg-pink-950/70 backdrop-blur-2xl text-pink-100 shadow-[0_12px_28px_rgba(244,114,182,0.35)] font-bold p-6 sm:p-7 leading-relaxed',
+        badge: {
+          text: 'INFORMAÇÕES DO JOGO 🎈',
+          className: 'bg-pink-400 text-white border-2 border-pink-200 font-black uppercase text-xs tracking-wider px-4 py-1 rounded-full shadow-md',
+        },
+        fadeClass: 'from-pink-950 via-pink-950/80 to-transparent',
+        indicatorClass: 'bg-pink-500 text-white border border-pink-300 font-black shadow-md rounded-full',
+      };
+
+    case 'spatial_3d':
+      return {
+        wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
+        cardClass: 'rounded-3xl border-2 border-purple-400/60 bg-slate-950/85 backdrop-blur-2xl text-purple-100 shadow-[0_25px_60px_-15px_rgba(147,51,234,0.4)] p-6 sm:p-7 leading-relaxed',
+        badge: {
+          text: 'SPATIAL EXPERIENCE 🌌',
+          className: 'bg-purple-500/25 text-purple-200 border border-purple-400/50 font-bold uppercase text-xs tracking-wider px-4 py-1 rounded-full shadow-md',
+        },
+        fadeClass: 'from-slate-950 via-slate-950/80 to-transparent',
+        indicatorClass: 'bg-purple-950 border border-purple-400 text-purple-200 shadow-md',
+      };
+
+    case 'modern_glass':
+    default:
+      return {
+        wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
+        cardClass: 'rounded-3xl border-2 border-white/20 bg-black/50 backdrop-blur-2xl text-slate-100 shadow-2xl p-6 sm:p-7 leading-relaxed',
+        badge: {
+          text: 'INFORMAÇÕES ✦',
+          className: 'bg-white/15 text-white border border-white/30 font-bold uppercase text-xs tracking-wider px-4 py-1 rounded-full backdrop-blur-md',
+        },
+        fadeClass: 'from-black/85 via-black/40 to-transparent',
+        indicatorClass: 'bg-slate-950/90 text-white border border-white/30 shadow-2xl',
+      };
+  }
+};
 
 const ScrollableDescription: React.FC<ScrollableDescriptionProps> = ({
   description,
   alignClass,
   sizeClass,
+  layout = 'modern_glass',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [canScroll, setCanScroll] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
+  const config = getSplashDescriptionStyle(layout);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -88,7 +256,14 @@ const ScrollableDescription: React.FC<ScrollableDescriptionProps> = ({
   };
 
   return (
-    <div className="relative mt-4 w-full max-w-2xl sm:max-w-3xl">
+    <div className={`relative ${config.wrapperClass}`}>
+      {/* Thematic Top Tag/Badge */}
+      {config.badge && (
+        <div className="flex justify-center -mb-3.5 relative z-20">
+          <span className={config.badge.className}>{config.badge.text}</span>
+        </div>
+      )}
+
       <div
         ref={containerRef}
         onScroll={handleScroll}
@@ -96,7 +271,8 @@ const ScrollableDescription: React.FC<ScrollableDescriptionProps> = ({
         onWheel={(e) => {
           if (e.deltaY > 5) setHasScrolled(true);
         }}
-        className={`max-h-[35vh] sm:max-h-[42vh] overflow-y-auto px-6 py-5 rounded-3xl bg-black/50 backdrop-blur-xl border border-white/20 shadow-2xl text-slate-200 font-medium leading-relaxed whitespace-pre-line no-scrollbar ${alignClass} ${sizeClass}`}
+        style={config.style}
+        className={`max-h-[35vh] sm:max-h-[42vh] overflow-y-auto whitespace-pre-line no-scrollbar transition-all duration-300 ${config.cardClass} ${alignClass} ${sizeClass}`}
       >
         {description}
       </div>
@@ -104,7 +280,7 @@ const ScrollableDescription: React.FC<ScrollableDescriptionProps> = ({
       {/* Sombra sutil de fade na borda inferior indicando continuidade */}
       {canScroll && (
         <div
-          className={`absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t from-black/85 via-black/40 to-transparent rounded-b-3xl pointer-events-none transition-opacity duration-300 ${
+          className={`absolute bottom-0 inset-x-0 h-14 bg-gradient-to-t ${config.fadeClass} rounded-b-3xl pointer-events-none transition-opacity duration-300 ${
             hasScrolled ? 'opacity-0' : 'opacity-100'
           }`}
         />
@@ -122,10 +298,10 @@ const ScrollableDescription: React.FC<ScrollableDescriptionProps> = ({
           <button
             type="button"
             onClick={handleIndicatorClick}
-            className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-950/90 hover:bg-black text-white border border-white/30 shadow-2xl backdrop-blur-md text-xs font-semibold tracking-wide cursor-pointer active:scale-95 transition-all select-none group"
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full backdrop-blur-md text-xs font-semibold tracking-wide cursor-pointer active:scale-95 transition-all select-none group ${config.indicatorClass}`}
           >
-            <span className="text-slate-200">Deslize para ler mais</span>
-            <ChevronDown className="w-3.5 h-3.5 text-amber-400 group-hover:translate-y-0.5 animate-bounce" />
+            <span>Deslize para ler mais</span>
+            <ChevronDown className="w-3.5 h-3.5 group-hover:translate-y-0.5 animate-bounce" />
           </button>
         </div>
       )}
@@ -353,6 +529,8 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
     (campaign.games_config?.splash_button_style as SplashButtonStyleId) || 'default';
   const splashBgEffect: BackgroundEffectId =
     (campaign.games_config?.splash_bg_effect as BackgroundEffectId) || 'none';
+  const campaignLayout: GameLayoutId =
+    (campaign.games_config?.game_layout as GameLayoutId) || 'modern_glass';
 
   const handleStartPlay = () => {
     sound.playSuccess();
@@ -601,11 +779,25 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
           {/* Top Brand Logo / Client */}
           <div className="relative z-10 pt-8 flex flex-col items-center animate-in slide-in-from-top-6 duration-700">
             {campaign.client_name && (
-              <span className="text-xs sm:text-sm font-black tracking-widest uppercase text-white/80 mb-2">
+              <span className={`text-xs sm:text-sm font-black tracking-widest uppercase mb-2 ${
+                campaignLayout === 'cartoon_comic'
+                  ? 'bg-yellow-400 text-slate-950 border-2 border-black px-3.5 py-1 rounded-full shadow-[2px_2px_0_#000]'
+                  : campaignLayout === 'pixel_retro'
+                  ? 'bg-yellow-400 text-black border-2 border-black font-mono px-3 py-1 shadow-[2px_2px_0_#ca8a04]'
+                  : campaignLayout === 'neon_arcade'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400 px-3.5 py-1 rounded-full shadow-[0_0_12px_rgba(6,182,212,0.4)]'
+                  : campaignLayout === 'bento_tech'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 font-mono px-3 py-1 rounded-sm'
+                  : campaignLayout === 'golden_casino'
+                  ? 'bg-amber-400/20 text-amber-200 border border-amber-300/40 px-3.5 py-1 rounded-full shadow-md'
+                  : 'text-white/80'
+              }`}>
                 {campaign.client_name}
               </span>
             )}
-            <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white drop-shadow-2xl max-w-3xl leading-tight">
+            <h1 className={`text-4xl sm:text-6xl md:text-7xl font-black tracking-tight drop-shadow-2xl max-w-3xl leading-tight ${
+              campaignLayout === 'pixel_retro' ? 'font-mono text-yellow-300' : 'text-white'
+            }`}>
               {campaign.name}
             </h1>
             {campaign.description && (() => {
@@ -626,22 +818,13 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
                 ? 'text-base sm:text-lg'
                 : 'text-sm sm:text-base';
 
-              const hasMultipleLines = campaign.description.includes('\n') || campaign.description.length > 120;
-
-              if (hasMultipleLines) {
-                return (
-                  <ScrollableDescription
-                    description={campaign.description}
-                    alignClass={alignClass}
-                    sizeClass={sizeClass}
-                  />
-                );
-              }
-
               return (
-                <p className={`mt-4 max-w-2xl font-medium drop-shadow leading-relaxed whitespace-pre-line text-slate-300 ${alignClass} ${sizeClass}`}>
-                  {campaign.description}
-                </p>
+                <ScrollableDescription
+                  description={campaign.description}
+                  alignClass={alignClass}
+                  sizeClass={sizeClass}
+                  layout={campaignLayout}
+                />
               );
             })()}
           </div>
