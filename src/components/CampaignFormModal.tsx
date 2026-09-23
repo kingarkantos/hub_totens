@@ -1605,6 +1605,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           currentContent={gamesConfig[editingContentGame.id]}
           currentTimeLimit={gamesConfig[`${editingContentGame.id}_time_limit`]}
           currentTotalTimeLimit={gamesConfig[`${editingContentGame.id}_total_time_limit`]}
+          currentLayout={gamesConfig[`${editingContentGame.id}_layout`] || gamesConfig?.game_layout || gameLayout || 'modern_glass'}
           campaignContext={{
             campaignName: name,
             clientName: clientName,
@@ -1612,12 +1613,13 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
             themeName: THEMES[themeId]?.name,
           }}
           onClose={() => setEditingContentGame(null)}
-          onSave={async (gameId, updatedContent, timeLimit, totalTimeLimit) => {
+          onSave={async (gameId, updatedContent, timeLimit, totalTimeLimit, layout) => {
             const nextGamesConfig = {
               ...gamesConfig,
               [gameId]: updatedContent,
               [`${gameId}_time_limit`]: timeLimit,
               [`${gameId}_total_time_limit`]: totalTimeLimit,
+              [`${gameId}_layout`]: layout,
             };
             setGamesConfig(nextGamesConfig);
             setEditingContentGame(null);
@@ -1626,7 +1628,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
               ...nextGamesConfig,
               theme_mode: themeMode,
               order_mode: orderMode,
-              game_layout: gameLayout,
+              game_layout: layout || gameLayout,
               custom_colors: {
                 ...customColors,
                 bgType: customColors.enabled ? customColors.bgType : (themeMode === 'light' ? 'light' : 'dark'),

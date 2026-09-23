@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw, Image as ImageIcon, Loader2, Wand2, Eye, ZoomIn, ExternalLink } from 'lucide-react';
 import { supabase, BUCKETS } from '../lib/supabase';
 import { GameDefinition } from '../types';
+import { GameLayoutId, GAME_LAYOUTS } from '../types/gameLayouts';
 import {
   GAME_CONTENT_SCHEMAS,
   TrueFalseCustomItem,
@@ -253,9 +254,10 @@ interface GameContentEditorModalProps {
   currentContent: any;
   currentTimeLimit?: number;
   currentTotalTimeLimit?: number;
+  currentLayout?: GameLayoutId;
   campaignContext: CampaignAIContext;
   onClose: () => void;
-  onSave: (gameId: string, updatedContent: any, timeLimit?: number, totalTimeLimit?: number) => void;
+  onSave: (gameId: string, updatedContent: any, timeLimit?: number, totalTimeLimit?: number, layout?: GameLayoutId) => void;
 }
 
 export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
@@ -263,6 +265,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
   currentContent,
   currentTimeLimit,
   currentTotalTimeLimit,
+  currentLayout,
   campaignContext,
   onClose,
   onSave,
@@ -270,6 +273,12 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
   const meta = GAME_CONTENT_SCHEMAS[game.id];
   const isQuestionGame = ['quiz', 'truefalse', 'speed_trivia', 'complete_phrase'].includes(game.id);
   const defaultTime = getDefaultTimeForGame(game.id);
+
+  // Layout choice for this game
+  const [selectedLayout, setSelectedLayout] = useState<GameLayoutId>(() => {
+    if (currentLayout) return currentLayout;
+    return 'modern_glass';
+  });
 
   // Time per question or single-action time
   const [timeLimit, setTimeLimit] = useState<number>(() => {
@@ -464,7 +473,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
     } catch (e) {
       console.warn('Audio play error:', e);
     }
-    onSave(game.id, content, timeLimit, totalTimeLimit);
+    onSave(game.id, content, timeLimit, totalTimeLimit, selectedLayout);
   };
 
   // -------------------------------------------------------------
@@ -3117,6 +3126,51 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                   );
                 })()}
               </div>
+            </div>
+          </div>
+
+          {/* SEÇÃO: SELETOR DE LAYOUT VISUAL DO JOGO */}
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5 shadow-xs">
+            <div className="mb-3">
+              <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wide">
+                Layout Visual do Jogo
+              </h4>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Escolha o estilo de design e formato gráfico que este jogo utilizará no totem.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+              {GAME_LAYOUTS.map((lay) => {
+                const isSelected = selectedLayout === lay.id;
+                return (
+                  <button
+                    key={lay.id}
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setSelectedLayout(lay.id);
+                    }}
+                    className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-2 active:scale-98 ${
+                      isSelected
+                        ? 'border-slate-900 bg-slate-900 text-white shadow-xs'
+                        : 'border-slate-200 bg-white hover:bg-slate-100 text-slate-800'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black">{lay.name}</span>
+                        {isSelected && (
+                          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                        )}
+                      </div>
+                      <span className={`text-[10px] block mt-0.5 ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>
+                        {lay.tagline}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

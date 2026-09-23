@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { 
-  ArrowLeft, Volume2, VolumeX, Trophy, RotateCcw, Keyboard, 
-  Sparkles, CheckCircle2, Gamepad2, LayoutGrid, Gem, Box, Palette, X, Check
+  ArrowLeft, Volume2, VolumeX, Trophy, RotateCcw, Keyboard, CheckCircle2
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '../lib/audio';
@@ -66,7 +65,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const [showKeyboard, setShowKeyboard] = useState(false);
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [currentLayout, setCurrentLayout] = useState<GameLayoutId>(gameLayout || 'modern_glass');
-  const [showLayoutPicker, setShowLayoutPicker] = useState(false);
 
   // Sync if prop changes externally
   useEffect(() => {
@@ -103,22 +101,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     setScoreSubmitted(true);
     setShowKeyboard(false);
     sound.playSuccess();
-  };
-
-  const renderLayoutIcon = (id: GameLayoutId, sizeClass = "w-4 h-4 sm:w-5 sm:h-5") => {
-    switch (id) {
-      case 'neon_arcade':
-        return <Gamepad2 className={sizeClass} />;
-      case 'bento_tech':
-        return <LayoutGrid className={sizeClass} />;
-      case 'neumorphic_luxe':
-        return <Gem className={sizeClass} />;
-      case 'spatial_3d':
-        return <Box className={sizeClass} />;
-      case 'modern_glass':
-      default:
-        return <Sparkles className={sizeClass} />;
-    }
   };
 
   return (
@@ -262,23 +244,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
             >
               <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>Sair</span>
-            </button>
-
-            {/* Quick 5-Layout Switcher Pill */}
-            <button
-              type="button"
-              onClick={() => {
-                sound.playClick();
-                setShowLayoutPicker(true);
-              }}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 ${currentLayoutDef.buttonClass} ${
-                currentLayoutDef.badgeBg
-              } active:scale-95 transition-all text-xs font-black`}
-              title="Trocar Layout (5 Estilos Disponíveis)"
-            >
-              <Palette className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Layout:</span>
-              <span>{currentLayoutDef.name}</span>
             </button>
           </div>
 
@@ -460,88 +425,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                   className={`flex-1 py-4 sm:py-5 px-4 ${currentLayoutDef.buttonClass} font-black text-sm sm:text-lg text-white active:scale-95 transition-all shadow-xl hover:brightness-110 border-2 border-white/20`}
                 >
                   Menu Principal
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 5 Layouts Interactive Selector Modal */}
-        {showLayoutPicker && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xl p-4 sm:p-6 overflow-y-auto no-scrollbar animate-in fade-in duration-200">
-            <div className="w-full max-w-2xl bg-slate-900 border-2 border-white/20 rounded-[32px] p-6 sm:p-8 text-white shadow-2xl">
-              <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-amber-500 to-red-500 text-white shadow-md">
-                    <Palette className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl sm:text-2xl font-black">Escolha o Layout do Jogo</h3>
-                    <p className="text-xs sm:text-sm text-slate-400">
-                      5 layouts e designs visuais exclusivos com formatos, animações e efeitos únicos.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowLayoutPicker(false)}
-                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* 5 Layout Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                {GAME_LAYOUTS.map((layoutDef) => {
-                  const isSelected = layoutDef.id === currentLayout;
-                  return (
-                    <button
-                      key={layoutDef.id}
-                      type="button"
-                      onClick={() => {
-                        sound.playSuccess();
-                        setCurrentLayout(layoutDef.id);
-                        setShowLayoutPicker(false);
-                      }}
-                      className={`p-4 rounded-2xl border-2 text-left transition-all flex flex-col justify-between gap-3 active:scale-98 ${
-                        isSelected
-                          ? 'border-amber-400 bg-amber-500/10 shadow-lg shadow-amber-500/20'
-                          : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/25'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-2.5">
-                          <div className={`p-2.5 rounded-xl bg-gradient-to-br ${layoutDef.previewBg} text-white shadow-md`}>
-                            {renderLayoutIcon(layoutDef.id, "w-5 h-5")}
-                          </div>
-                          <div>
-                            <h4 className="text-base font-black text-white flex items-center gap-2">
-                              {layoutDef.name}
-                              {isSelected && (
-                                <span className="text-[10px] bg-amber-400 text-slate-950 font-black px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                                  <Check className="w-2.5 h-2.5 stroke-[3]" /> Ativo
-                                </span>
-                              )}
-                            </h4>
-                            <span className="text-[11px] font-bold text-amber-300">{layoutDef.tagline}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <p className="text-xs text-slate-300 leading-relaxed">
-                        {layoutDef.description}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-white/10 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setShowLayoutPicker(false)}
-                  className="px-6 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 font-bold text-sm text-white"
-                >
-                  Fechar
                 </button>
               </div>
             </div>
