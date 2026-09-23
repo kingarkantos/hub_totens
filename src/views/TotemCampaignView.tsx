@@ -6,6 +6,7 @@ import { THEMES } from '../lib/themes';
 import { GAMES_CATALOG } from '../lib/gamesCatalog';
 import { sound } from '../lib/audio';
 import { LeaderboardModal } from '../components/LeaderboardModal';
+import { GameCardThumbnail } from '../components/GameCardThumbnail';
 
 // Games
 import { WheelGame } from '../games/WheelGame';
@@ -266,6 +267,7 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
       clientName: campaign.client_name,
       splashImageUrl: campaign.splash_image_url,
       customContent: campaign.games_config?.[activeGame.id],
+      gameLayout: campaign.games_config?.[`${activeGame.id}_layout`] || campaign.games_config?.game_layout || 'modern_glass',
     };
 
     switch (activeGame.id) {
@@ -455,7 +457,7 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
           </div>
 
           {/* Games List (Stacked vertically, big and highlighted for Totems) */}
-          <div className="flex-1 overflow-y-auto px-6 py-8 space-y-6 no-scrollbar max-w-4xl mx-auto w-full">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-8 space-y-6 sm:space-y-8 no-scrollbar max-w-5xl xl:max-w-6xl mx-auto w-full">
             {gamesList.map((game, index) => (
               <div
                 key={game.id}
@@ -463,26 +465,33 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
                   sound.playClick();
                   setActiveGame(game);
                 }}
-                className={`relative group rounded-3xl border-2 p-6 sm:p-8 cursor-pointer transition-all duration-300 active:scale-98 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-6 overflow-hidden ${theme.cardBg} ${theme.cardBorder}`}
+                className={`relative group rounded-[32px] sm:rounded-[36px] border-2 p-6 sm:p-8 lg:p-9 cursor-pointer transition-all duration-300 hover:scale-[1.015] hover:-translate-y-1 active:scale-98 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8 overflow-hidden ${theme.cardBg} ${theme.cardBorder}`}
+                style={{
+                  boxShadow: `0 20px 50px -15px ${theme.glowColor}30`,
+                }}
               >
                 {/* Background decorative glow on hover */}
                 <div
                   style={{ backgroundColor: theme.primary }}
-                  className="absolute -right-16 -top-16 w-48 h-48 rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity pointer-events-none"
+                  className="absolute -right-20 -top-20 w-64 h-64 rounded-full blur-3xl opacity-20 group-hover:opacity-45 transition-opacity duration-500 pointer-events-none"
                 />
 
-                {/* Left Side: Game Number, Badge & Details */}
-                <div className="flex items-start gap-5 z-10 w-full sm:w-auto">
+                {/* Left Side: Game Number, Badge, Title & Description */}
+                <div className="flex items-start gap-5 sm:gap-7 z-10 w-full lg:flex-1">
                   <div
                     style={{ color: theme.primary }}
-                    className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl ${isLight ? 'bg-slate-100 border border-slate-200 shadow-xs' : 'bg-gradient-to-br from-white/15 to-white/5 border border-white/20 text-amber-400 shadow-inner'} flex items-center justify-center font-black text-2xl sm:text-3xl flex-shrink-0`}
+                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl ${
+                      isLight 
+                        ? 'bg-slate-100 border-2 border-slate-200 shadow-sm' 
+                        : 'bg-gradient-to-br from-white/15 to-white/5 border-2 border-white/20 text-amber-400 shadow-inner'
+                    } flex items-center justify-center font-black text-3xl sm:text-4xl flex-shrink-0 group-hover:scale-105 transition-transform`}
                   >
                     {index + 1}
                   </div>
 
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                      <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${theme.badgeBg}`}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <span className={`text-[11px] sm:text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full border ${theme.badgeBg}`}>
                         {game.category}
                       </span>
                       {(() => {
@@ -502,7 +511,7 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
                         }
 
                         return (
-                          <span className={`text-[11px] font-mono px-2 py-0.5 rounded-md border ${isLight ? 'text-slate-700 bg-slate-100 border-slate-200' : 'text-slate-300 bg-black/40 border-white/10'}`}>
+                          <span className={`text-[11px] font-mono px-2.5 py-0.5 rounded-md border ${isLight ? 'text-slate-700 bg-slate-100 border-slate-200' : 'text-slate-300 bg-black/40 border-white/10'}`}>
                             ⏱️ {timeDisplay}
                           </span>
                         );
@@ -510,24 +519,40 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
                       <span className={`text-[11px] font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                         Dificuldade: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{game.difficulty}</strong>
                       </span>
+                      <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-400/30 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-amber-400" />
+                        <span>Touch</span>
+                      </span>
                     </div>
 
-                    <h3 className={`text-2xl sm:text-3xl font-black tracking-tight group-hover:opacity-90 transition-colors ${theme.textColor}`}>
+                    <h3 className={`text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight group-hover:opacity-95 transition-colors ${theme.textColor} mb-2`}>
                       {game.name}
                     </h3>
+
+                    <p className={`text-sm sm:text-base leading-relaxed ${isLight ? 'text-slate-600' : 'text-slate-300'} line-clamp-2 sm:line-clamp-3 font-medium max-w-2xl`}>
+                      {game.description}
+                    </p>
                   </div>
                 </div>
 
-                {/* Right Side: Big Highlighted Play Button */}
-                <div className="z-10 w-full sm:w-auto flex-shrink-0">
+                {/* Right Side: Game Miniature + Big Highlighted Play Button */}
+                <div className="z-10 w-full lg:w-auto flex flex-col sm:flex-row items-center gap-4 sm:gap-6 flex-shrink-0 justify-end">
+                  {/* Miniature Game Preview Art */}
+                  <GameCardThumbnail 
+                    game={game} 
+                    themePrimary={theme.primary} 
+                    isLight={isLight} 
+                  />
+
+                  {/* Play Action Button */}
                   <button
                     style={{
                       backgroundColor: theme.primary,
-                      boxShadow: `0 10px 30px -5px ${theme.glowColor}70`,
+                      boxShadow: `0 12px 35px -5px ${theme.glowColor}80`,
                     }}
-                    className="w-full sm:w-auto py-4 px-8 rounded-2xl text-white font-black text-lg tracking-wider uppercase shadow-xl flex items-center justify-center gap-3 transition-transform group-hover:scale-105 group-hover:brightness-110 active:scale-95"
+                    className="w-full sm:w-auto py-4 sm:py-5 px-8 sm:px-10 rounded-2xl sm:rounded-3xl text-white font-black text-lg sm:text-xl tracking-wider uppercase shadow-xl flex items-center justify-center gap-3 transition-transform group-hover:scale-105 group-hover:brightness-110 active:scale-95 flex-shrink-0"
                   >
-                    <Play className="w-5 h-5 fill-current" />
+                    <Play className="w-6 h-6 fill-current" />
                     <span>JOGAR AGORA</span>
                   </button>
                 </div>

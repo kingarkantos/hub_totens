@@ -15,7 +15,7 @@ export const GAMES_CATALOG: GameDefinition[] = [
   {
     id: 'quiz',
     slug: 'quiz-interativo',
-    name: 'Quiz da Marca',
+    name: 'Quiz',
     category: 'Conhecimento',
     description: 'Responda perguntas dinâmicas sobre lançamentos e diferenciais com botões touch gigantes e cronômetro regressivo.',
     icon: 'HelpCircle',

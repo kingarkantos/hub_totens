@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw, Shuffle, Clock } from 'lucide-react';
-import { Campaign, GameDefinition, ThemeId, CustomColorsConfig } from '../types';
+import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw, Shuffle, Clock, Gamepad2, LayoutGrid, Gem, Box } from 'lucide-react';
+import { Campaign, GameDefinition, ThemeId, CustomColorsConfig, GameLayoutId, GAME_LAYOUTS } from '../types';
 import { THEME_LIST, THEMES } from '../lib/themes';
 import { GAMES_CATALOG } from '../lib/gamesCatalog';
 import { GamePreviewModal } from '../games/GamePreviewModal';
@@ -71,6 +71,9 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>(initialThemeMode);
   const [orderMode, setOrderMode] = useState<'random' | 'ordered'>(
     campaignToEdit?.games_config?.order_mode || 'random'
+  );
+  const [gameLayout, setGameLayout] = useState<GameLayoutId>(
+    campaignToEdit?.games_config?.game_layout || 'modern_glass'
   );
 
   const initialCustomColors: CustomColorsConfig = campaignToEdit?.games_config?.custom_colors || {
@@ -221,6 +224,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           ...gamesConfig,
           theme_mode: themeMode,
           order_mode: orderMode,
+          game_layout: gameLayout,
           custom_colors: {
             ...customColors,
             bgType: customColors.enabled ? customColors.bgType : (themeMode === 'light' ? 'light' : 'dark'),
@@ -975,6 +979,71 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
               </div>
             </div>
 
+            {/* 5 Distinct Game Layouts Selector Section */}
+            <div className="space-y-4 p-5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2 text-sm font-bold text-red-600 uppercase tracking-wider">
+                  <Palette className="w-4 h-4" />
+                  <span>Design &amp; Layout dos Jogos (5 Estilos Exclusivos)</span>
+                </div>
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
+                  Layout Selecionado: <strong>{GAME_LAYOUTS.find((l) => l.id === gameLayout)?.name}</strong>
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Cada jogo da campanha terá este design visual exclusivo aplicado (containers, bordas, animações, efeitos e iluminação).
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-1">
+                {GAME_LAYOUTS.map((layoutDef) => {
+                  const isSelected = layoutDef.id === gameLayout;
+                  return (
+                    <button
+                      key={layoutDef.id}
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setGameLayout(layoutDef.id);
+                      }}
+                      className={`p-3.5 rounded-xl border-2 text-left transition-all flex flex-col justify-between gap-3 active:scale-95 ${
+                        isSelected
+                          ? 'border-red-500 bg-red-50/60 shadow-sm'
+                          : 'border-slate-200 bg-slate-50/70 hover:bg-slate-100 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <div className={`p-2 rounded-lg bg-gradient-to-br ${layoutDef.previewBg} text-white shadow-xs`}>
+                          {layoutDef.id === 'neon_arcade' ? (
+                            <Gamepad2 className="w-4 h-4" />
+                          ) : layoutDef.id === 'bento_tech' ? (
+                            <LayoutGrid className="w-4 h-4" />
+                          ) : layoutDef.id === 'neumorphic_luxe' ? (
+                            <Gem className="w-4 h-4" />
+                          ) : layoutDef.id === 'spatial_3d' ? (
+                            <Box className="w-4 h-4" />
+                          ) : (
+                            <Sparkles className="w-4 h-4" />
+                          )}
+                        </div>
+                        {isSelected && (
+                          <span className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px] font-black shadow-xs">
+                            ✓
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-black text-slate-900">{layoutDef.name}</h4>
+                        <span className="text-[10px] font-bold text-red-600 block mb-1">{layoutDef.tagline}</span>
+                        <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed">
+                          {layoutDef.description}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Interactive Games Catalog Section (Grid with Previews & Content) */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -1218,6 +1287,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           game={previewingGame}
           onClose={() => setPreviewingGame(null)}
           customContent={gamesConfig[previewingGame.id]}
+          gameLayout={gameLayout}
         />
       )}
 
@@ -1249,6 +1319,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
               ...nextGamesConfig,
               theme_mode: themeMode,
               order_mode: orderMode,
+              game_layout: gameLayout,
               custom_colors: {
                 ...customColors,
                 bgType: customColors.enabled ? customColors.bgType : (themeMode === 'light' ? 'light' : 'dark'),

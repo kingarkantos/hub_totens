@@ -27,7 +27,7 @@ O sistema conta com um painel de gerenciamento completo com autenticação por s
 - **Lista de Jogos Otimizada**: Jogos selecionados exibidos um abaixo do outro, bem grandes, destacados, com cards táteis de alta resolução.
 - **10 Jogos Interativos Touch**:
   1. 🎡 **Roleta Premiada**: Física de desaceleração realista, som de cliques por pino e confetes de vitória.
-  2. ❓ **Quiz da Marca**: Perguntas dinâmicas com botões grandes de toque, timer de 15s e pontuação por agilidade.
+  2. ❓ **Quiz**: Perguntas dinâmicas com botões grandes de toque, timer de 15s e pontuação por agilidade.
   3. 🎯 **Caça aos Alvos**: Alvos surgem em posições aleatórias na tela; teste de reflexo rápido com bônus para alvos dourados.
   4. 🧠 **Jogo da Memória**: Cartas com flip 3D, ícones de veículos e produtos da marca, com contagem de movimentos e pares.
   5. 🛍️ **Chuva de Brindes**: Arraste o veículo/cesta na base touch para coletar presentes e desviar de bombas.

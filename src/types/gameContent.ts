@@ -161,7 +161,7 @@ Chaveiro Turbo,250,#EA580C`,
 
   quiz: {
     gameId: 'quiz',
-    gameName: 'Quiz da Marca',
+    gameName: 'Quiz',
     description: 'Cadastre as perguntas com 4 alternativas e indique a letra da alternativa correta (A, B, C ou D).',
     csvColumns: [
       { name: 'question', description: 'Texto da pergunta', example: 'Qual o compromisso pioneiro da marca?' },

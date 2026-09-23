@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Play } from 'lucide-react';
 import { GameDefinition } from '../types';
+import { GameLayoutId } from '../types/gameLayouts';
 import { WheelGame } from './WheelGame';
 import { QuizGame } from './QuizGame';
 import { TargetGame } from './TargetGame';
@@ -25,51 +26,63 @@ interface GamePreviewModalProps {
   game: GameDefinition | null;
   onClose: () => void;
   customContent?: any;
+  gameLayout?: GameLayoutId;
 }
 
-export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({ game, onClose, customContent }) => {
+export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
+  game,
+  onClose,
+  customContent,
+  gameLayout = 'modern_glass',
+}) => {
   if (!game) return null;
+
+  const commonProps = {
+    onExit: onClose,
+    customContent,
+    gameLayout,
+  };
 
   const renderGame = () => {
     switch (game.id) {
       case 'wheel':
-        return <WheelGame onExit={onClose} customContent={customContent} />;
+        return <WheelGame {...commonProps} />;
       case 'quiz':
-        return <QuizGame onExit={onClose} customContent={customContent} />;
+        return <QuizGame {...commonProps} />;
       case 'target':
-        return <TargetGame onExit={onClose} customContent={customContent} />;
+        return <TargetGame {...commonProps} />;
       case 'memory':
-        return <MemoryGame onExit={onClose} customContent={customContent} />;
+        return <MemoryGame {...commonProps} />;
       case 'catcher':
-        return <CatcherGame onExit={onClose} customContent={customContent} />;
+        return <CatcherGame {...commonProps} />;
       case 'speed':
-        return <SpeedGame onExit={onClose} customContent={customContent} />;
+        return <SpeedGame {...commonProps} />;
       case 'safe':
-        return <SafeGame onExit={onClose} customContent={customContent} />;
+        return <SafeGame {...commonProps} />;
       case 'genius':
-        return <GeniusGame onExit={onClose} customContent={customContent} />;
+        return <GeniusGame {...commonProps} />;
       case 'puzzle':
-        return <PuzzleGame onExit={onClose} customContent={customContent} />;
+        return <PuzzleGame {...commonProps} />;
       case 'balloon':
-        return <BalloonGame onExit={onClose} customContent={customContent} />;
+        return <BalloonGame {...commonProps} />;
       case 'wordsearch':
-        return <WordSearchGame onExit={onClose} customContent={customContent} />;
+        return <WordSearchGame {...commonProps} />;
       case 'hangman':
-        return <HangmanGame onExit={onClose} customContent={customContent} />;
+        return <HangmanGame {...commonProps} />;
       case 'truefalse':
-        return <TrueFalseGame onExit={onClose} customContent={customContent} />;
+        return <TrueFalseGame {...commonProps} />;
       case 'complete_phrase':
-        return <CompletePhraseGame onExit={onClose} customContent={customContent} />;
+        return <CompletePhraseGame {...commonProps} />;
       case 'correct_order':
-        return <CorrectOrderGame onExit={onClose} customContent={customContent} />;
+        return <CorrectOrderGame {...commonProps} />;
       case 'connect_pairs':
-        return <ConnectPairsGame onExit={onClose} customContent={customContent} />;
+        return <ConnectPairsGame {...commonProps} />;
       case 'speed_trivia':
-        return <SpeedTriviaGame onExit={onClose} customContent={customContent} />;
+        return <SpeedTriviaGame {...commonProps} />;
       case 'spot_error':
-        return <SpotErrorGame onExit={onClose} customContent={customContent} />;
+        return <SpotErrorGame {...commonProps} />;
       case 'map_epi':
-        return <MapEpiGame onExit={onClose} />;
+        return <MapEpiGame {...commonProps} />;
       default:
         return (
           <div className="p-12 text-center text-slate-400">

@@ -202,7 +202,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({
 
   return (
     <GameContainer
-      title="Quiz da Marca"
+      title="Quiz"
       category="Conhecimento"
       score={score}
       correctAnswers={correctCount}

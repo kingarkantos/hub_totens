@@ -98,6 +98,9 @@ export interface BaseGameProps {
   orderMode?: 'random' | 'ordered';
   timeLimit?: number;
   totalTimeLimit?: number;
+  gameLayout?: import('./gameLayouts').GameLayoutId;
 }
+
+export * from './gameLayouts';
 
 
