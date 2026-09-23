@@ -393,7 +393,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                   </label>
                   <div className="flex items-center rounded-xl bg-slate-50 border border-slate-300 overflow-hidden focus-within:border-red-500 focus-within:bg-white">
                     <span className="px-3.5 py-3 text-xs font-mono text-slate-500 bg-slate-100 border-r border-slate-200 select-none">
-                      hub-totens.vercel.app/
+                      hub.totens.app/
                     </span>
                     <input
                       type="text"
