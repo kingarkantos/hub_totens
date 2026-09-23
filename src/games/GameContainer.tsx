@@ -137,6 +137,27 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           </>
         )}
 
+        {currentLayout === 'cartoon_pop' && (
+          <>
+            {/* Playful cartoon energy radiant background */}
+            <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gradient-to-b from-amber-500/25 via-orange-500/15 to-transparent blur-[110px] pointer-events-none" />
+            <div className="absolute -bottom-32 right-12 w-96 h-96 bg-amber-600/20 blur-[120px] pointer-events-none" />
+            {/* Floating comic star accents */}
+            <div className="absolute top-24 left-10 text-amber-400/40 text-2xl font-black pointer-events-none animate-bounce hidden sm:block">★</div>
+            <div className="absolute top-48 right-16 text-yellow-300/40 text-xl font-black pointer-events-none animate-bounce delay-300 hidden sm:block">✦</div>
+            <div className="absolute bottom-28 left-20 text-orange-400/35 text-2xl font-black pointer-events-none animate-pulse hidden sm:block">★</div>
+          </>
+        )}
+
+        {currentLayout === 'cartoon_comic' && (
+          <>
+            {/* Comic book halftone dots pattern */}
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#38bdf8_2px,transparent_2px)] [background-size:22px_22px] opacity-15" />
+            <div className="absolute -top-24 -left-24 w-80 h-80 bg-sky-500/20 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-emerald-500/20 rounded-full blur-[100px] pointer-events-none" />
+          </>
+        )}
+
         {currentLayout === 'neon_arcade' && (
           <>
             {/* Retro-futuristic scanlines overlay */}
@@ -214,7 +235,11 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
         {/* Top Bar Header */}
         <header className={`flex-shrink-0 flex items-center justify-between px-4 sm:px-8 py-3 sm:py-4 z-30 transition-all ${
-          currentLayout === 'neon_arcade' 
+          currentLayout === 'cartoon_pop'
+            ? 'bg-slate-900/95 border-b-4 border-amber-400/90 shadow-[0_4px_0_#92400e]'
+            : currentLayout === 'cartoon_comic'
+            ? 'bg-slate-950 border-b-4 border-black shadow-[0_4px_0_#000]'
+            : currentLayout === 'neon_arcade' 
             ? 'bg-black/80 border-b-2 border-cyan-500/40 shadow-[0_4px_25px_rgba(6,182,212,0.2)]' 
             : currentLayout === 'bento_tech'
             ? 'bg-slate-900/95 border-b-2 border-slate-700/80 shadow-md font-mono'
@@ -226,7 +251,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
             ? 'bg-white/95 border-b border-slate-200/80 shadow-xs text-slate-900 backdrop-blur-md' 
             : 'bg-black/40 border-b border-white/10 text-white backdrop-blur-md'
         }`}>
-          {/* Left: Exit button & Live Layout Switcher */}
+          {/* Left: Exit button */}
           <div className="flex items-center gap-2.5 sm:gap-3">
             <button
               onClick={() => {
@@ -234,7 +259,11 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 onExit();
               }}
               className={`flex items-center gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 ${currentLayoutDef.buttonClass} ${
-                currentLayout === 'neon_arcade'
+                currentLayout === 'cartoon_pop'
+                  ? 'bg-amber-400 hover:bg-amber-300 text-amber-950 border-2 border-amber-200 shadow-[0_4px_0_#92400e] active:translate-y-1 active:shadow-[0_1px_0_#92400e]'
+                  : currentLayout === 'cartoon_comic'
+                  ? 'bg-sky-400 hover:bg-sky-300 text-black border-2 border-black shadow-[3px_3px_0_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0_#000]'
+                  : currentLayout === 'neon_arcade'
                   ? 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)]'
                   : currentLayout === 'bento_tech'
                   ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600'
@@ -255,12 +284,26 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           {/* Center: Title & Category */}
           <div className="flex flex-col items-center text-center">
             <span className={`text-[10px] sm:text-xs uppercase tracking-widest ${
-              currentLayout === 'neon_arcade' ? 'text-cyan-400 font-black' : isLightMode ? 'text-slate-500 font-black' : 'text-slate-300 font-black'
+              currentLayout === 'cartoon_pop'
+                ? 'text-amber-400 font-black'
+                : currentLayout === 'cartoon_comic'
+                ? 'text-sky-300 font-black'
+                : currentLayout === 'neon_arcade'
+                ? 'text-cyan-400 font-black'
+                : isLightMode
+                ? 'text-slate-500 font-black'
+                : 'text-slate-300 font-black'
             }`}>
               {category}
             </span>
             <h2 className={`text-base sm:text-2xl font-black tracking-tight ${
-              currentLayout === 'neon_arcade' ? 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-white to-pink-400' : ''
+              currentLayout === 'cartoon_pop'
+                ? 'text-amber-300 drop-shadow-sm'
+                : currentLayout === 'cartoon_comic'
+                ? 'text-white drop-shadow-[2px_2px_0_#000]'
+                : currentLayout === 'neon_arcade'
+                ? 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-white to-pink-400'
+                : ''
             }`}>
               {title}
             </h2>
@@ -270,7 +313,11 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           <div className="flex items-center gap-2 sm:gap-3.5">
             {timeRemaining !== undefined && timeRemaining > 0 && (
               <div className={`px-3 sm:px-4 py-1.5 sm:py-2 ${currentLayoutDef.buttonClass} ${
-                currentLayout === 'neon_arcade'
+                currentLayout === 'cartoon_pop'
+                  ? 'bg-amber-400 text-amber-950 border-2 border-amber-200 shadow-[0_3px_0_#92400e]'
+                  : currentLayout === 'cartoon_comic'
+                  ? 'bg-yellow-400 text-black border-2 border-black shadow-[2px_2px_0_#000]'
+                  : currentLayout === 'neon_arcade'
                   ? 'bg-black border border-amber-400 text-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.3)]'
                   : currentLayout === 'bento_tech'
                   ? 'bg-slate-800 border border-amber-500/40 text-amber-400'
@@ -284,7 +331,11 @@ export const GameContainer: React.FC<GameContainerProps> = ({
             )}
 
             <div className={`px-3 sm:px-4 py-1.5 sm:py-2 ${currentLayoutDef.buttonClass} ${
-              currentLayout === 'neon_arcade'
+              currentLayout === 'cartoon_pop'
+                ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950 border-2 border-amber-200 shadow-[0_3px_0_#92400e]'
+                : currentLayout === 'cartoon_comic'
+                ? 'bg-emerald-400 text-black border-2 border-black shadow-[2px_2px_0_#000]'
+                : currentLayout === 'neon_arcade'
                 ? 'bg-black border border-cyan-400 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.3)]'
                 : currentLayout === 'bento_tech'
                 ? 'bg-slate-800 border border-slate-700 text-white'
