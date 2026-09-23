@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
-import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw, Shuffle, Clock, Gamepad2, LayoutGrid, Gem, Box, AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, List } from 'lucide-react';
-import { Campaign, GameDefinition, ThemeId, CustomColorsConfig, GameLayoutId, GAME_LAYOUTS } from '../types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw, Shuffle, Clock, Gamepad2, LayoutGrid, Gem, Box, AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, List, AlertTriangle, Store } from 'lucide-react';
+import { Campaign, GameDefinition, ThemeId, CustomColorsConfig, GameLayoutId, GAME_LAYOUTS, Reseller } from '../types';
 import { THEME_LIST, THEMES } from '../lib/themes';
 import { GAMES_CATALOG, GAME_CATEGORIES } from '../lib/gamesCatalog';
 import { GamePreviewModal } from '../games/GamePreviewModal';
 import { GameContentEditorModal, getContentCount } from './GameContentEditorModal';
 import { sound } from '../lib/audio';
 import { supabase, TABLES, BUCKETS } from '../lib/supabase';
+import { resellersService } from '../lib/resellersService';
 
 interface CampaignFormModalProps {
   campaignToEdit?: Campaign | null;
   onClose: () => void;
   onSave: (campaignData: Partial<Campaign>) => Promise<void>;
   onCampaignUpdated?: (campaignId: string, gamesConfig: Record<string, any>) => void;
+  existingCampaigns?: Campaign[];
 }
 
 const SPLASH_PRESETS = [
@@ -39,6 +41,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
   onClose,
   onSave,
   onCampaignUpdated,
+  existingCampaigns = [],
 }) => {
   const [name, setName] = useState(campaignToEdit?.name || '');
   const [slug, setSlug] = useState(campaignToEdit?.slug || '');
@@ -82,6 +85,22 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
   const [descriptionSize, setDescriptionSize] = useState<'sm' | 'md' | 'lg'>(
     campaignToEdit?.games_config?.description_size || 'md'
   );
+  const [resellers, setResellers] = useState<Reseller[]>([]);
+  const [selectedResellerId, setSelectedResellerId] = useState<string>(
+    campaignToEdit?.reseller_id || campaignToEdit?.games_config?.reseller_id || ''
+  );
+
+  useEffect(() => {
+    resellersService.getResellers().then(setResellers).catch(console.error);
+  }, []);
+
+  const isNameDuplicate = useMemo(() => {
+    const clean = name.trim().toLowerCase();
+    if (!clean) return false;
+    return (existingCampaigns || []).some(
+      (c) => c.id !== campaignToEdit?.id && c.name.trim().toLowerCase() === clean
+    );
+  }, [name, existingCampaigns, campaignToEdit]);
 
   const initialCustomColors: CustomColorsConfig = campaignToEdit?.games_config?.custom_colors || {
     enabled: false,
@@ -211,6 +230,10 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isNameDuplicate) {
+      alert('Já existe uma campanha cadastrada com este mesmo nome! Escolha um nome exclusivo.');
+      return;
+    }
     if (!name.trim() || !slug.trim()) return;
     if (selectedGames.length === 0) {
       alert('Selecione pelo menos 1 jogo para a campanha!');
@@ -219,6 +242,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
 
     setSaving(true);
     try {
+      const chosenReseller = resellers.find((r) => r.id === selectedResellerId);
       await onSave({
         name: name.trim(),
         slug: slug.trim().toLowerCase(),
@@ -227,8 +251,12 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
         splash_image_url: splashUrl.trim(),
         theme_id: themeId,
         selected_games: selectedGames,
+        reseller_id: selectedResellerId || undefined,
+        reseller_name: chosenReseller?.company_name || undefined,
         games_config: {
           ...gamesConfig,
+          reseller_id: selectedResellerId || undefined,
+          reseller_name: chosenReseller?.company_name || undefined,
           theme_mode: themeMode,
           order_mode: orderMode,
           game_layout: gameLayout,
@@ -286,17 +314,43 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                    Nome da Campanha *
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700 uppercase">
+                      Nome da Campanha *
+                    </label>
+                    {isNameDuplicate && (
+                      <span className="flex items-center gap-1 text-[11px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                        <AlertTriangle className="w-3 h-3 text-amber-600 animate-pulse" />
+                        Nome já em uso!
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="text"
                     required
                     placeholder="Ex: Campanha Honda Festival 2026"
                     value={name}
                     onChange={(e) => handleNameChange(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500 focus:bg-white text-sm font-semibold"
+                    className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white text-sm font-semibold transition-colors ${
+                      isNameDuplicate
+                        ? 'border-amber-400 focus:border-amber-500 bg-amber-50/20'
+                        : 'border-slate-300 focus:border-red-500'
+                    }`}
                   />
+                  {isNameDuplicate && (
+                    <div className="mt-1.5 p-2 bg-amber-50 rounded-lg border border-amber-200 flex items-center justify-between gap-2">
+                      <p className="text-[11px] text-amber-800 leading-tight">
+                        Já existe uma campanha com este nome. Adicione um ano ou termo:
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => handleNameChange(`${name} ${new Date().getFullYear()}`)}
+                        className="text-[11px] font-bold text-amber-900 bg-amber-200/80 hover:bg-amber-200 px-2 py-1 rounded transition-colors whitespace-nowrap"
+                      >
+                        + Ano ({new Date().getFullYear()})
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -311,6 +365,28 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                     onChange={(e) => setClientName(e.target.value)}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500 focus:bg-white text-sm font-semibold"
                   />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1 flex items-center gap-1.5">
+                    <Store className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Revendedor / Parceiro Responsável</span>
+                  </label>
+                  <select
+                    value={selectedResellerId}
+                    onChange={(e) => setSelectedResellerId(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:border-blue-500 focus:bg-white text-sm font-semibold cursor-pointer"
+                  >
+                    <option value="">Plataforma Direta (Sem Revendedor)</option>
+                    {resellers.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.company_name} {r.city_state ? `(${r.city_state})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Ao associar um revendedor, esta campanha será exibida e agrupada no portfólio dele.
+                  </p>
                 </div>
 
                 <div className="md:col-span-2">
@@ -1504,8 +1580,8 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
 
               <button
                 type="submit"
-                disabled={saving}
-                className="px-8 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 font-black text-sm text-white shadow-md active:scale-95 transition-all disabled:opacity-50"
+                disabled={saving || isNameDuplicate}
+                className="px-8 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 font-black text-sm text-white shadow-md active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? 'Salvando...' : campaignToEdit ? 'Salvar Alterações' : 'Criar Campanha'}
               </button>

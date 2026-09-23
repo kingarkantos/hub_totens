@@ -65,6 +65,8 @@ export interface Campaign {
   games_config?: Record<string, any>;
   ranking_enabled: boolean;
   active: boolean;
+  reseller_id?: string;
+  reseller_name?: string;
   created_at: string;
   updated_at: string;
 }
@@ -103,5 +105,6 @@ export interface BaseGameProps {
 }
 
 export * from './gameLayouts';
+export * from './reseller';
 
 

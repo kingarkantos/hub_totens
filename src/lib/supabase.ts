@@ -12,6 +12,7 @@ export const TABLES = {
   GAMES: 'hubtotens_games',
   RANKINGS: 'hubtotens_rankings',
   ANALYTICS: 'hubtotens_analytics',
+  RESELLERS: 'hubtotens_resellers',
 } as const;
 
 export const BUCKETS = {
