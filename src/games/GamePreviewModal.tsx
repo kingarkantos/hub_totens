@@ -1,7 +1,8 @@
-import React from 'react';
-import { X, Play } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Play, Palette } from 'lucide-react';
 import { GameDefinition } from '../types';
-import { GameLayoutId } from '../types/gameLayouts';
+import { GameLayoutId, GAME_LAYOUTS } from '../types/gameLayouts';
+import { GameLayoutProvider } from '../context/GameLayoutContext';
 import { WheelGame } from './WheelGame';
 import { QuizGame } from './QuizGame';
 import { TargetGame } from './TargetGame';
@@ -31,6 +32,7 @@ interface GamePreviewModalProps {
   onClose: () => void;
   customContent?: any;
   gameLayout?: GameLayoutId;
+  onLayoutChange?: (layout: GameLayoutId) => void;
 }
 
 export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
@@ -38,13 +40,29 @@ export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
   onClose,
   customContent,
   gameLayout = 'modern_glass',
+  onLayoutChange,
 }) => {
   if (!game) return null;
+
+  const [activeLayout, setActiveLayout] = useState<GameLayoutId>(gameLayout);
+
+  useEffect(() => {
+    if (gameLayout) {
+      setActiveLayout(gameLayout);
+    }
+  }, [gameLayout]);
+
+  const handleSelectLayout = (layoutId: GameLayoutId) => {
+    setActiveLayout(layoutId);
+    if (onLayoutChange) {
+      onLayoutChange(layoutId);
+    }
+  };
 
   const commonProps = {
     onExit: onClose,
     customContent,
-    gameLayout,
+    gameLayout: activeLayout,
   };
 
   const renderGame = () => {
@@ -108,33 +126,63 @@ export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
       <div className="relative w-full max-w-4xl h-[90vh] bg-slate-950 border-2 border-white/20 rounded-3xl overflow-hidden flex flex-col shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-slate-900 border-b border-white/10">
+        <div className="flex items-center justify-between px-5 py-3 bg-slate-900 border-b border-white/10 flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <span className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
-              <Play className="w-5 h-5 fill-current" />
+              <Play className="w-4 h-4 fill-current" />
             </span>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-black text-white">{game.name}</h3>
+                <h3 className="text-base font-black text-white">{game.name}</h3>
                 <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-white/10 text-slate-300">
                   {game.category}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 truncate max-w-md">{game.description}</p>
+              <p className="text-xs text-slate-400 truncate max-w-xs">{game.description}</p>
             </div>
+          </div>
+
+          {/* Interactive Layout Switcher Pills */}
+          <div className="flex items-center gap-1 bg-slate-950/90 p-1 rounded-xl border border-white/15 overflow-x-auto shadow-inner">
+            <span className="text-[11px] font-bold text-slate-400 px-2 flex items-center gap-1.5 shrink-0">
+              <Palette className="w-3.5 h-3.5 text-slate-400" />
+              <span>Layout:</span>
+            </span>
+            {GAME_LAYOUTS.map((l) => {
+              const isSelected = l.id === activeLayout;
+              return (
+                <button
+                  key={l.id}
+                  type="button"
+                  onClick={() => handleSelectLayout(l.id)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all shrink-0 active:scale-95 ${
+                    isSelected
+                      ? 'bg-white text-slate-950 shadow-sm'
+                      : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
+                  title={`${l.name} — ${l.tagline}`}
+                >
+                  <span>{l.name}</span>
+                  {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-xs" />}
+                </button>
+              );
+            })}
           </div>
 
           <button
             onClick={onClose}
-            className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-slate-300 hover:text-white transition-all"
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-slate-300 hover:text-white transition-all ml-auto sm:ml-0"
+            title="Fechar Preview"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Game Canvas Container */}
+        {/* Game Canvas Container with dynamic layout context */}
         <div className="flex-1 w-full h-full relative overflow-hidden">
-          {renderGame()}
+          <GameLayoutProvider layout={activeLayout} onLayoutChange={handleSelectLayout}>
+            {renderGame()}
+          </GameLayoutProvider>
         </div>
       </div>
     </div>

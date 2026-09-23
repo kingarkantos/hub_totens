@@ -7,7 +7,7 @@ import { sound } from '../lib/audio';
 import { TouchVirtualKeyboard } from '../components/TouchVirtualKeyboard';
 import { ThemeDefinition } from '../types';
 import { GameLayoutId, GAME_LAYOUTS, GameLayoutDefinition } from '../types/gameLayouts';
-import { GameLayoutProvider } from '../context/GameLayoutContext';
+import { GameLayoutProvider, useGameLayout } from '../context/GameLayoutContext';
 
 interface GameContainerProps {
   title: string;
@@ -64,14 +64,19 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const [playerName, setPlayerName] = useState('');
   const [showKeyboard, setShowKeyboard] = useState(false);
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
-  const [currentLayout, setCurrentLayout] = useState<GameLayoutId>(gameLayout || 'modern_glass');
+  const contextLayout = useGameLayout();
+  const [currentLayout, setCurrentLayout] = useState<GameLayoutId>(
+    gameLayout || contextLayout?.layout || 'modern_glass'
+  );
 
-  // Sync if prop changes externally
+  // Sync if prop or context changes externally
   useEffect(() => {
     if (gameLayout) {
       setCurrentLayout(gameLayout);
+    } else if (contextLayout?.layout) {
+      setCurrentLayout(contextLayout.layout);
     }
-  }, [gameLayout]);
+  }, [gameLayout, contextLayout?.layout]);
 
   const currentLayoutDef: GameLayoutDefinition = 
     GAME_LAYOUTS.find((l) => l.id === currentLayout) || GAME_LAYOUTS[0];

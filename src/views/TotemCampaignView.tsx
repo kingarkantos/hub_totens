@@ -7,6 +7,7 @@ import { GAMES_CATALOG, GAME_CATEGORIES } from '../lib/gamesCatalog';
 import { sound } from '../lib/audio';
 import { LeaderboardModal } from '../components/LeaderboardModal';
 import { GameCardThumbnail } from '../components/GameCardThumbnail';
+import { GameLayoutProvider } from '../context/GameLayoutContext';
 
 // Games
 import { WheelGame } from '../games/WheelGame';
@@ -381,56 +382,64 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
       gameLayout: campaign.games_config?.[`${activeGame.id}_layout`] || campaign.games_config?.game_layout || 'modern_glass',
     };
 
-    switch (activeGame.id) {
-      case 'wheel':
-        return <WheelGame {...commonProps} />;
-      case 'quiz':
-        return <QuizGame {...commonProps} />;
-      case 'target':
-        return <TargetGame {...commonProps} />;
-      case 'memory':
-        return <MemoryGame {...commonProps} />;
-      case 'catcher':
-        return <CatcherGame {...commonProps} />;
-      case 'speed':
-        return <SpeedGame {...commonProps} />;
-      case 'safe':
-        return <SafeGame {...commonProps} />;
-      case 'genius':
-        return <GeniusGame {...commonProps} />;
-      case 'puzzle':
-        return <PuzzleGame {...commonProps} />;
-      case 'balloon':
-        return <BalloonGame {...commonProps} />;
-      case 'wordsearch':
-        return <WordSearchGame {...commonProps} />;
-      case 'hangman':
-        return <HangmanGame {...commonProps} />;
-      case 'truefalse':
-        return <TrueFalseGame {...commonProps} />;
-      case 'complete_phrase':
-        return <CompletePhraseGame {...commonProps} />;
-      case 'correct_order':
-        return <CorrectOrderGame {...commonProps} />;
-      case 'connect_pairs':
-        return <ConnectPairsGame {...commonProps} />;
-      case 'speed_trivia':
-        return <SpeedTriviaGame {...commonProps} />;
-      case 'spot_error':
-        return <SpotErrorGame {...commonProps} />;
-      case 'map_epi':
-        return <MapEpiGame {...commonProps} />;
-      case 'math_blitz':
-        return <MathBlitzGame {...commonProps} />;
-      case 'higher_lower':
-        return <HigherLowerGame {...commonProps} />;
-      case 'reaction_time':
-        return <ReactionTimeGame {...commonProps} />;
-      case 'bullseye':
-        return <BullseyeGame {...commonProps} />;
-      default:
-        return null;
-    }
+    const renderActiveGame = () => {
+      switch (activeGame.id) {
+        case 'wheel':
+          return <WheelGame {...commonProps} />;
+        case 'quiz':
+          return <QuizGame {...commonProps} />;
+        case 'target':
+          return <TargetGame {...commonProps} />;
+        case 'memory':
+          return <MemoryGame {...commonProps} />;
+        case 'catcher':
+          return <CatcherGame {...commonProps} />;
+        case 'speed':
+          return <SpeedGame {...commonProps} />;
+        case 'safe':
+          return <SafeGame {...commonProps} />;
+        case 'genius':
+          return <GeniusGame {...commonProps} />;
+        case 'puzzle':
+          return <PuzzleGame {...commonProps} />;
+        case 'balloon':
+          return <BalloonGame {...commonProps} />;
+        case 'wordsearch':
+          return <WordSearchGame {...commonProps} />;
+        case 'hangman':
+          return <HangmanGame {...commonProps} />;
+        case 'truefalse':
+          return <TrueFalseGame {...commonProps} />;
+        case 'complete_phrase':
+          return <CompletePhraseGame {...commonProps} />;
+        case 'correct_order':
+          return <CorrectOrderGame {...commonProps} />;
+        case 'connect_pairs':
+          return <ConnectPairsGame {...commonProps} />;
+        case 'speed_trivia':
+          return <SpeedTriviaGame {...commonProps} />;
+        case 'spot_error':
+          return <SpotErrorGame {...commonProps} />;
+        case 'map_epi':
+          return <MapEpiGame {...commonProps} />;
+        case 'math_blitz':
+          return <MathBlitzGame {...commonProps} />;
+        case 'higher_lower':
+          return <HigherLowerGame {...commonProps} />;
+        case 'reaction_time':
+          return <ReactionTimeGame {...commonProps} />;
+        case 'bullseye':
+          return <BullseyeGame {...commonProps} />;
+        default:
+          return null;
+      }
+    };
+
+    return (
+      <GameLayoutProvider layout={commonProps.gameLayout} onLayoutChange={() => {}}>
+        {renderActiveGame()}
+      </GameLayoutProvider>
+    );
   }
 
   return (

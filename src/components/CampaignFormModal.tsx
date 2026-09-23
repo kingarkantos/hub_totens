@@ -1221,6 +1221,10 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                       onClick={() => {
                         sound.playClick();
                         setGameLayout(layoutDef.id);
+                        setGamesConfig((prev) => ({
+                          ...prev,
+                          game_layout: layoutDef.id,
+                        }));
                       }}
                       className={`p-3.5 rounded-xl border-2 text-left transition-all flex flex-col justify-between gap-3 active:scale-95 ${
                         isSelected
@@ -1594,7 +1598,15 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           game={previewingGame}
           onClose={() => setPreviewingGame(null)}
           customContent={gamesConfig[previewingGame.id]}
-          gameLayout={gameLayout}
+          gameLayout={gamesConfig[`${previewingGame.id}_layout`] || gamesConfig?.game_layout || gameLayout || 'modern_glass'}
+          onLayoutChange={(newLayout) => {
+            setGameLayout(newLayout);
+            setGamesConfig((prev) => ({
+              ...prev,
+              [`${previewingGame.id}_layout`]: newLayout,
+              game_layout: newLayout,
+            }));
+          }}
         />
       )}
 
