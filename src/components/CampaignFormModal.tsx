@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw, Shuffle, Clock, Gamepad2, LayoutGrid, Gem, Box, AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, List, AlertTriangle, Store } from 'lucide-react';
-import { Campaign, GameDefinition, ThemeId, CustomColorsConfig, GameLayoutId, GAME_LAYOUTS, Reseller } from '../types';
+import { Campaign, GameDefinition, ThemeId, CustomColorsConfig, GameLayoutId, GAME_LAYOUTS, Reseller, SplashButtonStyleId, SPLASH_BUTTON_STYLES } from '../types';
+import { BackgroundEffectId, BACKGROUND_EFFECTS } from './BackgroundEffectOverlay';
 import { THEME_LIST, THEMES } from '../lib/themes';
 import { GAMES_CATALOG, GAME_CATEGORIES } from '../lib/gamesCatalog';
 import { GamePreviewModal } from '../games/GamePreviewModal';
@@ -82,6 +83,12 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
   );
   const [descriptionSize, setDescriptionSize] = useState<'sm' | 'md' | 'lg'>(
     campaignToEdit?.games_config?.description_size || 'md'
+  );
+  const [splashButtonStyle, setSplashButtonStyle] = useState<SplashButtonStyleId>(
+    campaignToEdit?.games_config?.splash_button_style || 'default'
+  );
+  const [splashBgEffect, setSplashBgEffect] = useState<BackgroundEffectId>(
+    campaignToEdit?.games_config?.splash_bg_effect || 'none'
   );
   const [resellers, setResellers] = useState<Reseller[]>([]);
   const [selectedResellerId, setSelectedResellerId] = useState<string>(
@@ -258,6 +265,8 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           game_layout: gameLayout,
           description_align: descriptionAlign,
           description_size: descriptionSize,
+          splash_button_style: splashButtonStyle,
+          splash_bg_effect: splashBgEffect,
           custom_colors: {
             ...customColors,
             bgType: customColors.enabled ? customColors.bgType : (themeMode === 'light' ? 'light' : 'dark'),
@@ -697,6 +706,136 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                       </span>
                     </button>
                   ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Splash Screen Customization: Button Style & Background Overlay Animation */}
+            <div className="space-y-6 p-6 rounded-3xl bg-slate-50 border-2 border-slate-200">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2 text-sm font-bold text-red-600 uppercase tracking-wider">
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <span>Personalização da Tela de Abertura (Splash Screen)</span>
+                </div>
+                <span className="text-xs text-slate-500">
+                  Botão de início e partículas animadas em overlay
+                </span>
+              </div>
+
+              {/* 1. Estilo do Botão "Toque para Jogar" */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <Gamepad2 className="w-3.5 h-3.5 text-red-600" />
+                    <span>Estilo do Botão "Toque para Jogar"</span>
+                  </label>
+                  <span className="text-xs text-slate-500">
+                    Estilo ativo: <strong className="text-slate-900">{SPLASH_BUTTON_STYLES.find(s => s.id === splashButtonStyle)?.name}</strong>
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {SPLASH_BUTTON_STYLES.map((styleDef) => {
+                    const isSelected = splashButtonStyle === styleDef.id;
+                    return (
+                      <button
+                        key={styleDef.id}
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setSplashButtonStyle(styleDef.id);
+                        }}
+                        className={`p-3.5 rounded-2xl border-2 text-left transition-all flex flex-col justify-between gap-3 relative ${
+                          isSelected
+                            ? 'border-red-600 bg-white shadow-md ring-2 ring-red-500/20'
+                            : 'border-slate-200 bg-white/80 hover:border-slate-300 hover:bg-white'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{styleDef.icon}</span>
+                            <div>
+                              <div className="text-xs font-black text-slate-900">{styleDef.name}</div>
+                              <div className="text-[10px] text-slate-500">{styleDef.tagline}</div>
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <span className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center flex-shrink-0">
+                              <Check className="w-3 h-3 stroke-[3]" />
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Visual Miniature Button Preview */}
+                        <div className="w-full py-2 px-3 rounded-xl flex items-center justify-center gap-2 text-[11px] font-bold shadow-2xs truncate select-none border border-slate-200 bg-slate-900">
+                          <span className={`w-full py-1.5 px-3 rounded-xl flex items-center justify-center gap-1.5 text-[10px] font-black uppercase tracking-wider ${styleDef.previewClass}`}>
+                            <Play className="w-3 h-3 fill-current" />
+                            <span>Jogar</span>
+                          </span>
+                        </div>
+
+                        <p className="text-[10px] text-slate-500 leading-tight">
+                          {styleDef.description}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 2. Efeito de Animação de Fundo (Sobreposição / Overlay) */}
+              <div className="space-y-3 pt-3 border-t border-slate-200">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Animação de Fundo (Sobreposição / Overlay)</span>
+                  </label>
+                  <span className="text-xs text-slate-500">
+                    Efeito ativo: <strong className="text-slate-900">{BACKGROUND_EFFECTS.find(e => e.id === splashBgEffect)?.name}</strong>
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 -mt-1">
+                  Efeitos visuais animados em tempo real que ficam sobre a imagem de fundo:
+                </p>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3">
+                  {BACKGROUND_EFFECTS.map((eff) => {
+                    const isSelected = splashBgEffect === eff.id;
+                    return (
+                      <button
+                        key={eff.id}
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setSplashBgEffect(eff.id);
+                        }}
+                        className={`p-3 rounded-2xl border-2 text-left transition-all flex flex-col justify-between gap-2 relative ${
+                          isSelected
+                            ? 'border-indigo-600 bg-white shadow-md ring-2 ring-indigo-500/20'
+                            : 'border-slate-200 bg-white/80 hover:border-slate-300 hover:bg-white'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl">{eff.icon}</span>
+                            <div>
+                              <div className="text-xs font-black text-slate-900">{eff.name}</div>
+                              <div className="text-[10px] text-slate-500">{eff.tagline}</div>
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center flex-shrink-0">
+                              <Check className="w-3 h-3 stroke-[3]" />
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-[10px] text-slate-500 leading-snug line-clamp-2">
+                          {eff.description}
+                        </p>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>

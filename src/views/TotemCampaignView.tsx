@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Maximize, Minimize, Trophy, Play, ArrowLeft, Volume2, VolumeX, Flame, ShieldAlert, Home, ChevronDown } from 'lucide-react';
-import { Campaign, GameDefinition, ThemeDefinition, CustomColorsConfig } from '../types';
+import { Campaign, GameDefinition, ThemeDefinition, CustomColorsConfig, SplashButtonStyleId } from '../types';
 import { supabase, TABLES } from '../lib/supabase';
 import { THEMES } from '../lib/themes';
 import { GAMES_CATALOG, GAME_CATEGORIES } from '../lib/gamesCatalog';
@@ -8,6 +8,7 @@ import { sound } from '../lib/audio';
 import { LeaderboardModal } from '../components/LeaderboardModal';
 import { GameCardThumbnail } from '../components/GameCardThumbnail';
 import { GameLayoutProvider } from '../context/GameLayoutContext';
+import { BackgroundEffectOverlay, BackgroundEffectId } from '../components/BackgroundEffectOverlay';
 
 // Games
 import { WheelGame } from '../games/WheelGame';
@@ -348,6 +349,111 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
 
   const gamesList = GAMES_CATALOG.filter((g) => campaign.selected_games.includes(g.id));
 
+  const splashButtonStyle: SplashButtonStyleId =
+    (campaign.games_config?.splash_button_style as SplashButtonStyleId) || 'default';
+  const splashBgEffect: BackgroundEffectId =
+    (campaign.games_config?.splash_bg_effect as BackgroundEffectId) || 'none';
+
+  const handleStartPlay = () => {
+    sound.playSuccess();
+    if (gamesList.length === 1) {
+      setActiveGame(gamesList[0]);
+    } else {
+      setInSplash(false);
+    }
+  };
+
+  const renderSplashButton = () => {
+    switch (splashButtonStyle) {
+      case 'cartoon_3d':
+        return (
+          <button
+            onClick={handleStartPlay}
+            className="group relative py-6 px-12 sm:px-16 rounded-3xl bg-gradient-to-b from-amber-300 via-amber-400 to-amber-500 border-4 border-amber-100 text-amber-950 font-black text-2xl sm:text-3xl tracking-wider uppercase shadow-[0_12px_0_#b45309,0_25px_35px_rgba(0,0,0,0.6)] active:translate-y-2 active:shadow-[0_4px_0_#b45309] hover:brightness-105 transition-all flex items-center gap-4 animate-bounce"
+          >
+            <div className="p-2 rounded-2xl bg-amber-950/15 border border-amber-950/20">
+              <Play className="w-8 h-8 fill-amber-950 text-amber-950" />
+            </div>
+            <span className="drop-shadow-[0_2px_0_rgba(255,255,255,0.7)]">TOQUE PARA JOGAR</span>
+          </button>
+        );
+
+      case 'neon_pulse':
+        return (
+          <button
+            onClick={handleStartPlay}
+            className="relative py-6 px-12 sm:px-16 rounded-full bg-slate-950/90 border-2 border-cyan-400 text-cyan-300 font-black text-2xl sm:text-3xl tracking-widest uppercase shadow-[0_0_35px_rgba(34,211,238,0.7),inset_0_0_20px_rgba(34,211,238,0.3)] active:scale-95 transition-all flex items-center gap-4 animate-totem-pulse"
+          >
+            <Play className="w-8 h-8 fill-cyan-400 text-cyan-400 drop-shadow-[0_0_8px_#22d3ee]" />
+            <span className="drop-shadow-[0_0_12px_#22d3ee]">TOQUE PARA JOGAR</span>
+          </button>
+        );
+
+      case 'arcade_retro':
+        return (
+          <button
+            onClick={handleStartPlay}
+            className="relative py-6 px-12 sm:px-16 rounded-none bg-black border-4 border-yellow-400 text-yellow-300 font-mono font-black text-2xl sm:text-3xl tracking-widest uppercase shadow-[0_0_25px_#facc15,6px_6px_0px_#ca8a04] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center gap-4"
+          >
+            <Play className="w-8 h-8 fill-yellow-400 text-yellow-400" />
+            <span className="tracking-widest">▶ TOQUE PARA JOGAR</span>
+          </button>
+        );
+
+      case 'cyber_tech':
+        return (
+          <button
+            onClick={handleStartPlay}
+            style={{
+              clipPath: 'polygon(18px 0%, 100% 0%, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0% 100%, 0% 18px)',
+            }}
+            className="relative py-6 px-12 sm:px-16 bg-emerald-950/90 border-2 border-emerald-400 text-emerald-300 font-mono font-black text-2xl sm:text-3xl tracking-widest uppercase shadow-[0_0_30px_rgba(16,185,129,0.6)] active:scale-95 transition-all flex items-center gap-4"
+          >
+            <Play className="w-8 h-8 fill-emerald-400 text-emerald-400" />
+            <span>TOQUE PARA JOGAR</span>
+          </button>
+        );
+
+      case 'luxury_gold':
+        return (
+          <button
+            onClick={handleStartPlay}
+            className="relative py-6 px-12 sm:px-16 rounded-3xl bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 border-2 border-yellow-100 text-slate-950 font-black text-2xl sm:text-3xl tracking-wider uppercase shadow-[0_0_40px_rgba(245,158,11,0.6),0_15px_30px_rgba(0,0,0,0.5)] active:scale-95 transition-all flex items-center gap-4"
+          >
+            <Play className="w-8 h-8 fill-slate-950 text-slate-950" />
+            <span className="drop-shadow-xs">TOQUE PARA JOGAR</span>
+          </button>
+        );
+
+      case 'glass_glow':
+        return (
+          <button
+            onClick={handleStartPlay}
+            className="relative py-6 px-12 sm:px-16 rounded-3xl backdrop-blur-2xl bg-white/20 border-2 border-white/60 text-white font-black text-2xl sm:text-3xl tracking-wider uppercase shadow-[0_0_40px_rgba(255,255,255,0.3),inset_0_0_20px_rgba(255,255,255,0.2)] active:scale-95 transition-all flex items-center gap-4 animate-totem-pulse"
+          >
+            <Play className="w-8 h-8 fill-white text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+            <span className="drop-shadow-[0_0_10px_rgba(255,255,255,0.6)]">TOQUE PARA JOGAR</span>
+          </button>
+        );
+
+      case 'default':
+      default:
+        return (
+          <button
+            onClick={handleStartPlay}
+            style={{
+              boxShadow: `0 0 50px ${theme.glowColor}, 0 20px 40px rgba(0,0,0,0.6)`,
+              ...customButtonGradientStyle,
+            }}
+            className={`py-6 px-12 sm:px-16 rounded-3xl ${!isCustomActive ? `bg-gradient-to-r ${theme.buttonGradient}` : ''} text-white font-black text-2xl sm:text-3xl tracking-wider uppercase border-2 border-white/40 active:scale-95 transition-all flex items-center gap-4 animate-totem-pulse`}
+          >
+            <Play className="w-8 h-8 fill-current" />
+            <span>TOQUE PARA JOGAR</span>
+          </button>
+        );
+    }
+  };
+
   const availableCategories = GAME_CATEGORIES.filter((cat) =>
     gamesList.some((g) => g.categoryId === cat.id || g.category === cat.name)
   );
@@ -364,7 +470,12 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
     const gameTotalTimer = campaign.games_config?.[`${activeGame.id}_total_time_limit`];
 
     const commonProps = {
-      onExit: () => setActiveGame(null),
+      onExit: () => {
+        setActiveGame(null);
+        if (gamesList.length === 1) {
+          setInSplash(true);
+        }
+      },
       rankingEnabled: campaign.ranking_enabled,
       onSubmitScore: (name: string, score: number) =>
         handleScoreSubmit(name, score),
@@ -477,6 +588,9 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
             <div className="absolute inset-0 bg-radial-vignette opacity-80" />
           </div>
 
+          {/* Background Overlay Animation Effect (Matrix, Stars, Rain, Nanotech, etc.) */}
+          <BackgroundEffectOverlay effect={splashBgEffect} />
+
           {/* Top Brand Logo / Client */}
           <div className="relative z-10 pt-8 flex flex-col items-center animate-in slide-in-from-top-6 duration-700">
             {campaign.client_name && (
@@ -527,24 +641,7 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
 
           {/* Central Interactive Touch CTA */}
           <div className="relative z-10 my-auto flex flex-col items-center">
-            <button
-              onClick={() => {
-                sound.playSuccess();
-                setInSplash(false);
-              }}
-              style={{
-                boxShadow: `0 0 50px ${theme.glowColor}, 0 20px 40px rgba(0,0,0,0.6)`,
-                ...customButtonGradientStyle,
-              }}
-              className={`py-6 px-12 sm:px-16 rounded-3xl ${!isCustomActive ? `bg-gradient-to-r ${theme.buttonGradient}` : ''} text-white font-black text-2xl sm:text-3xl tracking-wider uppercase border-2 border-white/40 active:scale-95 transition-all flex items-center gap-4 animate-totem-pulse`}
-            >
-              <Play className="w-8 h-8 fill-current" />
-              <span>TOQUE PARA JOGAR</span>
-            </button>
-
-            <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-slate-400 mt-4 animate-pulse">
-              🎮 {gamesList.length} Desafios Interativos Disponíveis
-            </span>
+            {renderSplashButton()}
           </div>
 
           {/* Bottom Footer Info */}

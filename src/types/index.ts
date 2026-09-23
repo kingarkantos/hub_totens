@@ -107,5 +107,6 @@ export interface BaseGameProps {
 
 export * from './gameLayouts';
 export * from './reseller';
+export * from './splashCustomization';
 
 
