@@ -108,7 +108,12 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({
       ]);
 
       if (!campRes.error && campRes.data) {
-        setCampaigns(campRes.data as Campaign[]);
+        const enrichedCampaigns = (campRes.data as Campaign[]).map((c) => ({
+          ...c,
+          reseller_id: c.reseller_id || c.games_config?.reseller_id,
+          reseller_name: c.reseller_name || c.games_config?.reseller_name,
+        }));
+        setCampaigns(enrichedCampaigns);
       }
       setResellers(resList);
     } catch (err) {
@@ -138,11 +143,22 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({
   };
 
   const handleSaveCampaign = async (data: Partial<Campaign>) => {
+    // Strip unknown root table columns (reseller_id, reseller_name) so PostgreSQL doesn't reject with 400
+    const { reseller_id, reseller_name, ...tablePayload } = data;
+    const finalPayload = {
+      ...tablePayload,
+      games_config: {
+        ...(tablePayload.games_config || {}),
+        ...(reseller_id ? { reseller_id } : {}),
+        ...(reseller_name ? { reseller_name } : {}),
+      },
+    };
+
     if (editingCampaign) {
       const { error } = await supabase
         .from(TABLES.CAMPAIGNS)
         .update({
-          ...data,
+          ...finalPayload,
           updated_at: new Date().toISOString(),
         })
         .eq('id', editingCampaign.id);
@@ -152,7 +168,7 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({
       const { error } = await supabase
         .from(TABLES.CAMPAIGNS)
         .insert({
-          ...data,
+          ...finalPayload,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });

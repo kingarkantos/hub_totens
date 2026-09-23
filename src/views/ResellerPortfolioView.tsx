@@ -56,11 +56,15 @@ export const ResellerPortfolioView: React.FC<ResellerPortfolioViewProps> = ({
           // Fetch campaigns associated with this reseller
           const { data } = await supabase
             .from(TABLES.CAMPAIGNS)
-            .select('*')
-            .or(`reseller_id.eq.${found.id},reseller_name.eq.${found.company_name || found.name}`);
+            .select('*');
 
           if (data && isMounted) {
-            setCampaigns(data as Campaign[]);
+            const matches = (data as Campaign[]).filter((c) => {
+              const rId = c.reseller_id || c.games_config?.reseller_id;
+              const rName = c.reseller_name || c.games_config?.reseller_name;
+              return rId === found.id || rName === found.company_name || rName === found.name;
+            });
+            setCampaigns(matches);
           }
         }
       } catch (err) {

@@ -251,8 +251,6 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
         splash_image_url: splashUrl.trim(),
         theme_id: themeId,
         selected_games: selectedGames,
-        reseller_id: selectedResellerId || undefined,
-        reseller_name: chosenReseller?.company_name || undefined,
         games_config: {
           ...gamesConfig,
           reseller_id: selectedResellerId || undefined,
