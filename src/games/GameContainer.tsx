@@ -8,6 +8,7 @@ import { TouchVirtualKeyboard } from '../components/TouchVirtualKeyboard';
 import { ThemeDefinition } from '../types';
 import { GameLayoutId, GAME_LAYOUTS, GameLayoutDefinition } from '../types/gameLayouts';
 import { GameLayoutProvider, useGameLayout } from '../context/GameLayoutContext';
+import { getFontFamilyById } from '../lib/fonts';
 
 interface GameContainerProps {
   title: string;
@@ -33,6 +34,8 @@ interface GameContainerProps {
   isLight?: boolean;
   themeMode?: 'light' | 'dark';
   gameLayout?: GameLayoutId;
+  fontFamily?: string;
+  fontId?: string;
 }
 
 export const GameContainer: React.FC<GameContainerProps> = ({
@@ -59,6 +62,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   isLight,
   themeMode,
   gameLayout,
+  fontFamily,
+  fontId,
 }) => {
   const [soundOn, setSoundOn] = useState(sound.enabled);
   const [playerName, setPlayerName] = useState('');
@@ -112,6 +117,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     sound.playSuccess();
   };
 
+  const activeFontFamily = fontFamily || (fontId ? getFontFamilyById(fontId) : undefined);
+
   return (
     <GameLayoutProvider layout={currentLayout} onLayoutChange={setCurrentLayout}>
       <div
@@ -120,6 +127,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           '--layout-primary': activePrimary,
           '--layout-secondary': activeSecondary,
           '--layout-glow': activeGlow,
+          fontFamily: activeFontFamily,
           ...customBgStyle,
         } as React.CSSProperties}
         className={`absolute inset-0 w-full h-full flex flex-col bg-gradient-to-b ${

@@ -108,10 +108,13 @@ export interface BaseGameProps {
   timeLimit?: number;
   totalTimeLimit?: number;
   gameLayout?: import('./gameLayouts').GameLayoutId;
+  fontFamily?: string;
+  fontId?: string;
 }
 
 export * from './gameLayouts';
 export * from './reseller';
 export * from './splashCustomization';
+export * from '../lib/fonts';
 
 

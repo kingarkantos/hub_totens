@@ -11,6 +11,7 @@ import { GameLayoutProvider } from '../context/GameLayoutContext';
 import { BackgroundEffectOverlay, BackgroundEffectId } from '../components/BackgroundEffectOverlay';
 import { GameLayoutId } from '../types/gameLayouts';
 import { generateLayoutPalette } from '../lib/colorHarmony';
+import { getFontFamilyById } from '../lib/fonts';
 
 // Games
 import { WheelGame } from '../games/WheelGame';
@@ -687,6 +688,8 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
       splashImageUrl: campaign.splash_image_url,
       customContent: campaign.games_config?.[activeGame.id],
       gameLayout: campaign.games_config?.[`${activeGame.id}_layout`] || campaign.games_config?.game_layout || 'modern_glass',
+      fontId: campaign.games_config?.[`${activeGame.id}_font`] || campaign.games_config?.campaign_font || 'outfit',
+      fontFamily: getFontFamilyById(campaign.games_config?.[`${activeGame.id}_font`] || campaign.games_config?.campaign_font || 'outfit'),
     };
 
     const renderActiveGame = () => {

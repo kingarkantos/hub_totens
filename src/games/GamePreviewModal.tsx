@@ -3,6 +3,7 @@ import { X, Play, Palette } from 'lucide-react';
 import { GameDefinition, ThemeDefinition } from '../types';
 import { GameLayoutId, GAME_LAYOUTS } from '../types/gameLayouts';
 import { GameLayoutProvider } from '../context/GameLayoutContext';
+import { getFontFamilyById } from '../lib/fonts';
 import { WheelGame } from './WheelGame';
 import { QuizGame } from './QuizGame';
 import { TargetGame } from './TargetGame';
@@ -39,6 +40,8 @@ interface GamePreviewModalProps {
   themePrimary?: string;
   themeMode?: 'light' | 'dark';
   isLight?: boolean;
+  fontId?: string;
+  fontFamily?: string;
 }
 
 export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
@@ -53,6 +56,8 @@ export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
   themePrimary,
   themeMode,
   isLight,
+  fontId,
+  fontFamily,
 }) => {
   if (!game) return null;
 
@@ -71,6 +76,8 @@ export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
     }
   };
 
+  const activeFontFamily = fontFamily || getFontFamilyById(fontId);
+
   const commonProps = {
     onExit: onClose,
     customContent,
@@ -81,6 +88,8 @@ export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
     themePrimary,
     themeMode,
     isLight,
+    fontId,
+    fontFamily: activeFontFamily,
   };
 
   const renderGame = () => {

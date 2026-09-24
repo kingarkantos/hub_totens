@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw, Image as ImageIcon, Loader2, Wand2, Eye, ZoomIn, ExternalLink, Shuffle } from 'lucide-react';
+import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw, Image as ImageIcon, Loader2, Wand2, Eye, ZoomIn, ExternalLink, Shuffle, Type } from 'lucide-react';
 import { supabase, BUCKETS } from '../lib/supabase';
 import { GameDefinition } from '../types';
 import { GameLayoutId, GAME_LAYOUTS } from '../types/gameLayouts';
+import { GAME_FONTS, getFontFamilyById } from '../lib/fonts';
 import {
   GAME_CONTENT_SCHEMAS,
   TrueFalseCustomItem,
@@ -255,6 +256,8 @@ interface GameContentEditorModalProps {
   currentTimeLimit?: number;
   currentTotalTimeLimit?: number;
   currentLayout?: GameLayoutId;
+  currentFontId?: string;
+  campaignFontId?: string;
   currentOrderMode?: 'random' | 'ordered';
   currentQuestionsCount?: number;
   campaignContext: CampaignAIContext;
@@ -266,7 +269,8 @@ interface GameContentEditorModalProps {
     totalTimeLimit?: number,
     layout?: GameLayoutId,
     orderMode?: 'random' | 'ordered',
-    questionsCount?: number
+    questionsCount?: number,
+    fontId?: string
   ) => void;
 }
 
@@ -276,6 +280,8 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
   currentTimeLimit,
   currentTotalTimeLimit,
   currentLayout,
+  currentFontId,
+  campaignFontId,
   currentOrderMode,
   currentQuestionsCount,
   campaignContext,
@@ -291,6 +297,12 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
   const [selectedLayout, setSelectedLayout] = useState<GameLayoutId>(() => {
     if (currentLayout) return currentLayout;
     return 'modern_glass';
+  });
+
+  // Font family choice for this game (specific override or inherit from campaign)
+  const [selectedFont, setSelectedFont] = useState<string>(() => {
+    if (currentFontId) return currentFontId;
+    return 'inherit';
   });
 
   // Order mode for question/pool games (Aleatório vs Sequencial)
@@ -498,7 +510,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
     } catch (e) {
       console.warn('Audio play error:', e);
     }
-    onSave(game.id, content, timeLimit, totalTimeLimit, selectedLayout, orderMode, questionsCount);
+    onSave(game.id, content, timeLimit, totalTimeLimit, selectedLayout, orderMode, questionsCount, selectedFont);
   };
 
   // -------------------------------------------------------------
@@ -3333,6 +3345,109 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                       <span className={`text-[10px] block mt-0.5 ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>
                         {lay.tagline}
                       </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* SEÇÃO: SELETOR DE FONTE / TIPOGRAFIA DO JOGO */}
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5 shadow-xs space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wide flex items-center gap-2">
+                  <Type className="w-4 h-4 text-red-600" />
+                  <span>Tipografia &amp; Fonte do Jogo</span>
+                </h4>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Personalize a fonte dos textos e perguntas deste jogo ou herde a fonte geral definida na campanha.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-white text-slate-800 border border-slate-200 shadow-2xs">
+                  Fonte Ativa: <strong className="text-red-600">
+                    {selectedFont === 'inherit' || !selectedFont
+                      ? `Padrão da Campanha (${GAME_FONTS.find(f => f.id === campaignFontId)?.name || 'Outfit'})`
+                      : GAME_FONTS.find(f => f.id === selectedFont)?.name || selectedFont}
+                  </strong>
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+              {/* Option to inherit from campaign */}
+              <button
+                type="button"
+                onClick={() => {
+                  sound.playClick();
+                  setSelectedFont('inherit');
+                }}
+                className={`p-3 rounded-xl border-2 text-left transition-all flex flex-col justify-between gap-2 active:scale-98 ${
+                  selectedFont === 'inherit' || !selectedFont
+                    ? 'border-red-600 bg-red-50 text-slate-900 shadow-xs ring-2 ring-red-500/20'
+                    : 'border-slate-200 bg-white hover:bg-slate-100 text-slate-800'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black">Herdar da Campanha</span>
+                    {(selectedFont === 'inherit' || !selectedFont) && (
+                      <span className="w-4 h-4 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px] font-black">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-slate-500 block mt-0.5">
+                    Usa a fonte padrão da campanha ({GAME_FONTS.find(f => f.id === campaignFontId)?.name || 'Outfit'})
+                  </span>
+                </div>
+                <div
+                  style={{ fontFamily: getFontFamilyById(campaignFontId || 'outfit') }}
+                  className="p-2 rounded-lg bg-slate-900 text-white text-center text-xs font-bold truncate"
+                >
+                  Texto de Exemplo
+                </div>
+              </button>
+
+              {/* Individual Fonts */}
+              {GAME_FONTS.map((f) => {
+                const isSelected = selectedFont === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setSelectedFont(f.id);
+                    }}
+                    className={`p-3 rounded-xl border-2 text-left transition-all flex flex-col justify-between gap-2 active:scale-98 ${
+                      isSelected
+                        ? 'border-red-600 bg-red-50 text-slate-900 shadow-xs ring-2 ring-red-500/20'
+                        : 'border-slate-200 bg-white hover:bg-slate-100 text-slate-800'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black truncate">{f.name}</span>
+                        {isSelected && (
+                          <span className="w-4 h-4 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px] font-black flex-shrink-0">
+                            ✓
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-500 block truncate mt-0.5">
+                        {f.category}
+                      </span>
+                    </div>
+
+                    <div
+                      style={{ fontFamily: f.fontFamily }}
+                      className="p-2 rounded-lg bg-slate-900 text-white text-center text-xs font-bold truncate"
+                      title={f.name}
+                    >
+                      {f.previewText || 'Texto de Exemplo'}
                     </div>
                   </button>
                 );

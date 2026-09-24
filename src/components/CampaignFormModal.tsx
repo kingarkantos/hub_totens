@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw, Shuffle, Clock, Gamepad2, LayoutGrid, Gem, Box, AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, List, AlertTriangle, Store } from 'lucide-react';
+import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw, Shuffle, Clock, Gamepad2, LayoutGrid, Gem, Box, AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, List, AlertTriangle, Store, Type } from 'lucide-react';
 import { Campaign, GameDefinition, ThemeId, CustomColorsConfig, GameLayoutId, GAME_LAYOUTS, Reseller, SplashButtonStyleId, SPLASH_BUTTON_STYLES } from '../types';
 import { BackgroundEffectId, BACKGROUND_EFFECTS } from './BackgroundEffectOverlay';
 import { THEME_LIST, THEMES } from '../lib/themes';
@@ -10,6 +10,7 @@ import { sound } from '../lib/audio';
 import { supabase, TABLES, BUCKETS } from '../lib/supabase';
 import { resellersService } from '../lib/resellersService';
 import { QUICK_HUE_PRESETS, generateLayoutPalette, getDefaultHueForLayout } from '../lib/colorHarmony';
+import { GAME_FONTS, getFontFamilyById } from '../lib/fonts';
 
 interface CampaignFormModalProps {
   campaignToEdit?: Campaign | null;
@@ -87,6 +88,10 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
   const activeLayoutPalette = useMemo(() => {
     return generateLayoutPalette(layoutColorHue, themeMode === 'light');
   }, [layoutColorHue, themeMode]);
+
+  const [campaignFont, setCampaignFont] = useState<string>(
+    campaignToEdit?.games_config?.campaign_font || 'outfit'
+  );
 
   const [gameCategoryFilter, setGameCategoryFilter] = useState<string>('all');
   const [descriptionAlign, setDescriptionAlign] = useState<'left' | 'center' | 'right' | 'justify'>(
@@ -276,6 +281,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           order_mode: gamesConfig?.order_mode || 'random',
           game_layout: gameLayout,
           layout_color_hue: layoutColorHue,
+          campaign_font: campaignFont,
           description_align: descriptionAlign,
           description_size: descriptionSize,
           splash_button_style: splashButtonStyle,
@@ -1202,12 +1208,81 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
               </div>
             </div>
 
+            {/* 4. Tipografia & Fonte dos Jogos com 14 Estilos Variados */}
+            <div className="space-y-4 p-5 sm:p-6 rounded-3xl bg-white border-2 border-slate-200/90 shadow-sm">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2.5 text-sm sm:text-base font-black text-red-600 uppercase tracking-wider">
+                  <Type className="w-5 h-5" />
+                  <span>4. Tipografia &amp; Fonte dos Jogos ({GAME_FONTS.length} Estilos Variados)</span>
+                </div>
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
+                  Fonte Padrão: <strong className="text-red-600">{GAME_FONTS.find(f => f.id === campaignFont)?.name || 'Outfit'}</strong>
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-slate-500 leading-relaxed -mt-2">
+                Escolha a fonte que definirá a personalidade dos seus jogos (perguntas, cartelas, botões e títulos). Você também pode sobrescrever a fonte individualmente no editor de cada jogo!
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {GAME_FONTS.map((font) => {
+                  const isSelected = campaignFont === font.id;
+                  return (
+                    <button
+                      key={font.id}
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setCampaignFont(font.id);
+                        setGamesConfig((prev) => ({
+                          ...prev,
+                          campaign_font: font.id,
+                        }));
+                      }}
+                      className={`p-3.5 rounded-2xl border-2 text-left transition-all flex flex-col justify-between gap-2.5 active:scale-[0.98] relative ${
+                        isSelected
+                          ? 'border-red-600 bg-red-50/70 shadow-md ring-2 ring-red-500/20 scale-[1.02]'
+                          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-slate-900 truncate">
+                          {font.name}
+                        </span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          isSelected ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {font.category}
+                        </span>
+                      </div>
+
+                      <div
+                        style={{ fontFamily: font.fontFamily }}
+                        className="py-2.5 px-3 rounded-xl bg-slate-900 text-white text-center text-xs sm:text-sm font-bold shadow-inner truncate leading-snug"
+                        title={font.previewText || 'Texto de Teste'}
+                      >
+                        {font.previewText || 'Praticar atividades melhora a saúde!'}
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px] text-slate-500">
+                        <span className="truncate max-w-[85%]">{font.tagline}</span>
+                        {isSelected && (
+                          <span className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px] font-black flex-shrink-0">
+                            ✓
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Interactive Games Catalog Section (Grid with Previews & Content) */}
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-sm font-bold text-red-600 uppercase tracking-wider">
                   <Play className="w-4 h-4" />
-                  <span>4. Lista de Jogos do Totem (Selecione &amp; Alimente Conteúdo)</span>
+                  <span>5. Lista de Jogos do Totem (Selecione &amp; Alimente Conteúdo)</span>
                 </div>
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <button
@@ -1507,6 +1582,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           themePrimary={THEMES[themeId]?.primary || customColors.primary}
           themeMode={themeMode}
           isLight={themeMode === 'light'}
+          fontId={gamesConfig[`${previewingGame.id}_font`] || campaignFont}
           onLayoutChange={(newLayout) => {
             setGameLayout(newLayout);
             setGamesConfig((prev) => ({
@@ -1526,6 +1602,8 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           currentTimeLimit={gamesConfig[`${editingContentGame.id}_time_limit`]}
           currentTotalTimeLimit={gamesConfig[`${editingContentGame.id}_total_time_limit`]}
           currentLayout={gamesConfig[`${editingContentGame.id}_layout`] || gamesConfig?.game_layout || gameLayout || 'modern_glass'}
+          currentFontId={gamesConfig[`${editingContentGame.id}_font`]}
+          campaignFontId={campaignFont}
           currentOrderMode={gamesConfig[`${editingContentGame.id}_order_mode`] || 'random'}
           currentQuestionsCount={Number(gamesConfig[`${editingContentGame.id}_questions_count`]) || 0}
           campaignContext={{
@@ -1535,7 +1613,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
             themeName: THEMES[themeId]?.name,
           }}
           onClose={() => setEditingContentGame(null)}
-          onSave={async (gameId, updatedContent, timeLimit, totalTimeLimit, layout, gameOrderMode, gameQuestionsCount) => {
+          onSave={async (gameId, updatedContent, timeLimit, totalTimeLimit, layout, gameOrderMode, gameQuestionsCount, fontId) => {
             const nextGamesConfig = {
               ...gamesConfig,
               [gameId]: updatedContent,
@@ -1544,6 +1622,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
               [`${gameId}_layout`]: layout,
               [`${gameId}_order_mode`]: gameOrderMode,
               [`${gameId}_questions_count`]: gameQuestionsCount,
+              [`${gameId}_font`]: fontId !== 'inherit' ? fontId : undefined,
             };
             setGamesConfig(nextGamesConfig);
             setEditingContentGame(null);
