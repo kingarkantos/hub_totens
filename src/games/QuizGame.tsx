@@ -7,6 +7,7 @@ import { BaseGameProps } from '../types';
 import { QuizQuestionItem } from '../types/gameContent';
 import { useGameLayout } from '../context/GameLayoutContext';
 import { GameLayoutId } from '../types/gameLayouts';
+import { LayoutColorPalette, generateLayoutPalette, getDefaultHueForLayout } from '../lib/colorHarmony';
 
 interface QuizGameProps extends BaseGameProps {
   customContent?: QuizQuestionItem[];
@@ -65,6 +66,8 @@ export const QuizGame: React.FC<QuizGameProps> = ({
   timeLimit,
   totalTimeLimit,
   gameLayout,
+  palette,
+  layoutColorHue,
 }) => {
   const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
   const isUnlimitedTime = timeLimit === 0;
@@ -206,8 +209,36 @@ export const QuizGame: React.FC<QuizGameProps> = ({
 
   const contextLayout = useGameLayout();
   const activeLayout: GameLayoutId = gameLayout || contextLayout?.layout || 'cartoon_pop';
-  const layoutPrimary = contextLayout?.palette?.primary || themePrimary || '#06B6D4';
-  const layoutGlow = contextLayout?.palette?.glowColor || 'rgba(6, 182, 212, 0.45)';
+
+  const activePalette = useMemo(() => {
+    if (palette && (layoutColorHue === undefined || palette.hue === layoutColorHue)) {
+      return palette;
+    }
+    if (layoutColorHue !== undefined) {
+      return generateLayoutPalette(layoutColorHue, isLightMode);
+    }
+    if (theme?.primary && theme.primary !== '#DC2626') {
+      return {
+        hue: layoutColorHue || 185,
+        primary: theme.primary,
+        secondary: theme.secondary || '#3B82F6',
+        darkShade: theme.secondary || '#78350f',
+        accent: theme.accent || '#F59E0B',
+        glowColor: theme.glowColor || `${theme.primary}66`,
+        glowHex: theme.primary,
+        textColor: isLightMode ? '#0F172A' : '#FFFFFF',
+      };
+    }
+    if (contextLayout?.palette) {
+      return contextLayout.palette;
+    }
+    return generateLayoutPalette(getDefaultHueForLayout(activeLayout), isLightMode);
+  }, [palette, layoutColorHue, isLightMode, theme, contextLayout?.palette, activeLayout]);
+
+  const layoutPrimary = activePalette.primary || themePrimary || '#06B6D4';
+  const layoutSecondary = activePalette.secondary || '#3B82F6';
+  const darkPrimary = activePalette.darkShade || '#78350f';
+  const layoutGlow = activePalette.glowColor || 'rgba(6, 182, 212, 0.45)';
 
   const activeTimeDisplay = !isUnlimitedTime
     ? timeLeft
@@ -230,8 +261,13 @@ export const QuizGame: React.FC<QuizGameProps> = ({
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
-      themePrimary={themePrimary}
-      theme={theme}
+      themePrimary={layoutPrimary}
+      theme={theme ? {
+        ...theme,
+        primary: layoutPrimary,
+        secondary: layoutSecondary,
+        glowColor: layoutGlow,
+      } : undefined}
       isLight={isLightMode}
       themeMode={isLightMode ? 'light' : 'dark'}
       customBgStyle={customBgStyle}
@@ -239,6 +275,8 @@ export const QuizGame: React.FC<QuizGameProps> = ({
       clientName={clientName}
       splashImageUrl={splashImageUrl}
       gameLayout={activeLayout}
+      palette={activePalette}
+      layoutColorHue={activePalette.hue}
     >
       <div className="w-full max-w-3xl lg:max-w-4xl my-auto flex flex-col py-2 sm:py-4 px-2 sm:px-4 gap-4 sm:gap-5 animate-in fade-in duration-300">
         {/* Top Progress & Status */}
@@ -292,8 +330,14 @@ export const QuizGame: React.FC<QuizGameProps> = ({
           {/* Layout 1: CARTOON 3D POP - Floating 3D Coin Badge */}
           {activeLayout === 'cartoon_pop' && (
             <div className="absolute -top-7 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center pointer-events-none">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-b from-yellow-300 to-amber-500 border-4 border-amber-100 shadow-[0_6px_0_#92400e,0_12px_24px_rgba(0,0,0,0.5)] flex items-center justify-center transform -rotate-3 hover:rotate-0 transition-transform">
-                <span className="text-3xl sm:text-4xl font-black text-amber-950 select-none drop-shadow-sm">?</span>
+              <div
+                style={{
+                  background: `linear-gradient(to bottom, ${layoutPrimary}, ${layoutSecondary})`,
+                  boxShadow: `0 6px 0 ${darkPrimary}, 0 12px 24px rgba(0,0,0,0.5)`,
+                }}
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border-4 border-white/90 flex items-center justify-center transform -rotate-3 hover:rotate-0 transition-transform"
+              >
+                <span className="text-3xl sm:text-4xl font-black text-white select-none drop-shadow-md">?</span>
               </div>
             </div>
           )}
@@ -301,15 +345,27 @@ export const QuizGame: React.FC<QuizGameProps> = ({
           {/* Layout 2: CARTOON COMIC - Slanted Comic Badge */}
           {activeLayout === 'cartoon_comic' && (
             <div className="absolute -top-7 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center pointer-events-none">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-b from-sky-400 to-blue-600 border-4 border-white shadow-[4px_4px_0_#000] flex items-center justify-center rotate-6 text-white font-black text-3xl select-none">
-                ?
+              <div
+                style={{
+                  backgroundColor: layoutPrimary,
+                  boxShadow: '4px 4px 0 #000000',
+                }}
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border-4 border-black flex items-center justify-center rotate-6 text-black font-black text-3xl select-none"
+              >
+                POP!
               </div>
             </div>
           )}
 
           {/* Layout 4: GAME SHOW VIP - Floating Gold Trophy Ribbon */}
           {activeLayout === 'neumorphic_luxe' && (
-            <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-4 py-1 rounded-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 border-2 border-yellow-200 shadow-[0_4px_16px_rgba(245,158,11,0.5)] text-slate-950 font-black text-xs uppercase tracking-widest pointer-events-none">
+            <div
+              style={{
+                background: `linear-gradient(to right, ${layoutPrimary}, ${layoutSecondary})`,
+                boxShadow: `0 4px 16px ${layoutGlow}`,
+              }}
+              className="absolute -top-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-4 py-1 rounded-full border-2 border-white/80 text-slate-950 font-black text-xs uppercase tracking-widest pointer-events-none"
+            >
               <Award className="w-3.5 h-3.5 fill-current" />
               <span>Desafio VIP</span>
             </div>
@@ -337,42 +393,69 @@ export const QuizGame: React.FC<QuizGameProps> = ({
 
           {/* Card Body */}
           <div
-            style={
-              activeLayout === 'neon_arcade'
+            style={{
+              ...(activeLayout === 'cartoon_pop'
                 ? {
                     borderColor: layoutPrimary,
-                    boxShadow: `0 0 35px ${layoutGlow}, inset 0 0 20px ${layoutGlow}`,
+                    boxShadow: `0 10px 0 ${darkPrimary}, 0 20px 45px rgba(0,0,0,0.7)`,
+                  }
+                : activeLayout === 'cartoon_comic'
+                ? {
+                    borderColor: '#000000',
+                    boxShadow: '8px 8px 0 #000000',
+                  }
+                : activeLayout === 'neon_arcade'
+                ? {
+                    borderColor: layoutPrimary,
+                    boxShadow: `0 0 35px ${layoutGlow}, inset 0 0 20px ${layoutGlow}25`,
                   }
                 : activeLayout === 'bento_tech'
                 ? {
+                    borderColor: layoutPrimary,
+                    boxShadow: `0 0 25px ${layoutGlow}`,
                     clipPath:
                       'polygon(20px 0, calc(100% - 20px) 0, 100% 20px, 100% calc(100% - 20px), calc(100% - 20px) 100%, 20px 100%, 0 calc(100% - 20px), 0 20px)',
                   }
-                : undefined
-            }
+                : activeLayout === 'neumorphic_luxe' || activeLayout === 'golden_casino'
+                ? {
+                    borderColor: layoutPrimary,
+                    boxShadow: `0 15px 40px ${layoutGlow}`,
+                  }
+                : activeLayout === 'pixel_retro'
+                ? {
+                    borderColor: layoutPrimary,
+                    boxShadow: `6px 6px 0 #000000, 6px 6px 0 ${darkPrimary}`,
+                  }
+                : activeLayout === 'spatial_3d' || activeLayout === 'synthwave_grid' || activeLayout === 'bubble_toon' || activeLayout === 'cyber_matrix' || activeLayout === 'modern_glass'
+                ? {
+                    borderColor: layoutPrimary,
+                    boxShadow: `0 0 30px ${layoutGlow}`,
+                  }
+                : {}),
+            }}
             className={`w-full text-center transition-all ${
               activeLayout === 'cartoon_pop'
-                ? 'rounded-3xl border-4 border-amber-400 bg-gradient-to-b from-slate-900/95 via-slate-900 to-amber-950/40 shadow-[0_10px_0_#92400e,0_20px_45px_rgba(0,0,0,0.7)] pt-9 pb-6 px-6 sm:px-8'
+                ? 'rounded-3xl border-4 bg-gradient-to-b from-slate-900/95 via-slate-900 to-slate-950 pt-9 pb-6 px-6 sm:px-8'
                 : activeLayout === 'cartoon_comic'
-                ? 'rounded-3xl border-4 border-black bg-gradient-to-b from-slate-900 via-sky-950/60 to-slate-900 shadow-[8px_8px_0_#000] pt-9 pb-6 px-6 sm:px-8'
+                ? 'rounded-3xl border-4 border-black bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 shadow-[8px_8px_0_#000] pt-9 pb-6 px-6 sm:px-8'
                 : activeLayout === 'neon_arcade'
                 ? 'rounded-[32px] sm:rounded-[40px] border-2 bg-slate-950/90 py-6 px-6 sm:px-10'
                 : activeLayout === 'bento_tech'
-                ? 'border-2 border-emerald-500/80 bg-slate-950/95 shadow-[0_0_30px_rgba(16,185,129,0.25)] p-6 sm:p-8 font-mono'
+                ? 'border-2 bg-slate-950/95 p-6 sm:p-8 font-mono'
                 : activeLayout === 'neumorphic_luxe'
-                ? 'rounded-[36px] border-4 border-amber-400/80 bg-gradient-to-b from-slate-900/95 via-slate-900 to-amber-950/30 shadow-[0_20px_50px_rgba(245,158,11,0.3)] pt-8 pb-6 px-6 sm:px-8'
+                ? 'rounded-[36px] border-4 bg-gradient-to-b from-slate-900/95 via-slate-900 to-slate-950 pt-8 pb-6 px-6 sm:px-8'
                 : activeLayout === 'spatial_3d'
-                ? 'rounded-3xl border-2 border-purple-500/40 bg-gradient-to-b from-slate-900/90 via-purple-950/30 to-slate-900/90 shadow-[0_25px_60px_-15px_rgba(147,51,234,0.35)] p-6 sm:p-8'
+                ? 'rounded-3xl border-2 bg-gradient-to-b from-slate-900/90 via-slate-900 to-slate-950 p-6 sm:p-8'
                 : activeLayout === 'pixel_retro'
-                ? 'rounded-none border-4 border-yellow-400 bg-black shadow-[6px_6px_0_#ca8a04] p-6 sm:p-8 font-mono'
+                ? 'rounded-none border-4 bg-black p-6 sm:p-8 font-mono'
                 : activeLayout === 'cyber_matrix'
-                ? 'rounded-xl border-2 border-emerald-400 bg-black/95 shadow-[0_0_25px_rgba(16,185,129,0.3)] p-6 sm:p-8 font-mono'
+                ? 'rounded-xl border-2 bg-black/95 p-6 sm:p-8 font-mono'
                 : activeLayout === 'synthwave_grid'
-                ? 'rounded-3xl border-2 border-pink-500/70 bg-purple-950/85 shadow-[0_0_35px_rgba(244,63,94,0.3)] p-6 sm:p-8'
+                ? 'rounded-3xl border-2 bg-purple-950/85 p-6 sm:p-8'
                 : activeLayout === 'golden_casino'
-                ? 'rounded-3xl border-4 border-amber-300 bg-stone-950 shadow-[0_15px_40px_rgba(245,158,11,0.3)] p-6 sm:p-8'
+                ? 'rounded-3xl border-4 bg-stone-950 p-6 sm:p-8'
                 : activeLayout === 'bubble_toon'
-                ? 'rounded-[40px] border-4 border-pink-300/80 bg-slate-900/95 shadow-[0_15px_30px_rgba(244,114,182,0.3)] p-6 sm:p-8'
+                ? 'rounded-[40px] border-4 bg-slate-900/95 p-6 sm:p-8'
                 : isLightMode
                 ? 'rounded-3xl bg-white/95 border-2 border-slate-200 shadow-xl p-6 sm:p-8'
                 : 'rounded-3xl bg-slate-900/85 backdrop-blur-xl border-2 border-white/20 shadow-xl p-6 sm:p-8'
@@ -454,9 +537,9 @@ export const QuizGame: React.FC<QuizGameProps> = ({
             if (activeLayout === 'cartoon_pop') {
               // 3D Cartoon Tactile Button
               btnStyle =
-                'border-4 border-amber-400/90 bg-gradient-to-b from-slate-800 to-slate-900 shadow-[0_6px_0_#78350f,0_8px_16px_rgba(0,0,0,0.4)] active:translate-y-1.5 active:shadow-[0_1px_0_#78350f] text-white rounded-2xl hover:brightness-110';
+                'border-4 bg-gradient-to-b from-slate-800 to-slate-900 active:translate-y-1.5 text-white rounded-2xl hover:brightness-110';
               badgeStyle =
-                'bg-amber-400 border-2 border-amber-200 text-amber-950 shadow-[0_3px_0_#92400e]';
+                'border-2 border-white/80 font-black';
               if (answered) {
                 if (opt.isCorrect) {
                   btnStyle =
@@ -678,13 +761,53 @@ export const QuizGame: React.FC<QuizGameProps> = ({
               }
             }
 
-            const optionInlineStyle = (activeLayout === 'neon_arcade' && !answered)
-              ? { borderColor: layoutPrimary, boxShadow: `0 0 14px ${layoutGlow}` }
-              : undefined;
+            const optionInlineStyle: React.CSSProperties = !answered
+              ? (activeLayout === 'cartoon_pop'
+                  ? { borderColor: layoutPrimary, boxShadow: `0 6px 0 ${darkPrimary}, 0 8px 16px rgba(0,0,0,0.4)` }
+                  : activeLayout === 'cartoon_comic'
+                  ? { boxShadow: '5px 5px 0 #000000' }
+                  : activeLayout === 'neon_arcade'
+                  ? { borderColor: layoutPrimary, boxShadow: `0 0 14px ${layoutGlow}` }
+                  : activeLayout === 'bento_tech'
+                  ? { borderColor: layoutPrimary, boxShadow: `0 0 12px ${layoutGlow}40` }
+                  : activeLayout === 'neumorphic_luxe'
+                  ? { borderColor: layoutPrimary, boxShadow: `0 6px 20px ${layoutGlow}50` }
+                  : activeLayout === 'pixel_retro'
+                  ? { borderColor: layoutPrimary, color: layoutPrimary, boxShadow: `4px 4px 0 #000000, 4px 4px 0 ${darkPrimary}` }
+                  : activeLayout === 'cyber_matrix'
+                  ? { borderColor: layoutPrimary, color: layoutPrimary, boxShadow: `0 0 12px ${layoutGlow}40` }
+                  : activeLayout === 'synthwave_grid'
+                  ? { borderColor: layoutPrimary, boxShadow: `0 0 14px ${layoutGlow}50` }
+                  : activeLayout === 'golden_casino'
+                  ? { borderColor: layoutPrimary, boxShadow: `0 6px 0 ${darkPrimary}, 0 8px 20px rgba(0,0,0,0.5)` }
+                  : activeLayout === 'bubble_toon'
+                  ? { borderColor: layoutPrimary, boxShadow: `0 8px 20px ${layoutGlow}50` }
+                  : {})
+              : {};
 
-            const badgeInlineStyle = (activeLayout === 'neon_arcade' && !answered)
-              ? { borderColor: layoutPrimary, color: layoutPrimary, boxShadow: `0 0 8px ${layoutGlow}` }
-              : undefined;
+            const badgeInlineStyle: React.CSSProperties = !answered
+              ? (activeLayout === 'cartoon_pop'
+                  ? { backgroundColor: layoutPrimary, boxShadow: `0 3px 0 ${darkPrimary}`, color: '#FFFFFF' }
+                  : activeLayout === 'cartoon_comic'
+                  ? { backgroundColor: layoutPrimary, color: '#000000' }
+                  : activeLayout === 'neon_arcade'
+                  ? { borderColor: layoutPrimary, color: layoutPrimary, boxShadow: `0 0 8px ${layoutGlow}` }
+                  : activeLayout === 'bento_tech'
+                  ? { borderColor: layoutPrimary, color: layoutPrimary, backgroundColor: `${layoutPrimary}25` }
+                  : activeLayout === 'neumorphic_luxe'
+                  ? { background: `linear-gradient(135deg, ${layoutPrimary}, ${layoutSecondary})`, color: '#000000' }
+                  : activeLayout === 'pixel_retro'
+                  ? { backgroundColor: layoutPrimary, color: '#000000' }
+                  : activeLayout === 'cyber_matrix'
+                  ? { borderColor: layoutPrimary, color: layoutPrimary, backgroundColor: `${layoutPrimary}20` }
+                  : activeLayout === 'synthwave_grid'
+                  ? { background: `linear-gradient(to right, ${layoutPrimary}, ${layoutSecondary})`, color: '#FFFFFF' }
+                  : activeLayout === 'golden_casino'
+                  ? { background: `linear-gradient(to bottom, ${layoutPrimary}, ${layoutSecondary})`, color: '#000000' }
+                  : activeLayout === 'bubble_toon'
+                  ? { backgroundColor: layoutPrimary, color: '#FFFFFF' }
+                  : {})
+              : {};
 
             return (
               <button

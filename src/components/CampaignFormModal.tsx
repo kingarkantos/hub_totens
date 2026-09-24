@@ -11,6 +11,7 @@ import { supabase, TABLES, BUCKETS } from '../lib/supabase';
 import { resellersService } from '../lib/resellersService';
 import { QUICK_HUE_PRESETS, generateLayoutPalette, getDefaultHueForLayout } from '../lib/colorHarmony';
 import { GAME_FONTS, getFontFamilyById } from '../lib/fonts';
+import { RealtimeLayoutPreviewCard } from './RealtimeLayoutPreviewCard';
 
 interface CampaignFormModalProps {
   campaignToEdit?: Campaign | null;
@@ -1080,55 +1081,12 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                     </div>
                   </div>
 
-                  <div
-                    style={{
-                      borderColor: activeLayoutPalette.primary,
-                      boxShadow: `0 0 30px ${activeLayoutPalette.glowColor}, inset 0 0 20px ${activeLayoutPalette.glowColor}25`,
-                    }}
-                    className="p-5 rounded-3xl bg-black/60 border-2 flex flex-col md:flex-row items-center justify-between gap-5 transition-all duration-300 relative overflow-hidden"
-                  >
-                    {/* Ambient glow accent inside preview */}
-                    <div
-                      style={{ backgroundColor: activeLayoutPalette.primary }}
-                      className="absolute -top-12 -left-12 w-48 h-48 rounded-full blur-3xl opacity-20 pointer-events-none transition-all duration-300"
-                    />
-
-                    <div className="flex items-center gap-4 relative z-10 w-full md:w-auto">
-                      <div
-                        style={{
-                          borderColor: activeLayoutPalette.primary,
-                          color: activeLayoutPalette.primary,
-                          boxShadow: `0 0 15px ${activeLayoutPalette.glowColor}`,
-                        }}
-                        className="w-14 h-14 rounded-2xl bg-white/5 border-2 flex items-center justify-center font-black text-2xl flex-shrink-0 transition-all duration-300"
-                      >
-                        ?
-                      </div>
-
-                      <div>
-                        <h5 className="text-sm sm:text-base font-black text-white leading-tight">
-                          Quiz &amp; Desafios da Campanha
-                        </h5>
-                        <p className="text-xs text-slate-400 mt-0.5">
-                          Bordas, botões, barras de progresso e luzes sincronizadas
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 w-full md:w-auto justify-end relative z-10">
-                      <button
-                        type="button"
-                        style={{
-                          background: `linear-gradient(to right, ${activeLayoutPalette.primary}, ${activeLayoutPalette.secondary})`,
-                          boxShadow: `0 0 25px ${activeLayoutPalette.glowColor}`,
-                        }}
-                        className="w-full md:w-auto px-7 py-3.5 rounded-2xl text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg flex items-center justify-center gap-2.5 transition-all duration-300 hover:scale-[1.02] active:scale-95"
-                      >
-                        <Play className="w-4 h-4 fill-current" />
-                        <span>JOGAR AGORA</span>
-                      </button>
-                    </div>
-                  </div>
+                  <RealtimeLayoutPreviewCard
+                    layoutId={gameLayout}
+                    palette={activeLayoutPalette}
+                    isLight={themeMode === 'light'}
+                    campaignFont={campaignFont}
+                  />
                 </div>
 
                 {/* 2. Barra de Arrastar (Slider Horizontal Esquerda <-> Direita) */}
@@ -1568,10 +1526,18 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           gameLayout={gameLayout || gamesConfig[`${previewingGame.id}_layout`] || gamesConfig?.game_layout || 'modern_glass'}
           orderMode={gamesConfig[`${previewingGame.id}_order_mode`] || 'random'}
           questionsCount={Number(gamesConfig[`${previewingGame.id}_questions_count`]) || undefined}
-          theme={THEMES[themeId]}
-          themePrimary={THEMES[themeId]?.primary || customColors.primary}
+          theme={{
+            ...THEMES[themeId],
+            primary: activeLayoutPalette.primary,
+            secondary: activeLayoutPalette.secondary,
+            accent: activeLayoutPalette.accent,
+            glowColor: activeLayoutPalette.glowColor,
+          }}
+          themePrimary={activeLayoutPalette.primary}
           themeMode={themeMode}
           isLight={themeMode === 'light'}
+          layoutColorHue={layoutColorHue}
+          palette={activeLayoutPalette}
           fontId={gamesConfig[`${previewingGame.id}_font`] || campaignFont}
           onLayoutChange={(newLayout) => {
             setGameLayout(newLayout);

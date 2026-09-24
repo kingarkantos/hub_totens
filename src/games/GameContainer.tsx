@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { 
   ArrowLeft, Volume2, VolumeX, Trophy, RotateCcw, Keyboard, CheckCircle2
 } from 'lucide-react';
@@ -9,6 +9,7 @@ import { ThemeDefinition } from '../types';
 import { GameLayoutId, GAME_LAYOUTS, GameLayoutDefinition } from '../types/gameLayouts';
 import { GameLayoutProvider, useGameLayout } from '../context/GameLayoutContext';
 import { getFontFamilyById } from '../lib/fonts';
+import { LayoutColorPalette, generateLayoutPalette } from '../lib/colorHarmony';
 
 interface GameContainerProps {
   title: string;
@@ -37,6 +38,8 @@ interface GameContainerProps {
   gameLayout?: GameLayoutId;
   fontFamily?: string;
   fontId?: string;
+  palette?: LayoutColorPalette;
+  layoutColorHue?: number;
 }
 
 export const GameContainer: React.FC<GameContainerProps> = ({
@@ -66,6 +69,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   gameLayout,
   fontFamily,
   fontId,
+  palette,
+  layoutColorHue,
 }) => {
   const [soundOn, setSoundOn] = useState(sound.enabled);
   const [playerName, setPlayerName] = useState('');
@@ -115,11 +120,22 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const currentLayoutDef: GameLayoutDefinition = 
     GAME_LAYOUTS.find((l) => l.id === currentLayout) || GAME_LAYOUTS[0];
 
-  const activePrimary = contextLayout?.palette?.primary || theme?.primary || themePrimary || '#06B6D4';
-  const activeSecondary = contextLayout?.palette?.secondary || theme?.secondary || '#3B82F6';
-  const activeGlow = contextLayout?.palette?.glowColor || theme?.glowColor || `${activePrimary}66`;
-
   const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
+
+  const effectiveHue = layoutColorHue !== undefined ? layoutColorHue : palette?.hue;
+  const activePalette = useMemo(() => {
+    if (palette && (layoutColorHue === undefined || palette.hue === layoutColorHue)) {
+      return palette;
+    }
+    if (layoutColorHue !== undefined) {
+      return generateLayoutPalette(layoutColorHue, isLightMode);
+    }
+    return contextLayout?.palette;
+  }, [palette, layoutColorHue, isLightMode, contextLayout?.palette]);
+
+  const activePrimary = activePalette?.primary || theme?.primary || themePrimary || '#06B6D4';
+  const activeSecondary = activePalette?.secondary || theme?.secondary || '#3B82F6';
+  const activeGlow = activePalette?.glowColor || theme?.glowColor || `${activePrimary}66`;
 
   useEffect(() => {
     if (gameOver && gameWon) {
@@ -149,7 +165,12 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const activeFontFamily = fontFamily || (fontId ? getFontFamilyById(fontId) : undefined);
 
   return (
-    <GameLayoutProvider layout={currentLayout} onLayoutChange={setCurrentLayout}>
+    <GameLayoutProvider
+      layout={currentLayout}
+      hue={effectiveHue}
+      isLight={isLightMode}
+      onLayoutChange={setCurrentLayout}
+    >
       <div
         style={{
           '--glow-color': activeGlow,

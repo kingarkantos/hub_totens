@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X, Play, Palette } from 'lucide-react';
 import { GameDefinition, ThemeDefinition } from '../types';
 import { GameLayoutId, GAME_LAYOUTS } from '../types/gameLayouts';
 import { GameLayoutProvider } from '../context/GameLayoutContext';
 import { getFontFamilyById } from '../lib/fonts';
+import { LayoutColorPalette, generateLayoutPalette, getDefaultHueForLayout } from '../lib/colorHarmony';
 import { WheelGame } from './WheelGame';
 import { QuizGame } from './QuizGame';
 import { TargetGame } from './TargetGame';
@@ -42,6 +43,8 @@ interface GamePreviewModalProps {
   isLight?: boolean;
   fontId?: string;
   fontFamily?: string;
+  palette?: LayoutColorPalette;
+  layoutColorHue?: number;
 }
 
 export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
@@ -58,6 +61,8 @@ export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
   isLight,
   fontId,
   fontFamily,
+  palette,
+  layoutColorHue,
 }) => {
   if (!game) return null;
 
@@ -76,7 +81,23 @@ export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
     }
   };
 
+  const activePalette = useMemo(() => {
+    if (palette && (layoutColorHue === undefined || palette.hue === layoutColorHue)) {
+      return palette;
+    }
+    const hueToUse = layoutColorHue !== undefined ? layoutColorHue : getDefaultHueForLayout(activeLayout);
+    return generateLayoutPalette(hueToUse, isLight);
+  }, [palette, layoutColorHue, activeLayout, isLight]);
+
   const activeFontFamily = fontFamily || getFontFamilyById(fontId);
+
+  const mergedTheme: ThemeDefinition | undefined = theme ? {
+    ...theme,
+    primary: activePalette.primary,
+    secondary: activePalette.secondary,
+    accent: activePalette.accent,
+    glowColor: activePalette.glowColor,
+  } : undefined;
 
   const commonProps = {
     onExit: onClose,
@@ -84,12 +105,14 @@ export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
     gameLayout: activeLayout,
     orderMode,
     questionsCount,
-    theme,
-    themePrimary,
+    theme: mergedTheme,
+    themePrimary: activePalette.primary,
     themeMode,
     isLight,
     fontId,
     fontFamily: activeFontFamily,
+    palette: activePalette,
+    layoutColorHue: activePalette.hue,
   };
 
   const renderGame = () => {

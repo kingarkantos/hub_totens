@@ -6,6 +6,7 @@ import { BaseGameProps } from '../types';
 import { TrueFalseCustomItem } from '../types/gameContent';
 import { useGameLayout } from '../context/GameLayoutContext';
 import { GameLayoutId } from '../types/gameLayouts';
+import { LayoutColorPalette, generateLayoutPalette, getDefaultHueForLayout } from '../lib/colorHarmony';
 
 interface TrueFalseGameProps extends BaseGameProps {
   customContent?: TrueFalseCustomItem[];
@@ -57,11 +58,43 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
   totalTimeLimit,
   customContent,
   gameLayout,
+  palette,
+  layoutColorHue,
 }) => {
   const contextLayout = useGameLayout();
   const activeLayout: GameLayoutId = gameLayout || contextLayout?.layout || 'cartoon_pop';
 
   const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
+
+  const activePalette = useMemo(() => {
+    if (palette && (layoutColorHue === undefined || palette.hue === layoutColorHue)) {
+      return palette;
+    }
+    if (layoutColorHue !== undefined) {
+      return generateLayoutPalette(layoutColorHue, isLightMode);
+    }
+    if (theme?.primary && theme.primary !== '#DC2626') {
+      return {
+        hue: layoutColorHue || 185,
+        primary: theme.primary,
+        secondary: theme.secondary || '#3B82F6',
+        darkShade: theme.secondary || '#78350f',
+        accent: theme.accent || '#F59E0B',
+        glowColor: theme.glowColor || `${theme.primary}66`,
+        glowHex: theme.primary,
+        textColor: isLightMode ? '#0F172A' : '#FFFFFF',
+      };
+    }
+    if (contextLayout?.palette) {
+      return contextLayout.palette;
+    }
+    return generateLayoutPalette(getDefaultHueForLayout(activeLayout), isLightMode);
+  }, [palette, layoutColorHue, isLightMode, theme, contextLayout?.palette, activeLayout]);
+
+  const layoutPrimary = activePalette.primary || themePrimary || '#06B6D4';
+  const layoutSecondary = activePalette.secondary || '#3B82F6';
+  const darkPrimary = activePalette.darkShade || '#78350f';
+  const layoutGlow = activePalette.glowColor || 'rgba(6, 182, 212, 0.45)';
   const rawStatements = useMemo(() => {
     return customContent && customContent.length > 0 ? customContent : DEFAULT_STATEMENTS;
   }, [customContent]);
@@ -201,14 +234,21 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
-      themePrimary={themePrimary}
-      theme={theme}
+      themePrimary={layoutPrimary}
+      theme={theme ? {
+        ...theme,
+        primary: layoutPrimary,
+        secondary: layoutSecondary,
+        glowColor: layoutGlow,
+      } : undefined}
       isLight={isLightMode}
       themeMode={isLightMode ? 'light' : 'dark'}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
       clientName={clientName}
       gameLayout={activeLayout}
+      palette={activePalette}
+      layoutColorHue={activePalette.hue}
     >
       <div className="flex flex-col w-full max-w-3xl lg:max-w-4xl mx-auto my-auto py-2 sm:py-4 px-2 sm:px-4 gap-4 sm:gap-5 select-none animate-in fade-in duration-300">
         {/* Progress & Streak Header */}
@@ -244,8 +284,14 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
           {/* Layout 1: CARTOON 3D POP - Floating 3D Coin Badge */}
           {activeLayout === 'cartoon_pop' && (
             <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center pointer-events-none">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-b from-yellow-300 to-amber-500 border-4 border-amber-100 shadow-[0_6px_0_#92400e,0_12px_24px_rgba(0,0,0,0.5)] flex items-center justify-center transform -rotate-3 hover:rotate-0 transition-transform">
-                <span className="text-3xl sm:text-4xl font-black text-amber-950 select-none drop-shadow-sm">?</span>
+              <div
+                style={{
+                  background: `linear-gradient(to bottom, ${layoutPrimary}, ${layoutSecondary})`,
+                  boxShadow: `0 6px 0 ${darkPrimary}, 0 12px 24px rgba(0,0,0,0.5)`,
+                }}
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border-4 border-white/90 flex items-center justify-center transform -rotate-3 hover:rotate-0 transition-transform"
+              >
+                <span className="text-3xl sm:text-4xl font-black text-white select-none drop-shadow-md">?</span>
               </div>
             </div>
           )}
@@ -253,8 +299,14 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
           {/* Layout 2: CARTOON COMIC - Slanted Comic Badge */}
           {activeLayout === 'cartoon_comic' && (
             <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center pointer-events-none">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-b from-sky-400 to-blue-600 border-4 border-white shadow-[4px_4px_0_#000] flex items-center justify-center rotate-6 text-white font-black text-3xl select-none">
-                ?
+              <div
+                style={{
+                  backgroundColor: layoutPrimary,
+                  boxShadow: '4px 4px 0 #000000',
+                }}
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border-4 border-black flex items-center justify-center rotate-6 text-black font-black text-3xl select-none"
+              >
+                POP!
               </div>
             </div>
           )}
@@ -262,33 +314,66 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
           {/* Neon Arcade Horizontal Glowing Tubes */}
           {activeLayout === 'neon_arcade' && (
             <>
-              <div className="hidden sm:block absolute -left-5 top-1/2 -translate-y-1/2 w-6 h-1.5 bg-gradient-to-r from-transparent to-cyan-400 shadow-[0_0_10px_#22d3ee] rounded-full pointer-events-none" />
-              <div className="hidden sm:block absolute -right-5 top-1/2 -translate-y-1/2 w-6 h-1.5 bg-gradient-to-l from-transparent to-cyan-400 shadow-[0_0_10px_#22d3ee] rounded-full pointer-events-none" />
+              <div
+                style={{ background: layoutPrimary, boxShadow: `0 0 10px ${layoutPrimary}` }}
+                className="hidden sm:block absolute -left-5 top-1/2 -translate-y-1/2 w-6 h-1.5 rounded-full pointer-events-none"
+              />
+              <div
+                style={{ background: layoutPrimary, boxShadow: `0 0 10px ${layoutPrimary}` }}
+                className="hidden sm:block absolute -right-5 top-1/2 -translate-y-1/2 w-6 h-1.5 rounded-full pointer-events-none"
+              />
             </>
           )}
 
           <div
-            style={
-              activeLayout === 'bento_tech'
+            style={{
+              ...(activeLayout === 'cartoon_pop'
                 ? {
+                    borderColor: layoutPrimary,
+                    boxShadow: `0 10px 0 ${darkPrimary}, 0 20px 45px rgba(0,0,0,0.7)`,
+                  }
+                : activeLayout === 'cartoon_comic'
+                ? {
+                    borderColor: '#000000',
+                    boxShadow: '8px 8px 0 #000000',
+                  }
+                : activeLayout === 'neon_arcade'
+                ? {
+                    borderColor: layoutPrimary,
+                    boxShadow: `0 0 35px ${layoutGlow}, inset 0 0 20px ${layoutGlow}25`,
+                  }
+                : activeLayout === 'bento_tech'
+                ? {
+                    borderColor: layoutPrimary,
+                    boxShadow: `0 0 25px ${layoutGlow}`,
                     clipPath:
                       'polygon(20px 0, calc(100% - 20px) 0, 100% 20px, 100% calc(100% - 20px), calc(100% - 20px) 100%, 20px 100%, 0 calc(100% - 20px), 0 20px)',
                   }
-                : undefined
-            }
+                : activeLayout === 'neumorphic_luxe'
+                ? {
+                    borderColor: layoutPrimary,
+                    boxShadow: `0 15px 40px ${layoutGlow}`,
+                  }
+                : activeLayout === 'spatial_3d'
+                ? {
+                    borderColor: layoutPrimary,
+                    boxShadow: `0 0 30px ${layoutGlow}`,
+                  }
+                : {}),
+            }}
             className={`w-full text-center transition-all ${
               activeLayout === 'cartoon_pop'
-                ? 'rounded-3xl border-4 border-amber-400 bg-gradient-to-b from-slate-900/95 via-slate-900 to-amber-950/40 shadow-[0_10px_0_#92400e,0_20px_45px_rgba(0,0,0,0.7)] pt-9 pb-6 px-6 sm:px-10'
+                ? 'rounded-3xl border-4 bg-gradient-to-b from-slate-900/95 via-slate-900 to-slate-950 pt-9 pb-6 px-6 sm:px-10'
                 : activeLayout === 'cartoon_comic'
                 ? 'rounded-3xl border-4 border-black bg-gradient-to-b from-slate-900 via-sky-950/60 to-slate-900 shadow-[8px_8px_0_#000] pt-9 pb-6 px-6 sm:px-10'
                 : activeLayout === 'neon_arcade'
-                ? 'rounded-[32px] sm:rounded-[40px] border-2 border-cyan-400 bg-slate-950/90 shadow-[0_0_35px_rgba(6,182,212,0.45),inset_0_0_20px_rgba(6,182,212,0.2)] py-7 px-6 sm:px-12'
+                ? 'rounded-[32px] sm:rounded-[40px] border-2 bg-slate-950/90 py-7 px-6 sm:px-12'
                 : activeLayout === 'bento_tech'
-                ? 'border-2 border-emerald-500/80 bg-slate-950/95 shadow-[0_0_30px_rgba(16,185,129,0.25)] p-6 sm:p-10 font-mono'
+                ? 'border-2 bg-slate-950/95 p-6 sm:p-10 font-mono'
                 : activeLayout === 'neumorphic_luxe'
-                ? 'rounded-[36px] border-4 border-amber-400/80 bg-gradient-to-b from-slate-900/95 via-slate-900 to-amber-950/30 shadow-[0_20px_50px_rgba(245,158,11,0.3)] pt-8 pb-6 px-6 sm:px-10'
+                ? 'rounded-[36px] border-4 bg-gradient-to-b from-slate-900/95 via-slate-900 to-slate-950 pt-8 pb-6 px-6 sm:px-10'
                 : activeLayout === 'spatial_3d'
-                ? 'rounded-3xl border-2 border-purple-500/40 bg-gradient-to-b from-slate-900/90 via-purple-950/30 to-slate-900/90 shadow-[0_25px_60px_-15px_rgba(147,51,234,0.35)] p-6 sm:p-10'
+                ? 'rounded-3xl border-2 bg-gradient-to-b from-slate-900/90 via-purple-950/30 to-slate-900/90 p-6 sm:p-10'
                 : isLightMode
                 ? 'rounded-3xl bg-white/95 border-2 border-slate-200 shadow-xl p-5 sm:p-8 md:p-10'
                 : 'rounded-3xl bg-slate-900/85 backdrop-blur-xl border-2 border-white/20 shadow-xl p-5 sm:p-8 md:p-10'

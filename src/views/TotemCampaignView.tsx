@@ -631,6 +631,8 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
       gameLayout: campaign.games_config?.[`${activeGame.id}_layout`] || campaign.games_config?.game_layout || 'modern_glass',
       fontId: campaign.games_config?.[`${activeGame.id}_font`] || campaign.games_config?.campaign_font || 'outfit',
       fontFamily: getFontFamilyById(campaign.games_config?.[`${activeGame.id}_font`] || campaign.games_config?.campaign_font || 'outfit'),
+      palette: sliderPalette || undefined,
+      layoutColorHue,
     };
 
     const renderActiveGame = () => {

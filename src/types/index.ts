@@ -110,6 +110,8 @@ export interface BaseGameProps {
   gameLayout?: import('./gameLayouts').GameLayoutId;
   fontFamily?: string;
   fontId?: string;
+  palette?: import('../lib/colorHarmony').LayoutColorPalette;
+  layoutColorHue?: number;
 }
 
 export * from './gameLayouts';

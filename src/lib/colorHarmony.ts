@@ -6,6 +6,7 @@ export interface LayoutColorPalette {
   name?: string;
   primary: string;
   secondary: string;
+  darkShade: string;
   accent: string;
   glowColor: string;
   glowHex: string;
@@ -109,10 +110,14 @@ export function generateLayoutPalette(hue: number, isLight = false): LayoutColor
   // Glow: Luminescent aura for borders and buttons
   const glowColor = hexToRgba(primary, isLight ? 0.35 : 0.55);
 
+  // Deep saturated shade for 3D bottom drop-shadows and tactile borders
+  const darkShade = hslToHex(safeHue, 95, isLight ? 22 : 18);
+
   return {
     hue: safeHue,
     primary,
     secondary,
+    darkShade,
     accent,
     glowColor,
     glowHex: primary,
