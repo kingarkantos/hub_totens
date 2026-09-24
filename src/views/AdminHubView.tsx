@@ -112,6 +112,7 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({
       if (!campRes.error && campRes.data) {
         const enrichedCampaigns = (campRes.data as Campaign[]).map((c) => ({
           ...c,
+          theme_mode: c.theme_mode || c.games_config?.theme_mode || 'dark',
           reseller_id: c.reseller_id || c.games_config?.reseller_id,
           reseller_name: c.reseller_name || c.games_config?.reseller_name,
         }));
@@ -145,12 +146,13 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({
   };
 
   const handleSaveCampaign = async (data: Partial<Campaign>) => {
-    // Strip unknown root table columns (reseller_id, reseller_name) so PostgreSQL doesn't reject with 400
-    const { reseller_id, reseller_name, ...tablePayload } = data;
+    // Strip unknown root table columns (reseller_id, reseller_name, theme_mode) so PostgreSQL doesn't reject with 400
+    const { reseller_id, reseller_name, theme_mode, ...tablePayload } = data;
     const finalPayload = {
       ...tablePayload,
       games_config: {
         ...(tablePayload.games_config || {}),
+        ...(theme_mode ? { theme_mode } : {}),
         ...(reseller_id ? { reseller_id } : {}),
         ...(reseller_name ? { reseller_name } : {}),
       },
@@ -250,10 +252,10 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({
         selected_games: Array.isArray(camp.selected_games) ? [...camp.selected_games] : [],
         games_config: {
           ...clonedGamesConfig,
+          theme_mode: camp.theme_mode || clonedGamesConfig.theme_mode || 'dark',
           ...(camp.reseller_id ? { reseller_id: camp.reseller_id } : {}),
           ...(camp.reseller_name ? { reseller_name: camp.reseller_name } : {}),
         },
-        theme_mode: camp.theme_mode || 'dark',
         ranking_enabled: camp.ranking_enabled ?? false,
         active: true,
         created_at: new Date().toISOString(),
