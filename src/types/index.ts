@@ -114,6 +114,22 @@ export interface BaseGameProps {
   layoutColorHue?: number;
 }
 
+export interface CampaignStylePackage {
+  sourceCampaignId: string;
+  sourceCampaignName: string;
+  theme_id: ThemeId;
+  theme_mode?: 'light' | 'dark';
+  layout_color_hue?: number;
+  game_layout?: import('./gameLayouts').GameLayoutId;
+  campaign_font?: string;
+  splash_bg_effect?: string;
+  splash_button_style?: import('./splashCustomization').SplashButtonStyleId;
+  splash_button_hue?: number;
+  custom_colors?: CustomColorsConfig;
+  game_specific_styles?: Record<string, any>;
+  copiedAt: string;
+}
+
 export * from './gameLayouts';
 export * from './reseller';
 export * from './splashCustomization';

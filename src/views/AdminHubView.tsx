@@ -23,9 +23,12 @@ import {
   Gamepad2,
   Share2,
   CopyPlus,
-  Loader2
+  Loader2,
+  ClipboardPaste,
+  Sparkles,
+  X
 } from 'lucide-react';
-import { Campaign, GameDefinition, Reseller } from '../types';
+import { Campaign, CampaignStylePackage, GameDefinition, Reseller } from '../types';
 import { supabase, TABLES } from '../lib/supabase';
 import { THEMES } from '../lib/themes';
 import { GAMES_CATALOG, GAME_CATEGORIES } from '../lib/gamesCatalog';
@@ -35,6 +38,13 @@ import { SettingsModal } from '../components/SettingsModal';
 import { GamePreviewModal } from '../games/GamePreviewModal';
 import { sound } from '../lib/audio';
 import { resellersService } from '../lib/resellersService';
+import { 
+  extractCampaignStyle, 
+  saveCopiedStyle, 
+  getCopiedStyle, 
+  clearCopiedStyle, 
+  mergeStyleIntoCampaignConfig 
+} from '../lib/campaignStyleHelper';
 
 interface AdminHubViewProps {
   onNavigateToCampaign: (slug: string) => void;
@@ -71,6 +81,12 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [copiedResellerSlug, setCopiedResellerSlug] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+
+  // Copied Style State (Copy Style / Paste Style between campaigns)
+  const [copiedStyle, setCopiedStyle] = useState<CampaignStylePackage | null>(() => getCopiedStyle());
+  const [justCopiedId, setJustCopiedId] = useState<string | null>(null);
+  const [pastingStyleId, setPastingStyleId] = useState<string | null>(null);
+  const [justPastedId, setJustPastedId] = useState<string | null>(null);
 
   // Check saved session or fetch master password from Supabase
   useEffect(() => {
@@ -308,6 +324,59 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({
     setTimeout(() => setCopiedResellerSlug(null), 2000);
   };
 
+  // Copy campaign style package
+  const handleCopyStyle = (camp: Campaign) => {
+    sound.playSuccess();
+    const stylePackage = extractCampaignStyle(camp);
+    saveCopiedStyle(stylePackage);
+    setCopiedStyle(stylePackage);
+    setJustCopiedId(camp.id);
+    setTimeout(() => setJustCopiedId(null), 3000);
+  };
+
+  // Clear currently copied style package
+  const handleClearCopiedStyle = () => {
+    sound.playClick();
+    clearCopiedStyle();
+    setCopiedStyle(null);
+  };
+
+  // Paste copied style package onto another campaign
+  const handlePasteStyle = async (targetCamp: Campaign) => {
+    if (!copiedStyle) return;
+    sound.playClick();
+    setPastingStyleId(targetCamp.id);
+
+    try {
+      const mergedGamesConfig = mergeStyleIntoCampaignConfig(
+        targetCamp.games_config,
+        copiedStyle
+      );
+
+      const { error } = await supabase
+        .from(TABLES.CAMPAIGNS)
+        .update({
+          theme_id: copiedStyle.theme_id,
+          games_config: mergedGamesConfig,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', targetCamp.id);
+
+      if (error) throw error;
+
+      sound.playFanfare();
+      setJustPastedId(targetCamp.id);
+      setTimeout(() => setJustPastedId(null), 3000);
+      await fetchData();
+    } catch (err: any) {
+      console.error('Error pasting style:', err);
+      sound.playError();
+      alert(`Erro ao colar estilo: ${err.message || 'Tente novamente.'}`);
+    } finally {
+      setPastingStyleId(null);
+    }
+  };
+
   const filteredCampaigns = campaigns.filter((camp) => {
     if (resellerFilter === 'all') return true;
     if (resellerFilter === 'direct') return !camp.reseller_id && !camp.reseller_name;
@@ -540,119 +609,223 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {filteredCampaigns.map((camp) => {
-                  const themeMeta = THEMES[camp.theme_id] || THEMES['honda-red'];
-                  const isCopied = copiedSlug === camp.slug;
-
-                  return (
-                    <div
-                      key={camp.id}
-                      className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 transition-all flex flex-col justify-between shadow-xs hover:shadow-sm relative group"
-                    >
+              <div className="space-y-4">
+                {/* Banner de Estilo Copiado Ativo */}
+                {copiedStyle && (
+                  <div className="flex items-center justify-between gap-3 p-3.5 px-4 rounded-2xl bg-gradient-to-r from-indigo-50 via-purple-50 to-emerald-50 border-2 border-indigo-200/90 text-indigo-950 shadow-xs animate-in slide-in-from-top-2 duration-300 flex-wrap">
+                    <div className="flex items-center gap-3 text-xs">
+                      <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                        <Palette className="w-4 h-4" />
+                      </div>
                       <div>
-                        {/* Status and info line */}
-                        <div className="flex items-center justify-between gap-2 mb-2.5 flex-wrap">
-                          <div className="flex items-center gap-2">
-                            {/* Important status badge with semantic color */}
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                              Ativa
-                            </span>
+                        <div className="font-bold flex items-center gap-1.5 text-indigo-950 flex-wrap">
+                          <span>🎨 Estilo visual copiado de:</span>
+                          <strong className="underline decoration-indigo-400 font-black">{copiedStyle.sourceCampaignName}</strong>
+                        </div>
+                        <div className="text-[11px] text-slate-500 flex items-center gap-2 flex-wrap mt-0.5">
+                          <span>Tema: <strong>{THEMES[copiedStyle.theme_id]?.name || copiedStyle.theme_id}</strong> ({copiedStyle.theme_mode === 'light' ? 'Claro' : 'Escuro'})</span>
+                          {copiedStyle.layout_color_hue !== undefined && (
+                            <>
+                              <span>•</span>
+                              <span>Matiz Slider: <strong>{copiedStyle.layout_color_hue}°</strong></span>
+                            </>
+                          )}
+                          {copiedStyle.game_layout && (
+                            <>
+                              <span>•</span>
+                              <span>Layout: <strong>{copiedStyle.game_layout}</strong></span>
+                            </>
+                          )}
+                          <span>•</span>
+                          <span className="text-emerald-700 font-bold">Clique em "Colar Estilo" no card desejado para aplicar</span>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleClearCopiedStyle}
+                      className="text-xs text-slate-600 hover:text-slate-900 font-semibold px-2.5 py-1.5 rounded-lg hover:bg-white transition-all flex items-center gap-1 border border-slate-200 ml-auto bg-white/70 shadow-xs"
+                      title="Descartar estilo copiado"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>Descartar</span>
+                    </button>
+                  </div>
+                )}
 
-                            <span className="text-xs font-medium text-slate-500">
-                              {camp.client_name}
-                            </span>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {filteredCampaigns.map((camp) => {
+                    const themeMeta = THEMES[camp.theme_id] || THEMES['honda-red'];
+                    const isCopied = copiedSlug === camp.slug;
+                    const isStyleSource = copiedStyle?.sourceCampaignId === camp.id;
+                    const isJustCopied = justCopiedId === camp.id;
+                    const isPasting = pastingStyleId === camp.id;
+                    const isJustPasted = justPastedId === camp.id;
 
-                            {camp.reseller_name && (
-                              <span className="text-xs text-slate-400">
-                                • {camp.reseller_name}
+                    return (
+                      <div
+                        key={camp.id}
+                        className={`p-5 rounded-2xl bg-white border transition-all flex flex-col justify-between shadow-xs hover:shadow-sm relative group ${
+                          isStyleSource
+                            ? 'border-indigo-300 ring-2 ring-indigo-200/50'
+                            : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <div>
+                          {/* Status and info line */}
+                          <div className="flex items-center justify-between gap-2 mb-2.5 flex-wrap">
+                            <div className="flex items-center gap-2">
+                              {/* Important status badge with semantic color */}
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                Ativa
+                              </span>
+
+                              <span className="text-xs font-medium text-slate-500">
+                                {camp.client_name}
+                              </span>
+
+                              {camp.reseller_name && (
+                                <span className="text-xs text-slate-400">
+                                  • {camp.reseller_name}
+                                </span>
+                              )}
+                            </div>
+
+                            {camp.ranking_enabled && (
+                              <span className="text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                                Ranking Ativo
                               </span>
                             )}
                           </div>
 
-                          {camp.ranking_enabled && (
-                            <span className="text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
-                              Ranking Ativo
-                            </span>
-                          )}
+                          <h4 className="text-lg font-bold text-slate-900 group-hover:text-slate-700 transition-colors">
+                            {camp.name}
+                          </h4>
+
+                          <div className="flex items-center gap-2 mt-2 font-mono text-xs text-slate-600 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200 w-fit max-w-full truncate">
+                            <span className="text-slate-400 font-sans">Rota:</span>
+                            <span className="font-semibold truncate">/{camp.slug}</span>
+                          </div>
+
+                          <div className="mt-2.5 text-xs text-slate-500 flex items-center gap-2">
+                            <span>{camp.selected_games?.length || 0} jogos configurados</span>
+                            <span>•</span>
+                            <span>Tema: {themeMeta.name}</span>
+                          </div>
                         </div>
 
-                        <h4 className="text-lg font-bold text-slate-900 group-hover:text-slate-700 transition-colors">
-                          {camp.name}
-                        </h4>
+                        {/* Action buttons */}
+                        <div className="mt-5 pt-3.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <button
+                              onClick={() => copyTotemLink(camp.slug)}
+                              className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 active:scale-95 text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition-all border border-slate-200"
+                              title="Copiar Link da Campanha"
+                            >
+                              {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+                              <span>{isCopied ? 'Copiado!' : 'Copiar Link'}</span>
+                            </button>
 
-                        <div className="flex items-center gap-2 mt-2 font-mono text-xs text-slate-600 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200 w-fit max-w-full truncate">
-                          <span className="text-slate-400 font-sans">Rota:</span>
-                          <span className="font-semibold truncate">/{camp.slug}</span>
-                        </div>
+                            {/* Botão Copiar Estilo */}
+                            <button
+                              onClick={() => handleCopyStyle(camp)}
+                              className={`px-3 py-1.5 rounded-lg active:scale-95 text-xs font-semibold flex items-center gap-1.5 transition-all border ${
+                                isJustCopied
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-300 shadow-xs'
+                                  : isStyleSource
+                                  ? 'bg-indigo-50 text-indigo-700 border-indigo-300 shadow-xs'
+                                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                              }`}
+                              title="Copiar Estilo Visual (Tema, Cores do Slider, Layout e Fonte)"
+                            >
+                              {isJustCopied ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                  <span className="font-bold text-emerald-700">Estilo Copiado!</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Palette className={`w-3.5 h-3.5 ${isStyleSource ? 'text-indigo-600' : 'text-slate-500'}`} />
+                                  <span>{isStyleSource ? 'Estilo Ativo' : 'Copiar Estilo'}</span>
+                                </>
+                              )}
+                            </button>
 
-                        <div className="mt-2.5 text-xs text-slate-500 flex items-center gap-2">
-                          <span>{camp.selected_games?.length || 0} jogos configurados</span>
-                          <span>•</span>
-                          <span>Tema: {themeMeta.name}</span>
-                        </div>
-                      </div>
+                            {/* Botão Colar Estilo (Aparece quando há estilo copiado de outra campanha) */}
+                            {copiedStyle && !isStyleSource && (
+                              <button
+                                onClick={() => handlePasteStyle(camp)}
+                                disabled={isPasting}
+                                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm border border-emerald-700 transition-all disabled:opacity-50 animate-in fade-in zoom-in-95 duration-200"
+                                title={`Colar estilo copiado de "${copiedStyle.sourceCampaignName}" nesta campanha`}
+                              >
+                                {isPasting ? (
+                                  <>
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    <span>Colando...</span>
+                                  </>
+                                ) : isJustPasted ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                    <span>Estilo Aplicado!</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <ClipboardPaste className="w-3.5 h-3.5" />
+                                    <span>Colar Estilo</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
 
-                      {/* Action buttons */}
-                      <div className="mt-5 pt-3.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => copyTotemLink(camp.slug)}
-                            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 active:scale-95 text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition-all border border-slate-200"
-                            title="Copiar Link da Campanha"
-                          >
-                            {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
-                            <span>{isCopied ? 'Copiado!' : 'Copiar Link'}</span>
-                          </button>
+                            <button
+                              onClick={() => {
+                                sound.playClick();
+                                setEditingCampaign(camp);
+                              }}
+                              className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 border border-slate-200"
+                              title="Editar Campanha"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+
+                            <button
+                              onClick={() => handleDuplicateCampaign(camp)}
+                              disabled={duplicatingId === camp.id}
+                              className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 active:scale-95 text-indigo-600 border border-indigo-200 disabled:opacity-50 transition-all"
+                              title="Duplicar Campanha com Conteúdo"
+                            >
+                              {duplicatingId === camp.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-600" />
+                              ) : (
+                                <CopyPlus className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+
+                            <button
+                              onClick={() => handleDeleteCampaign(camp.id, camp.name)}
+                              className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-600 border border-rose-200"
+                              title="Excluir Campanha"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
 
                           <button
                             onClick={() => {
                               sound.playClick();
-                              setEditingCampaign(camp);
+                              onNavigateToCampaign(camp.slug);
                             }}
-                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 border border-slate-200"
-                            title="Editar Campanha"
+                            className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-xs active:scale-95 transition-all"
                           >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-
-                          <button
-                            onClick={() => handleDuplicateCampaign(camp)}
-                            disabled={duplicatingId === camp.id}
-                            className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 active:scale-95 text-indigo-600 border border-indigo-200 disabled:opacity-50 transition-all"
-                            title="Duplicar Campanha com Conteúdo"
-                          >
-                            {duplicatingId === camp.id ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-600" />
-                            ) : (
-                              <CopyPlus className="w-3.5 h-3.5" />
-                            )}
-                          </button>
-
-                          <button
-                            onClick={() => handleDeleteCampaign(camp.id, camp.name)}
-                            className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-600 border border-rose-200"
-                            title="Excluir Campanha"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            <span>Abrir Totem</span>
                           </button>
                         </div>
-
-                        <button
-                          onClick={() => {
-                            sound.playClick();
-                            onNavigateToCampaign(camp.slug);
-                          }}
-                          className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-xs active:scale-95 transition-all"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          <span>Abrir Totem</span>
-                        </button>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>

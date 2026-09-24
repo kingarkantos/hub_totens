@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw, Shuffle, Clock, Gamepad2, LayoutGrid, Gem, Box, AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, List, AlertTriangle, Store, Type, Sliders, Eye } from 'lucide-react';
-import { Campaign, GameDefinition, ThemeId, CustomColorsConfig, GameLayoutId, GAME_LAYOUTS, Reseller, SplashButtonStyleId, SPLASH_BUTTON_STYLES } from '../types';
+import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw, Shuffle, Clock, Gamepad2, LayoutGrid, Gem, Box, AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, List, AlertTriangle, Store, Type, Sliders, Eye, ClipboardPaste } from 'lucide-react';
+import { Campaign, GameDefinition, ThemeId, CustomColorsConfig, GameLayoutId, GAME_LAYOUTS, Reseller, SplashButtonStyleId, SPLASH_BUTTON_STYLES, CampaignStylePackage } from '../types';
 import { BackgroundEffectId, BACKGROUND_EFFECTS, BackgroundEffectOverlay } from './BackgroundEffectOverlay';
 import { SplashButtonRenderer } from './SplashButtonRenderer';
 import { THEME_LIST, THEMES } from '../lib/themes';
@@ -13,6 +13,7 @@ import { resellersService } from '../lib/resellersService';
 import { QUICK_HUE_PRESETS, generateLayoutPalette, getDefaultHueForLayout } from '../lib/colorHarmony';
 import { GAME_FONTS, getFontFamilyById } from '../lib/fonts';
 import { RealtimeLayoutPreviewCard } from './RealtimeLayoutPreviewCard';
+import { getCopiedStyle } from '../lib/campaignStyleHelper';
 
 interface CampaignFormModalProps {
   campaignToEdit?: Campaign | null;
@@ -155,6 +156,46 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+
+  // Copied style from other campaign
+  const [copiedStyle, setCopiedStyle] = useState<CampaignStylePackage | null>(() => getCopiedStyle());
+  const [justPastedStyle, setJustPastedStyle] = useState(false);
+
+  const handlePasteCopiedStyle = () => {
+    if (!copiedStyle) return;
+    sound.playFanfare();
+
+    if (copiedStyle.theme_id) setThemeId(copiedStyle.theme_id);
+    if (copiedStyle.theme_mode) setThemeMode(copiedStyle.theme_mode);
+    if (copiedStyle.layout_color_hue !== undefined) setLayoutColorHue(copiedStyle.layout_color_hue);
+    if (copiedStyle.game_layout) setGameLayout(copiedStyle.game_layout as GameLayoutId);
+    if (copiedStyle.campaign_font) setCampaignFont(copiedStyle.campaign_font);
+    if (copiedStyle.splash_bg_effect) setSplashBgEffect(copiedStyle.splash_bg_effect as BackgroundEffectId);
+    if (copiedStyle.splash_button_style) setSplashButtonStyle(copiedStyle.splash_button_style as SplashButtonStyleId);
+    if (copiedStyle.splash_button_hue !== undefined) setSplashButtonHue(copiedStyle.splash_button_hue);
+    if (copiedStyle.custom_colors) setCustomColors(copiedStyle.custom_colors);
+
+    setGamesConfig((prev) => {
+      const updated: Record<string, any> = {
+        ...prev,
+        theme_mode: copiedStyle.theme_mode || 'dark',
+        layout_color_hue: copiedStyle.layout_color_hue,
+        game_layout: copiedStyle.game_layout,
+        campaign_font: copiedStyle.campaign_font,
+        splash_bg_effect: copiedStyle.splash_bg_effect,
+        splash_button_style: copiedStyle.splash_button_style,
+        splash_button_hue: copiedStyle.splash_button_hue,
+      };
+      if (copiedStyle.custom_colors) updated.custom_colors = copiedStyle.custom_colors;
+      if (copiedStyle.game_specific_styles) {
+        Object.assign(updated, copiedStyle.game_specific_styles);
+      }
+      return updated;
+    });
+
+    setJustPastedStyle(true);
+    setTimeout(() => setJustPastedStyle(false), 3000);
+  };
 
   // Upload image directly to Supabase Storage
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -339,12 +380,34 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                 Configure os dados da ativação, tema visual, imagem de splash e catálogo de jogos
               </p>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-xl bg-slate-200/70 hover:bg-slate-200 active:scale-95 text-slate-600 hover:text-slate-900"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-2.5">
+              {copiedStyle && (
+                <button
+                  type="button"
+                  onClick={handlePasteCopiedStyle}
+                  className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm border border-emerald-700 transition-all animate-in fade-in"
+                  title={`Colar tema, matiz do slider, fonte e layouts copiados de "${copiedStyle.sourceCampaignName}"`}
+                >
+                  {justPastedStyle ? (
+                    <>
+                      <Check className="w-4 h-4 stroke-[3]" />
+                      <span>Estilo Aplicado!</span>
+                    </>
+                  ) : (
+                    <>
+                      <ClipboardPaste className="w-4 h-4" />
+                      <span>Colar Estilo ({copiedStyle.sourceCampaignName})</span>
+                    </>
+                  )}
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                className="p-2 rounded-xl bg-slate-200/70 hover:bg-slate-200 active:scale-95 text-slate-600 hover:text-slate-900"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Form Body Scrollable */}
