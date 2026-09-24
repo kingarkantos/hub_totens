@@ -8,22 +8,37 @@ interface PuzzleGameProps extends BaseGameProps {
   customContent?: any;
 }
 
-export const PuzzleGame: React.FC<PuzzleGameProps> = ({
-  onExit,
-  rankingEnabled,
-  onSubmitScore,
-  themePrimary = '#059669',
-  theme,
-  customBgStyle,
-  campaignName,
-  clientName,
-  splashImageUrl,
-  customContent,
-  isLight,
-  themeMode,
-  gameLayout,
-}) => {
-  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
+import { useActiveGamePalette } from '../context/GameLayoutContext';
+
+export const PuzzleGame: React.FC<PuzzleGameProps> = (props) => {
+  const {
+    onExit,
+    rankingEnabled,
+    onSubmitScore,
+    themePrimary = '#059669',
+    theme,
+    customBgStyle,
+    campaignName,
+    clientName,
+    splashImageUrl,
+    customContent,
+    isLight,
+    themeMode,
+    gameLayout,
+    palette,
+    layoutColorHue,
+  } = props;
+
+  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
+
   // 3x3 sliding puzzle where 0 is the empty tile
   const [tiles, setTiles] = useState<number[]>([1, 2, 3, 4, 5, 6, 7, 8, 0]);
   const [moves, setMoves] = useState(0);
@@ -116,7 +131,7 @@ export const PuzzleGame: React.FC<PuzzleGameProps> = ({
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
-      themePrimary={themePrimary}
+      themePrimary={layoutPrimary}
       theme={theme}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
@@ -124,20 +139,28 @@ export const PuzzleGame: React.FC<PuzzleGameProps> = ({
       splashImageUrl={splashImageUrl}
       isLight={isLightMode}
       themeMode={isLightMode ? 'light' : 'dark'}
-      gameLayout={gameLayout}
+      gameLayout={activeLayout}
+      palette={palette}
+      layoutColorHue={layoutColorHue}
     >
       <div className="w-full max-w-xl sm:max-w-2xl lg:max-w-3xl flex-1 flex flex-col items-center justify-between py-4 sm:py-8 px-2 sm:px-6 my-auto gap-6 sm:gap-8 select-none animate-in fade-in duration-300">
-        <div className={`w-full flex justify-between text-sm sm:text-lg font-black px-5 py-3.5 rounded-2xl border-2 ${
-          isLightMode
-            ? 'bg-white/90 border-slate-200 text-slate-800 shadow-sm'
-            : 'bg-slate-900/85 border-white/20 text-slate-300 backdrop-blur-xl'
-        }`}>
+        <div 
+          style={{ borderColor: `${layoutPrimary}44` }}
+          className={`w-full flex justify-between text-sm sm:text-lg font-black px-5 py-3.5 rounded-2xl border-2 ${
+            isLightMode
+              ? 'bg-white/90 border-slate-200 text-slate-800 shadow-sm'
+              : 'bg-slate-900/85 border-white/20 text-slate-300 backdrop-blur-xl'
+          }`}
+        >
           <span>Movimentos: <strong className={isLightMode ? 'text-slate-950 font-mono' : 'text-white font-mono'}>{moves}</strong></span>
-          <span className="text-amber-500 font-black">Ordene de 1 a 8</span>
+          <span style={{ color: layoutPrimary }} className="font-black">Ordene de 1 a 8</span>
         </div>
 
         {/* 3x3 Grid - Large Totem Tiles */}
-        <div className="grid grid-cols-3 gap-4 sm:gap-6 w-full max-w-[520px] sm:max-w-[600px] aspect-square p-5 sm:p-8 bg-slate-900/90 backdrop-blur-xl rounded-3xl border-4 border-white/25 shadow-2xl my-auto">
+        <div 
+          style={{ borderColor: `${layoutPrimary}44`, boxShadow: `0 0 35px ${layoutGlow}33` }}
+          className="grid grid-cols-3 gap-4 sm:gap-6 w-full max-w-[520px] sm:max-w-[600px] aspect-square p-5 sm:p-8 bg-slate-900/90 backdrop-blur-xl rounded-3xl border-4 shadow-2xl my-auto"
+        >
           {tiles.map((tile, idx) => {
             if (tile === 0) {
               return (
@@ -151,7 +174,12 @@ export const PuzzleGame: React.FC<PuzzleGameProps> = ({
               <button
                 key={idx}
                 onClick={() => handleTileClick(idx)}
-                className="rounded-2xl sm:rounded-3xl bg-gradient-to-br from-teal-500 to-emerald-700 border-2 sm:border-4 border-emerald-400 text-white font-black text-5xl sm:text-7xl shadow-xl active:scale-95 flex items-center justify-center transition-transform hover:brightness-110"
+                style={{
+                  background: `linear-gradient(135deg, ${layoutPrimary}, ${layoutSecondary})`,
+                  borderColor: `${darkPrimary}88`,
+                  boxShadow: `0 0 20px ${layoutGlow}`,
+                }}
+                className="rounded-2xl sm:rounded-3xl border-2 sm:border-4 text-white font-black text-5xl sm:text-7xl shadow-xl active:scale-95 flex items-center justify-center transition-transform hover:brightness-110"
               >
                 {tile}
               </button>

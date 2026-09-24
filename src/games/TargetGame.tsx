@@ -17,21 +17,37 @@ interface TargetItem {
   spawnTime: number;
 }
 
-export const TargetGame: React.FC<TargetGameProps> = ({
-  onExit,
-  rankingEnabled,
-  onSubmitScore,
-  themePrimary = '#E11D48',
-  theme,
-  customBgStyle,
-  campaignName,
-  clientName,
-  splashImageUrl,
-  customContent,
-  isLight,
-  themeMode,
-  gameLayout,
-}) => {
+import { useActiveGamePalette } from '../context/GameLayoutContext';
+
+export const TargetGame: React.FC<TargetGameProps> = (props) => {
+  const {
+    onExit,
+    rankingEnabled,
+    onSubmitScore,
+    themePrimary = '#E11D48',
+    theme,
+    customBgStyle,
+    campaignName,
+    clientName,
+    splashImageUrl,
+    customContent,
+    isLight,
+    themeMode,
+    gameLayout,
+    palette,
+    layoutColorHue,
+  } = props;
+
+  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, layoutAccent, isLightMode } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
+
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
   const [targets, setTargets] = useState<TargetItem[]>([]);
@@ -81,6 +97,7 @@ export const TargetGame: React.FC<TargetGameProps> = ({
       sound.playSuccess();
       setScore((s) => s + 250);
     } else {
+      sound.playClick();
       setScore((s) => s + 100);
     }
     setTargets((prev) => prev.filter((t) => t.id !== id));
@@ -104,19 +121,27 @@ export const TargetGame: React.FC<TargetGameProps> = ({
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
-      themePrimary={themePrimary}
+      themePrimary={layoutPrimary}
       theme={theme}
-      isLight={isLight}
+      isLight={isLightMode}
       themeMode={themeMode}
-      gameLayout={gameLayout}
+      gameLayout={activeLayout}
+      palette={palette}
+      layoutColorHue={layoutColorHue}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
       clientName={clientName}
       splashImageUrl={splashImageUrl}
     >
-      <div className="relative w-full flex-1 max-h-[78vh] min-h-[480px] sm:min-h-[560px] max-w-4xl lg:max-w-5xl my-auto bg-slate-900/80 backdrop-blur-xl rounded-3xl border-4 border-white/20 overflow-hidden select-none touch-none shadow-2xl animate-in fade-in duration-300">
+      <div 
+        style={{ borderColor: `${layoutPrimary}44` }}
+        className="relative w-full flex-1 max-h-[78vh] min-h-[480px] sm:min-h-[560px] max-w-4xl lg:max-w-5xl my-auto bg-slate-900/80 backdrop-blur-xl rounded-3xl border-4 overflow-hidden select-none touch-none shadow-2xl animate-in fade-in duration-300"
+      >
         {/* Helper prompt */}
-        <div className="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 px-6 sm:px-8 py-2.5 sm:py-3 rounded-full bg-black/70 border-2 border-white/20 text-sm sm:text-lg font-black text-amber-300 pointer-events-none z-10 shadow-2xl">
+        <div 
+          style={{ borderColor: `${layoutPrimary}55`, color: layoutPrimary }}
+          className="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 px-6 sm:px-8 py-2.5 sm:py-3 rounded-full bg-black/70 border-2 text-sm sm:text-lg font-black pointer-events-none z-10 shadow-2xl"
+        >
           Toque nos alvos o mais rápido possível! 🎯
         </div>
 
@@ -134,12 +159,21 @@ export const TargetGame: React.FC<TargetGameProps> = ({
               width: `${t.size}px`,
               height: `${t.size}px`,
               transform: 'translate(-50%, -50%)',
+              ...(t.isBonus
+                ? {
+                    background: 'linear-gradient(to top right, #f59e0b, #fef08a)',
+                    boxShadow: '0 0 25px rgba(245, 158, 11, 0.7)',
+                    borderColor: '#ffffff',
+                    color: '#020617',
+                  }
+                : {
+                    background: `linear-gradient(to top right, ${layoutPrimary}, ${layoutSecondary})`,
+                    boxShadow: `0 0 25px ${layoutGlow}`,
+                    borderColor: '#ffffffcc',
+                    color: '#ffffff',
+                  }),
             }}
-            className={`absolute rounded-full flex items-center justify-center font-black transition-all active:scale-75 animate-totem-pulse ${
-              t.isBonus
-                ? 'bg-gradient-to-tr from-amber-400 to-yellow-200 text-slate-950 shadow-2xl shadow-amber-400/60 border-4 border-white'
-                : 'bg-gradient-to-tr from-rose-600 to-red-500 text-white shadow-2xl shadow-red-600/60 border-4 border-rose-300'
-            }`}
+            className="absolute rounded-full flex items-center justify-center font-black transition-all active:scale-75 animate-totem-pulse border-4"
           >
             <span className="text-2xl sm:text-4xl">{t.isBonus ? '★' : '◎'}</span>
           </button>

@@ -8,21 +8,37 @@ interface SpeedGameProps extends BaseGameProps {
   customContent?: any;
 }
 
-export const SpeedGame: React.FC<SpeedGameProps> = ({
-  onExit,
-  rankingEnabled,
-  onSubmitScore,
-  themePrimary = '#DC2626',
-  theme,
-  customBgStyle,
-  campaignName,
-  clientName,
-  splashImageUrl,
-  customContent,
-  isLight,
-  themeMode,
-  gameLayout,
-}) => {
+import { useActiveGamePalette } from '../context/GameLayoutContext';
+
+export const SpeedGame: React.FC<SpeedGameProps> = (props) => {
+  const {
+    onExit,
+    rankingEnabled,
+    onSubmitScore,
+    themePrimary = '#DC2626',
+    theme,
+    customBgStyle,
+    campaignName,
+    clientName,
+    splashImageUrl,
+    customContent,
+    isLight,
+    themeMode,
+    gameLayout,
+    palette,
+    layoutColorHue,
+  } = props;
+
+  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
+
   const [stage, setStage] = useState<'countdown' | 'racing' | 'finished'>('countdown');
   const [trafficLights, setTrafficLights] = useState<number>(1); // 1 = red, 2 = yellow, 3 = green
   const [speed, setSpeed] = useState(0);
@@ -103,11 +119,13 @@ export const SpeedGame: React.FC<SpeedGameProps> = ({
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       customScoreLabel="Pts"
-      themePrimary={themePrimary}
+      themePrimary={layoutPrimary}
       theme={theme}
-      isLight={isLight}
+      isLight={isLightMode}
       themeMode={themeMode}
-      gameLayout={gameLayout}
+      gameLayout={activeLayout}
+      palette={palette}
+      layoutColorHue={layoutColorHue}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
       clientName={clientName}
@@ -115,7 +133,10 @@ export const SpeedGame: React.FC<SpeedGameProps> = ({
     >
       <div className="w-full max-w-xl sm:max-w-2xl lg:max-w-3xl flex-1 flex flex-col items-center justify-between py-4 sm:py-8 px-2 sm:px-6 my-auto gap-6 sm:gap-10 select-none animate-in fade-in duration-300">
         {/* Traffic Light */}
-        <div className="flex items-center gap-5 sm:gap-8 p-4 sm:p-5 bg-slate-900/90 border-4 border-white/20 rounded-3xl shadow-2xl backdrop-blur-xl">
+        <div 
+          style={{ borderColor: `${layoutPrimary}44` }}
+          className="flex items-center gap-5 sm:gap-8 p-4 sm:p-5 bg-slate-900/90 border-4 rounded-3xl shadow-2xl backdrop-blur-xl"
+        >
           <div
             className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full border-4 transition-all ${
               trafficLights === 1 ? 'bg-rose-600 border-rose-400 shadow-xl shadow-rose-600/80 scale-110' : 'bg-rose-950 border-rose-900 opacity-40'
@@ -134,18 +155,35 @@ export const SpeedGame: React.FC<SpeedGameProps> = ({
         </div>
 
         {/* Speedometer Gauge Display */}
-        <div className="relative w-64 h-64 sm:w-88 sm:h-88 md:w-[380px] md:h-[380px] rounded-full bg-slate-900/95 border-4 sm:border-8 border-white/20 shadow-2xl flex flex-col items-center justify-center backdrop-blur-xl my-auto">
+        <div 
+          style={{ borderColor: `${layoutPrimary}55`, boxShadow: `0 0 35px ${layoutGlow}` }}
+          className="relative w-64 h-64 sm:w-88 sm:h-88 md:w-[380px] md:h-[380px] rounded-full bg-slate-900/95 border-4 sm:border-8 shadow-2xl flex flex-col items-center justify-center backdrop-blur-xl my-auto"
+        >
           {/* Progress circle */}
           <div
-            className="absolute inset-3 rounded-full border-4 border-dashed border-red-500/40 animate-spin-slow pointer-events-none"
+            style={{ borderColor: `${layoutPrimary}55` }}
+            className="absolute inset-3 rounded-full border-4 border-dashed animate-spin-slow pointer-events-none"
           />
-          <span className="text-xs sm:text-base text-slate-300 font-black uppercase tracking-widest">Velocímetro</span>
+          <span 
+            style={{ color: layoutPrimary }}
+            className="text-xs sm:text-base font-black uppercase tracking-widest"
+          >
+            Velocímetro
+          </span>
           <div className="text-6xl sm:text-8xl md:text-9xl font-black text-white font-mono tracking-tighter my-2 drop-shadow-lg">
             {speed}
           </div>
-          <span className="text-base sm:text-xl font-black text-red-400 tracking-wider">KM/H</span>
+          <span 
+            style={{ color: layoutPrimary }}
+            className="text-base sm:text-xl font-black tracking-wider"
+          >
+            KM/H
+          </span>
 
-          <div className="mt-3 px-5 py-1.5 rounded-full bg-slate-800 text-sm sm:text-lg font-mono text-amber-400 font-bold border-2 border-white/10 shadow-sm">
+          <div 
+            style={{ color: layoutPrimary, borderColor: `${layoutPrimary}33` }}
+            className="mt-3 px-5 py-1.5 rounded-full bg-slate-800 text-sm sm:text-lg font-mono font-bold border-2 shadow-sm"
+          >
             ⏱️ {elapsedTime}s
           </div>
         </div>
@@ -154,8 +192,12 @@ export const SpeedGame: React.FC<SpeedGameProps> = ({
         <button
           onClick={handlePedalTap}
           disabled={stage !== 'racing'}
-          style={{ backgroundColor: stage === 'racing' ? themePrimary : '#334155' }}
-          className="w-full h-28 sm:h-40 rounded-3xl border-4 border-white/30 flex flex-col items-center justify-center font-black text-2xl sm:text-4xl uppercase tracking-wider text-white shadow-2xl active:scale-95 transition-all disabled:opacity-40 select-none animate-totem-pulse"
+          style={{ 
+            backgroundColor: stage === 'racing' ? layoutPrimary : '#334155',
+            boxShadow: stage === 'racing' ? `0 10px 30px ${layoutGlow}` : undefined,
+            borderColor: stage === 'racing' ? darkPrimary : '#ffffff33',
+          }}
+          className="w-full h-28 sm:h-40 rounded-3xl border-4 flex flex-col items-center justify-center font-black text-2xl sm:text-4xl uppercase tracking-wider text-white shadow-2xl active:scale-95 transition-all disabled:opacity-40 select-none animate-totem-pulse"
         >
           <span>🏎️ ACELERAR!</span>
           <span className="text-xs sm:text-base font-bold tracking-normal text-slate-200 mt-1">Toque freneticamente no totem!</span>

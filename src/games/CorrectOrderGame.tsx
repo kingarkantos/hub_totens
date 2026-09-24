@@ -19,22 +19,36 @@ const DEFAULT_PROCEDURE: CorrectOrderCustomItem = {
   ],
 };
 
-export const CorrectOrderGame: React.FC<CorrectOrderGameProps> = ({
-  onExit,
-  rankingEnabled,
-  onSubmitScore,
-  themePrimary = '#0D9488',
-  theme,
-  customBgStyle,
-  campaignName,
-  clientName,
-  splashImageUrl,
-  customContent,
-  isLight,
-  themeMode,
-  gameLayout,
-}) => {
-  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
+import { useActiveGamePalette } from '../context/GameLayoutContext';
+
+export const CorrectOrderGame: React.FC<CorrectOrderGameProps> = (props) => {
+  const {
+    onExit,
+    rankingEnabled,
+    onSubmitScore,
+    themePrimary = '#0D9488',
+    theme,
+    customBgStyle,
+    campaignName,
+    clientName,
+    splashImageUrl,
+    customContent,
+    isLight,
+    themeMode,
+    gameLayout,
+    palette,
+    layoutColorHue,
+  } = props;
+
+  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
   const procedure = useMemo(() => {
     return customContent?.steps && customContent.steps.length >= 3 ? customContent : DEFAULT_PROCEDURE;
   }, [customContent]);
@@ -138,7 +152,7 @@ export const CorrectOrderGame: React.FC<CorrectOrderGameProps> = ({
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
-      themePrimary={themePrimary}
+      themePrimary={layoutPrimary}
       theme={theme}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
@@ -146,17 +160,25 @@ export const CorrectOrderGame: React.FC<CorrectOrderGameProps> = ({
       splashImageUrl={splashImageUrl}
       isLight={isLightMode}
       themeMode={isLightMode ? 'light' : 'dark'}
-      gameLayout={gameLayout}
+      gameLayout={activeLayout}
+      palette={palette}
+      layoutColorHue={layoutColorHue}
     >
       <div className="flex flex-col flex-1 w-full max-w-3xl lg:max-w-4xl mx-auto justify-between py-4 sm:py-8 px-2 sm:px-6 gap-5 sm:gap-8 select-none animate-in fade-in duration-300">
         {/* Procedure Title */}
-        <div className={`rounded-3xl p-6 sm:p-8 border-2 text-center shadow-xl backdrop-blur-xl ${
-          isLightMode
-            ? 'bg-teal-50/90 border-teal-200 text-teal-950'
-            : 'bg-slate-900/85 border-teal-500/30 text-white'
-        }`}>
-          <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-teal-600 dark:text-teal-400 flex items-center justify-center gap-2 mb-2">
-            <ListOrdered className="w-5 h-5 text-teal-500" />
+        <div 
+          style={{ borderColor: `${layoutPrimary}44` }}
+          className={`rounded-3xl p-6 sm:p-8 border-2 text-center shadow-xl backdrop-blur-xl ${
+            isLightMode
+              ? 'bg-white/95 text-slate-900 shadow-slate-200/50'
+              : 'bg-slate-900/85 text-white'
+          }`}
+        >
+          <span 
+            style={{ color: layoutPrimary }}
+            className="text-xs sm:text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2 mb-2"
+          >
+            <ListOrdered className="w-5 h-5" />
             Organize os passos na sequência ideal:
           </span>
           <h3 className="text-xl sm:text-3xl font-black leading-snug tracking-tight">
@@ -173,23 +195,32 @@ export const CorrectOrderGame: React.FC<CorrectOrderGameProps> = ({
             return (
               <div
                 key={step}
+                style={{
+                  borderColor: isCorrectPosition
+                    ? '#10b981'
+                    : isWrongPosition
+                    ? '#f43f5e'
+                    : `${layoutPrimary}33`,
+                }}
                 className={`flex items-center gap-4 sm:gap-6 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-2 transition-all shadow-lg ${
                   isCorrectPosition
-                    ? isLightMode ? 'bg-emerald-50 border-emerald-500 text-emerald-950' : 'bg-emerald-950/60 border-emerald-500 text-emerald-200'
+                    ? isLightMode ? 'bg-emerald-50 text-emerald-950' : 'bg-emerald-950/60 text-emerald-200'
                     : isWrongPosition
-                    ? isLightMode ? 'bg-rose-50 border-rose-400 text-rose-950' : 'bg-rose-950/60 border-rose-500 text-rose-200'
-                    : isLightMode ? 'bg-white border-slate-200 text-slate-900 shadow-md' : 'bg-slate-900/85 border-white/20 text-white shadow-md'
+                    ? isLightMode ? 'bg-rose-50 text-rose-950' : 'bg-rose-950/60 text-rose-200'
+                    : isLightMode ? 'bg-white text-slate-900 shadow-md' : 'bg-slate-900/85 text-white shadow-md'
                 }`}
               >
                 {/* Step number badge */}
                 <div
-                  className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center font-black text-lg sm:text-2xl flex-shrink-0 shadow-md ${
-                    isCorrectPosition
-                      ? 'bg-emerald-600 text-white'
+                  style={{
+                    backgroundColor: isCorrectPosition
+                      ? '#059669'
                       : isWrongPosition
-                      ? 'bg-rose-600 text-white'
-                      : 'bg-teal-600 text-white'
-                  }`}
+                      ? '#e11d48'
+                      : layoutPrimary,
+                    boxShadow: isCorrectPosition || isWrongPosition ? undefined : `0 0 12px ${layoutGlow}`,
+                  }}
+                  className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center font-black text-lg sm:text-2xl flex-shrink-0 shadow-md text-white"
                 >
                   {isCorrectPosition ? <Check className="w-7 h-7 stroke-[3]" /> : idx + 1}
                 </div>
@@ -228,7 +259,12 @@ export const CorrectOrderGame: React.FC<CorrectOrderGameProps> = ({
           <button
             type="button"
             onClick={handleValidateOrder}
-            className="w-full py-6 sm:py-7 min-h-[85px] sm:min-h-[95px] bg-teal-600 hover:bg-teal-500 text-white rounded-3xl font-black text-xl sm:text-2xl shadow-xl shadow-teal-950/50 flex items-center justify-center gap-3 transition-all active:scale-95 border-b-4 border-teal-800"
+            style={{
+              background: `linear-gradient(to right, ${layoutPrimary}, ${layoutSecondary})`,
+              boxShadow: `0 10px 30px ${layoutGlow}`,
+              borderColor: darkPrimary,
+            }}
+            className="w-full py-6 sm:py-7 min-h-[85px] sm:min-h-[95px] text-white rounded-3xl font-black text-xl sm:text-2xl shadow-xl flex items-center justify-center gap-3 transition-all active:scale-95 border-b-4"
           >
             <CheckCircle2 className="w-7 h-7 stroke-[3]" />
             <span>Verificar Ordem</span>

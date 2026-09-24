@@ -4,6 +4,7 @@ import { sound } from '../lib/audio';
 import { BaseGameProps } from '../types';
 import { Crosshair, Target, Award, Sparkles, CheckCircle2, RotateCcw } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { useActiveGamePalette } from '../context/GameLayoutContext';
 
 interface BullseyeGameProps extends BaseGameProps {
   customContent?: any;
@@ -17,20 +18,34 @@ interface ShotImpact {
   label: string;
 }
 
-export const BullseyeGame: React.FC<BullseyeGameProps> = ({
-  onExit,
-  rankingEnabled,
-  onSubmitScore,
-  themePrimary = '#F97316',
-  theme,
-  customBgStyle,
-  campaignName,
-  clientName,
-  splashImageUrl,
-  isLight,
-  themeMode,
-  gameLayout,
-}) => {
+export const BullseyeGame: React.FC<BullseyeGameProps> = (props) => {
+  const {
+    onExit,
+    rankingEnabled,
+    onSubmitScore,
+    themePrimary = '#F97316',
+    theme,
+    customBgStyle,
+    campaignName,
+    clientName,
+    splashImageUrl,
+    isLight,
+    themeMode,
+    gameLayout,
+    palette,
+    layoutColorHue,
+  } = props;
+
+  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
+
   const totalShots = 5;
   const [shotsLeft, setShotsLeft] = useState(totalShots);
   const [score, setScore] = useState(0);
@@ -41,7 +56,6 @@ export const BullseyeGame: React.FC<BullseyeGameProps> = ({
   // Crosshair animation physics
   const [crosshairPos, setCrosshairPos] = useState({ x: 50, y: 50 });
   const animFrameRef = useRef<number | null>(null);
-  const isLightMode = isLight ?? (themeMode === 'light');
 
   // Oscillating crosshair coordinates using sin/cos with varying frequencies
   useEffect(() => {
@@ -152,34 +166,47 @@ export const BullseyeGame: React.FC<BullseyeGameProps> = ({
       customScoreLabel="Pontos"
       correctAnswers={shots.filter((s) => s.points >= 300).length}
       totalQuestions={totalShots}
-      themePrimary={themePrimary}
+      themePrimary={layoutPrimary}
       theme={theme}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
       clientName={clientName}
       splashImageUrl={splashImageUrl}
-      isLight={isLight}
-      themeMode={themeMode}
-      gameLayout={gameLayout}
+      isLight={isLightMode}
+      themeMode={isLightMode ? 'light' : 'dark'}
+      gameLayout={activeLayout}
+      palette={palette}
+      layoutColorHue={layoutColorHue}
     >
       <div className="relative w-full h-full flex flex-col items-center justify-between p-4 sm:p-6 max-w-4xl mx-auto select-none">
         {/* Top HUD: Shots remaining */}
         <div className="w-full flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
-            <Target className="w-5 h-5 text-orange-400" />
+          <div 
+            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border"
+            style={{ borderColor: `${layoutPrimary}44` }}
+          >
+            <Target className="w-5 h-5" style={{ color: layoutPrimary }} />
             <span className="text-xs sm:text-sm font-black uppercase tracking-wider">
-              Disparos: <strong className="text-white">{totalShots - shotsLeft + 1} de {totalShots}</strong>
+              Disparos: <strong className={isLightMode ? 'text-slate-900' : 'text-white'}>{totalShots - shotsLeft + 1} de {totalShots}</strong>
             </span>
           </div>
 
           {/* Shot Bullet Indicators */}
-          <div className="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
+          <div 
+            className="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border"
+            style={{ borderColor: `${layoutPrimary}44` }}
+          >
             {Array.from({ length: totalShots }).map((_, i) => (
               <span
                 key={i}
+                style={
+                  i < totalShots - shotsLeft
+                    ? { backgroundColor: layoutPrimary, borderColor: layoutSecondary, boxShadow: `0 0 10px ${layoutGlow}` }
+                    : undefined
+                }
                 className={`w-3.5 h-3.5 rounded-full border transition-all ${
                   i < totalShots - shotsLeft
-                    ? 'bg-amber-500 border-amber-400 shadow-sm'
+                    ? 'shadow-sm'
                     : 'bg-white/15 border-white/30'
                 }`}
               />
@@ -192,7 +219,8 @@ export const BullseyeGame: React.FC<BullseyeGameProps> = ({
           {/* Target Container */}
           <div
             onClick={handleShoot}
-            className="relative w-72 h-72 sm:w-96 sm:h-96 rounded-full border-4 border-slate-700 bg-slate-950 shadow-2xl flex items-center justify-center cursor-crosshair overflow-hidden select-none"
+            style={{ borderColor: `${layoutPrimary}66`, boxShadow: `0 0 45px ${layoutGlow}` }}
+            className="relative w-72 h-72 sm:w-96 sm:h-96 rounded-full border-4 bg-slate-950 shadow-2xl flex items-center justify-center cursor-crosshair overflow-hidden select-none"
           >
             {/* Outer Ring (100 pts) */}
             <div className="absolute w-[80%] h-[80%] rounded-full bg-slate-800/80 border-2 border-slate-600 flex items-center justify-center">
@@ -200,8 +228,14 @@ export const BullseyeGame: React.FC<BullseyeGameProps> = ({
               <div className="absolute w-[70%] h-[70%] rounded-full bg-amber-900/60 border-2 border-amber-700 flex items-center justify-center">
                 {/* Silver Ring (300 pts) */}
                 <div className="absolute w-[60%] h-[60%] rounded-full bg-blue-900/60 border-2 border-blue-500 flex items-center justify-center">
-                  {/* Bullseye Gold Center (500 pts) */}
-                  <div className="absolute w-[35%] h-[35%] rounded-full bg-gradient-to-tr from-amber-500 via-red-600 to-amber-400 border-2 border-yellow-300 shadow-[0_0_30px_rgba(245,158,11,0.6)] flex items-center justify-center animate-pulse">
+                  {/* Bullseye Center (500 pts) */}
+                  <div 
+                    style={{
+                      background: `radial-gradient(circle, ${layoutSecondary} 0%, ${layoutPrimary} 100%)`,
+                      boxShadow: `0 0 30px ${layoutGlow}`
+                    }}
+                    className="absolute w-[35%] h-[35%] rounded-full border-2 border-yellow-300 flex items-center justify-center animate-pulse"
+                  >
                     <span className="text-[10px] font-black text-white font-mono uppercase tracking-tighter">
                       500
                     </span>
@@ -235,10 +269,13 @@ export const BullseyeGame: React.FC<BullseyeGameProps> = ({
                 }}
                 className="absolute pointer-events-none z-20 transition-transform duration-75"
               >
-                <div className="w-12 h-12 rounded-full border-2 border-emerald-400/90 shadow-[0_0_15px_#10B981] flex items-center justify-center">
+                <div 
+                  className="w-12 h-12 rounded-full border-2 shadow-[0_0_15px_#10B981] flex items-center justify-center"
+                  style={{ borderColor: layoutPrimary }}
+                >
                   <div className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                  <div className="absolute w-full h-[1px] bg-emerald-400/80" />
-                  <div className="absolute h-full w-[1px] bg-emerald-400/80" />
+                  <div className="absolute w-full h-[1px]" style={{ backgroundColor: layoutPrimary }} />
+                  <div className="absolute h-full w-[1px]" style={{ backgroundColor: layoutPrimary }} />
                 </div>
               </div>
             )}
@@ -260,7 +297,11 @@ export const BullseyeGame: React.FC<BullseyeGameProps> = ({
             type="button"
             onClick={handleShoot}
             disabled={gameOver || shotsLeft <= 0}
-            className="w-full py-5 sm:py-6 px-8 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-orange-600 via-red-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 active:scale-95 text-white font-black text-xl sm:text-2xl tracking-wider uppercase shadow-xl shadow-orange-600/30 border-2 border-white/30 flex items-center justify-center gap-3 select-none"
+            style={{
+              background: `linear-gradient(135deg, ${layoutPrimary}, ${layoutSecondary})`,
+              boxShadow: `0 10px 30px ${layoutGlow}`
+            }}
+            className="w-full py-5 sm:py-6 px-8 rounded-2xl sm:rounded-3xl hover:opacity-95 active:scale-95 text-white font-black text-xl sm:text-2xl tracking-wider uppercase shadow-xl border-2 border-white/30 flex items-center justify-center gap-3 select-none transition-all"
           >
             <Crosshair className="w-7 h-7 animate-spin duration-3000" />
             <span>DISPARAR NO ALVO! 🎯</span>

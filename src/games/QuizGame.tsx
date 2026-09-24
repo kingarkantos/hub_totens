@@ -5,7 +5,7 @@ import { CheckCircle2, XCircle, Award, HelpCircle, Sparkles } from 'lucide-react
 
 import { BaseGameProps } from '../types';
 import { QuizQuestionItem } from '../types/gameContent';
-import { useGameLayout } from '../context/GameLayoutContext';
+import { useGameLayout, useActiveGamePalette } from '../context/GameLayoutContext';
 import { GameLayoutId } from '../types/gameLayouts';
 import { LayoutColorPalette, generateLayoutPalette, getDefaultHueForLayout } from '../lib/colorHarmony';
 
@@ -207,38 +207,24 @@ export const QuizGame: React.FC<QuizGameProps> = ({
     setGameOver(false);
   };
 
-  const contextLayout = useGameLayout();
-  const activeLayout: GameLayoutId = gameLayout || contextLayout?.layout || 'cartoon_pop';
-
-  const activePalette = useMemo(() => {
-    if (palette && (layoutColorHue === undefined || palette.hue === layoutColorHue)) {
-      return palette;
-    }
-    if (layoutColorHue !== undefined) {
-      return generateLayoutPalette(layoutColorHue, isLightMode);
-    }
-    if (theme?.primary && theme.primary !== '#DC2626') {
-      return {
-        hue: layoutColorHue || 185,
-        primary: theme.primary,
-        secondary: theme.secondary || '#3B82F6',
-        darkShade: theme.secondary || '#78350f',
-        accent: theme.accent || '#F59E0B',
-        glowColor: theme.glowColor || `${theme.primary}66`,
-        glowHex: theme.primary,
-        textColor: isLightMode ? '#0F172A' : '#FFFFFF',
-      };
-    }
-    if (contextLayout?.palette) {
-      return contextLayout.palette;
-    }
-    return generateLayoutPalette(getDefaultHueForLayout(activeLayout), isLightMode);
-  }, [palette, layoutColorHue, isLightMode, theme, contextLayout?.palette, activeLayout]);
-
-  const layoutPrimary = activePalette.primary || themePrimary || '#06B6D4';
-  const layoutSecondary = activePalette.secondary || '#3B82F6';
-  const darkPrimary = activePalette.darkShade || '#78350f';
-  const layoutGlow = activePalette.glowColor || 'rgba(6, 182, 212, 0.45)';
+  const {
+    activeLayout,
+    palette: activePalette,
+    layoutPrimary,
+    layoutSecondary,
+    darkPrimary,
+    layoutGlow,
+    layoutAccent,
+    isLightMode: activeIsLightMode,
+  } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
 
   const activeTimeDisplay = !isUnlimitedTime
     ? timeLeft

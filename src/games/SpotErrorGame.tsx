@@ -35,22 +35,36 @@ const HOTSPOTS_LAYOUT = [
   { xPercent: 70, yPercent: 68, icon: '💧' },
 ];
 
-export const SpotErrorGame: React.FC<SpotErrorGameProps> = ({
-  onExit,
-  rankingEnabled,
-  onSubmitScore,
-  themePrimary = '#EA580C',
-  theme,
-  customBgStyle,
-  campaignName,
-  clientName,
-  splashImageUrl,
-  customContent,
-  isLight,
-  themeMode,
-  gameLayout,
-}) => {
-  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
+import { useActiveGamePalette } from '../context/GameLayoutContext';
+
+export const SpotErrorGame: React.FC<SpotErrorGameProps> = (props) => {
+  const {
+    onExit,
+    rankingEnabled,
+    onSubmitScore,
+    themePrimary = '#EA580C',
+    theme,
+    customBgStyle,
+    campaignName,
+    clientName,
+    splashImageUrl,
+    customContent,
+    isLight,
+    themeMode,
+    gameLayout,
+    palette,
+    layoutColorHue,
+  } = props;
+
+  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
   const scenario = customContent || DEFAULT_SCENARIO;
 
   const hazards: HazardHotspot[] = scenario.hazards.map((h, i) => ({
@@ -123,7 +137,7 @@ export const SpotErrorGame: React.FC<SpotErrorGameProps> = ({
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
-      themePrimary={themePrimary}
+      themePrimary={layoutPrimary}
       theme={theme}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
@@ -131,31 +145,53 @@ export const SpotErrorGame: React.FC<SpotErrorGameProps> = ({
       splashImageUrl={splashImageUrl}
       isLight={isLightMode}
       themeMode={isLightMode ? 'light' : 'dark'}
-      gameLayout={gameLayout}
+      gameLayout={activeLayout}
+      palette={palette}
+      layoutColorHue={layoutColorHue}
     >
       <div className="flex flex-col flex-1 w-full max-w-4xl lg:max-w-5xl mx-auto justify-between py-4 sm:py-8 px-2 sm:px-6 gap-5 sm:gap-8 select-none animate-in fade-in duration-300">
         {/* Header with Title and Count */}
-        <div className={`rounded-2xl px-6 py-3.5 shadow-sm border-2 flex items-center justify-between ${
-          isLightMode
-            ? 'bg-orange-50 border-orange-200/80 text-orange-950'
-            : 'bg-slate-900/90 border-orange-500/30 text-orange-300'
-        }`}>
+        <div 
+          className={`rounded-2xl px-6 py-3.5 shadow-sm border-2 flex items-center justify-between ${
+            isLightMode
+              ? 'bg-slate-50/90 text-slate-900'
+              : 'bg-slate-900/90 text-white'
+          }`}
+          style={{ borderColor: `${layoutPrimary}55` }}
+        >
           <div>
             <span className="text-sm sm:text-base font-black uppercase flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-orange-500" />
+              <AlertTriangle className="w-5 h-5" style={{ color: layoutPrimary }} />
               {scenario.scenarioTitle}
             </span>
           </div>
-          <span className="text-xs sm:text-sm font-black text-orange-950 bg-orange-200/80 border border-orange-300 px-3.5 py-1.5 rounded-xl shadow-xs">
+          <span 
+            className="text-xs sm:text-sm font-black px-3.5 py-1.5 rounded-xl shadow-xs"
+            style={{ 
+              backgroundColor: `${layoutPrimary}25`, 
+              borderColor: `${layoutPrimary}66`,
+              color: isLightMode ? darkPrimary : '#ffffff',
+              borderWidth: 1 
+            }}
+          >
             {foundIds.length} / {hazards.length} irregularidades
           </span>
         </div>
 
         {/* Interactive Scenario Area with Hotspots */}
         <div className="my-auto py-2">
-          <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] min-h-[440px] sm:min-h-[520px] rounded-3xl overflow-hidden border-4 border-slate-300 dark:border-white/20 shadow-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-zinc-950 flex items-center justify-center backdrop-blur-xl">
+          <div 
+            className="relative w-full aspect-[4/3] sm:aspect-[16/10] min-h-[440px] sm:min-h-[520px] rounded-3xl overflow-hidden border-4 shadow-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-zinc-950 flex items-center justify-center backdrop-blur-xl"
+            style={{ borderColor: `${layoutPrimary}66`, boxShadow: `0 0 35px ${layoutGlow}` }}
+          >
             {/* Visual Floor & Background Graphics */}
-            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#f97316_2px,transparent_2px)] [background-size:24px_24px]" />
+            <div 
+              className="absolute inset-0 opacity-20"
+              style={{
+                backgroundImage: `radial-gradient(${layoutPrimary} 2px, transparent 2px)`,
+                backgroundSize: '24px 24px'
+              }}
+            />
 
             {/* Industrial Plant / Kiosk Visual Mock Layout */}
             <div className="absolute inset-8 rounded-3xl border-2 border-dashed border-slate-700/60 flex flex-col justify-between p-6 pointer-events-none">
@@ -184,16 +220,30 @@ export const SpotErrorGame: React.FC<SpotErrorGameProps> = ({
                   style={{
                     left: `${hazard.xPercent}%`,
                     top: `${hazard.yPercent}%`,
+                    ...(isFound
+                      ? {
+                          backgroundColor: '#10B981',
+                          borderColor: '#ffffff',
+                          boxShadow: '0 0 25px rgba(16, 185, 129, 0.6)'
+                        }
+                      : {
+                          background: `linear-gradient(135deg, ${layoutPrimary}, ${layoutSecondary})`,
+                          borderColor: '#ffffff',
+                          boxShadow: `0 0 30px ${layoutGlow}`
+                        })
                   }}
-                  className={`absolute -translate-x-1/2 -translate-y-1/2 w-18 h-18 sm:w-22 sm:h-22 rounded-3xl flex items-center justify-center text-3xl sm:text-4xl transition-all active:scale-95 shadow-2xl ${
+                  className={`absolute -translate-x-1/2 -translate-y-1/2 w-18 h-18 sm:w-22 sm:h-22 rounded-3xl flex items-center justify-center text-3xl sm:text-4xl transition-all active:scale-95 shadow-2xl border-4 ${
                     isFound
-                      ? 'bg-emerald-500 text-white shadow-emerald-500/50 scale-105 border-4 border-white'
-                      : 'bg-orange-500/95 hover:bg-orange-400 text-white animate-bounce shadow-orange-500/50 border-4 border-amber-300'
+                      ? 'text-white scale-105'
+                      : 'text-white animate-bounce'
                   }`}
                 >
                   {isFound ? <Check className="w-9 h-9 stroke-[3] text-white" /> : hazard.icon}
                   {!isFound && (
-                    <span className="absolute -inset-2 rounded-3xl border-2 border-amber-400 animate-ping opacity-50 pointer-events-none" />
+                    <span 
+                      className="absolute -inset-2 rounded-3xl border-2 animate-ping opacity-60 pointer-events-none" 
+                      style={{ borderColor: layoutPrimary }}
+                    />
                   )}
                 </button>
               );
@@ -202,14 +252,24 @@ export const SpotErrorGame: React.FC<SpotErrorGameProps> = ({
         </div>
 
         {/* Hazard Found Info Banner or Checklist */}
-        <div className={`rounded-3xl p-4 sm:p-6 shadow-xl min-h-[80px] sm:min-h-[90px] flex items-center justify-between gap-4 border-2 ${
-          isLightMode 
-            ? 'bg-white/95 border-slate-200' 
-            : 'bg-slate-900/90 border-white/20 backdrop-blur-xl'
-        }`}>
+        <div 
+          className={`rounded-3xl p-4 sm:p-6 shadow-xl min-h-[80px] sm:min-h-[90px] flex items-center justify-between gap-4 border-2 ${
+            isLightMode 
+              ? 'bg-white/95 text-slate-900' 
+              : 'bg-slate-900/90 text-white backdrop-blur-xl'
+          }`}
+          style={{ borderColor: `${layoutPrimary}44` }}
+        >
           {activeHazardInfo ? (
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-orange-100 dark:bg-orange-950/80 text-orange-600 dark:text-orange-400 flex items-center justify-center flex-shrink-0 font-bold border border-orange-300">
+              <div 
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center flex-shrink-0 font-bold border"
+                style={{ 
+                  backgroundColor: `${layoutPrimary}22`, 
+                  borderColor: `${layoutPrimary}66`,
+                  color: layoutPrimary 
+                }}
+              >
                 <ShieldAlert className="w-7 h-7" />
               </div>
               <div>

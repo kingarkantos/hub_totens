@@ -135,6 +135,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
   const activePrimary = activePalette?.primary || theme?.primary || themePrimary || '#06B6D4';
   const activeSecondary = activePalette?.secondary || theme?.secondary || '#3B82F6';
+  const activeDarkShade = activePalette?.darkShade || '#78350f';
   const activeGlow = activePalette?.glowColor || theme?.glowColor || `${activePrimary}66`;
 
   useEffect(() => {
@@ -343,13 +344,22 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         )}
 
         {/* Top Bar Header */}
-        <header className={`flex-shrink-0 flex items-center justify-between px-4 sm:px-8 py-3 sm:py-4 z-30 transition-all ${
+        <header
+          style={{
+            ...(currentLayout === 'cartoon_pop' ? { borderBottomColor: activePrimary, boxShadow: `0 4px 0 ${activeDarkShade}` } : {}),
+            ...(currentLayout === 'neon_arcade' ? { borderBottomColor: activePrimary, boxShadow: `0 4px 25px ${activeGlow}` } : {}),
+            ...(currentLayout === 'bento_tech' ? { borderBottomColor: activePrimary } : {}),
+            ...(currentLayout === 'pixel_retro' ? { borderBottomColor: activePrimary, boxShadow: `0 4px 0 ${activeDarkShade}` } : {}),
+            ...(currentLayout === 'golden_casino' ? { borderBottomColor: activePrimary, boxShadow: `0 4px 20px ${activeGlow}` } : {}),
+            ...(currentLayout === 'synthwave_grid' ? { borderBottomColor: activePrimary, boxShadow: `0 4px 25px ${activeGlow}` } : {}),
+          }}
+          className={`flex-shrink-0 flex items-center justify-between px-4 sm:px-8 py-3 sm:py-4 z-30 transition-all ${
           currentLayout === 'cartoon_pop'
-            ? 'bg-slate-900/95 border-b-4 border-amber-400/90 shadow-[0_4px_0_#92400e]'
+            ? 'bg-slate-900/95 border-b-4'
             : currentLayout === 'cartoon_comic'
             ? 'bg-slate-950 border-b-4 border-black shadow-[0_4px_0_#000]'
             : currentLayout === 'neon_arcade' 
-            ? 'bg-black/80 border-b-2 border-cyan-500/40 shadow-[0_4px_25px_rgba(6,182,212,0.2)]' 
+            ? 'bg-black/80 border-b-2' 
             : currentLayout === 'bento_tech'
             ? 'bg-slate-900/95 border-b-2 border-slate-700/80 shadow-md font-mono'
             : currentLayout === 'neumorphic_luxe'
@@ -357,13 +367,13 @@ export const GameContainer: React.FC<GameContainerProps> = ({
             : currentLayout === 'spatial_3d'
             ? 'bg-slate-950/85 border-b border-purple-500/30 backdrop-blur-2xl shadow-xl'
             : currentLayout === 'pixel_retro'
-            ? 'bg-black border-b-4 border-yellow-400 font-mono shadow-[0_4px_0_#ca8a04]'
+            ? 'bg-black border-b-4 font-mono'
             : currentLayout === 'cyber_matrix'
             ? 'bg-black/95 border-b-2 border-emerald-400/80 font-mono shadow-[0_0_20px_rgba(16,185,129,0.3)]'
             : currentLayout === 'synthwave_grid'
-            ? 'bg-purple-950/90 border-b-2 border-pink-500/50 shadow-[0_4px_25px_rgba(244,63,94,0.3)]'
+            ? 'bg-purple-950/90 border-b-2'
             : currentLayout === 'golden_casino'
-            ? 'bg-stone-950 border-b-4 border-amber-300 shadow-[0_4px_20px_rgba(245,158,11,0.3)]'
+            ? 'bg-stone-950 border-b-4'
             : currentLayout === 'bubble_toon'
             ? 'bg-pink-950/60 border-b-4 border-pink-300 shadow-lg'
             : isLightMode 
@@ -377,13 +387,26 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 sound.playClick();
                 onExit();
               }}
+              style={{
+                ...(currentLayout === 'cartoon_pop'
+                  ? { backgroundColor: activePrimary, borderColor: '#FFFFFF', boxShadow: `0 4px 0 ${activeDarkShade}`, color: isLightMode ? '#000000' : '#FFFFFF' }
+                  : currentLayout === 'neon_arcade'
+                  ? { borderColor: activePrimary, color: activePrimary, boxShadow: `0 0 15px ${activeGlow}` }
+                  : currentLayout === 'pixel_retro'
+                  ? { borderColor: activePrimary, color: activePrimary, boxShadow: `2px 2px 0 ${activeDarkShade}` }
+                  : currentLayout === 'golden_casino'
+                  ? { backgroundColor: activePrimary, color: '#000000', boxShadow: `0 3px 0 ${activeDarkShade}` }
+                  : currentLayout === 'synthwave_grid'
+                  ? { borderColor: activePrimary, color: activePrimary, boxShadow: `0 0 12px ${activeGlow}` }
+                  : {}),
+              }}
               className={`flex items-center gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 ${currentLayoutDef.buttonClass} ${
                 currentLayout === 'cartoon_pop'
-                  ? 'bg-amber-400 hover:bg-amber-300 text-amber-950 border-2 border-amber-200 shadow-[0_4px_0_#92400e] active:translate-y-1 active:shadow-[0_1px_0_#92400e]'
+                  ? 'border-2 active:translate-y-1'
                   : currentLayout === 'cartoon_comic'
                   ? 'bg-sky-400 hover:bg-sky-300 text-black border-2 border-black shadow-[3px_3px_0_#000] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0_#000]'
                   : currentLayout === 'neon_arcade'
-                  ? 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)]'
+                  ? 'bg-cyan-500/20 hover:bg-cyan-500/30 border'
                   : currentLayout === 'bento_tech'
                   ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600'
                   : currentLayout === 'neumorphic_luxe'
@@ -391,13 +414,13 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                   : currentLayout === 'spatial_3d'
                   ? 'bg-purple-950/60 hover:bg-purple-900/60 text-purple-200 border border-purple-400/40'
                   : currentLayout === 'pixel_retro'
-                  ? 'bg-black text-yellow-300 border-2 border-yellow-400 font-mono shadow-[2px_2px_0_#ca8a04]'
+                  ? 'bg-black border-2 font-mono'
                   : currentLayout === 'cyber_matrix'
                   ? 'bg-black/90 text-emerald-300 border border-emerald-400 font-mono shadow-[0_0_10px_rgba(16,185,129,0.3)]'
                   : currentLayout === 'synthwave_grid'
-                  ? 'bg-pink-500/20 text-pink-300 border border-pink-400 shadow-[0_0_12px_rgba(244,63,94,0.3)]'
+                  ? 'bg-pink-500/20 border'
                   : currentLayout === 'golden_casino'
-                  ? 'bg-amber-400 text-stone-950 font-black border border-yellow-200 shadow-md'
+                  ? 'font-black border border-yellow-200 shadow-md'
                   : currentLayout === 'bubble_toon'
                   ? 'bg-pink-400 text-white font-black border-2 border-pink-200 shadow-sm'
                   : isLightMode
@@ -412,13 +435,17 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
           {/* Center: Title & Category */}
           <div className="flex flex-col items-center text-center">
-            <span className={`text-[10px] sm:text-xs uppercase tracking-widest ${
+            <span
+              style={{
+                ...(currentLayout === 'cartoon_pop' || currentLayout === 'neon_arcade' ? { color: activePrimary } : {}),
+              }}
+              className={`text-[10px] sm:text-xs uppercase tracking-widest ${
               currentLayout === 'cartoon_pop'
-                ? 'text-amber-400 font-black'
+                ? 'font-black'
                 : currentLayout === 'cartoon_comic'
                 ? 'text-sky-300 font-black'
                 : currentLayout === 'neon_arcade'
-                ? 'text-cyan-400 font-black'
+                ? 'font-black'
                 : isLightMode
                 ? 'text-slate-500 font-black'
                 : 'text-slate-300 font-black'
@@ -427,7 +454,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
             </span>
             <h2 className={`text-base sm:text-2xl font-black tracking-tight ${
               currentLayout === 'cartoon_pop'
-                ? 'text-amber-300 drop-shadow-sm'
+                ? 'text-white drop-shadow-sm'
                 : currentLayout === 'cartoon_comic'
                 ? 'text-white drop-shadow-[2px_2px_0_#000]'
                 : currentLayout === 'neon_arcade'
@@ -442,23 +469,36 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           <div className="flex items-center gap-2 sm:gap-3.5">
             {timeRemaining !== undefined && timeRemaining > 0 && (
               <div
+                style={{
+                  ...(currentLayout === 'cartoon_pop'
+                    ? { borderColor: activePrimary, boxShadow: `0 3px 0 ${activeDarkShade}` }
+                    : currentLayout === 'neon_arcade'
+                    ? { borderColor: activePrimary, boxShadow: `0 0 15px ${activeGlow}` }
+                    : currentLayout === 'pixel_retro'
+                    ? { borderColor: activePrimary, boxShadow: `2px 2px 0 ${activeDarkShade}` }
+                    : currentLayout === 'golden_casino'
+                    ? { borderColor: activePrimary, boxShadow: `0 3px 0 ${activeDarkShade}` }
+                    : currentLayout === 'synthwave_grid'
+                    ? { borderColor: activePrimary, boxShadow: `0 0 12px ${activeGlow}` }
+                    : {}),
+                }}
                 className={`relative min-w-[125px] sm:min-w-[160px] md:min-w-[190px] h-8 sm:h-9.5 ${currentLayoutDef.buttonClass} overflow-hidden p-0.5 sm:p-1 border-2 transition-all shadow-md flex items-center select-none ${
                   currentLayout === 'cartoon_pop'
-                    ? 'bg-amber-950/80 border-amber-300 shadow-[0_3px_0_#92400e]'
+                    ? 'bg-slate-950/90'
                     : currentLayout === 'cartoon_comic'
                     ? 'bg-white border-2 border-black shadow-[2px_2px_0_#000]'
                     : currentLayout === 'neon_arcade'
-                    ? 'bg-slate-950 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.35)]'
+                    ? 'bg-slate-950'
                     : currentLayout === 'bento_tech'
                     ? 'bg-slate-900 border-emerald-400 font-mono shadow-sm'
                     : currentLayout === 'neumorphic_luxe'
                     ? 'bg-slate-900/90 border-amber-400/80 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
                     : currentLayout === 'pixel_retro'
-                    ? 'bg-black border-2 border-yellow-400 shadow-[2px_2px_0_#ca8a04]'
+                    ? 'bg-black border-2'
                     : currentLayout === 'cyber_matrix'
                     ? 'bg-black border border-emerald-400 font-mono shadow-[0_0_12px_rgba(16,185,129,0.3)]'
                     : currentLayout === 'synthwave_grid'
-                    ? 'bg-purple-950 border border-pink-400 shadow-[0_0_12px_rgba(244,63,94,0.35)]'
+                    ? 'bg-purple-950 border'
                     : isLightMode 
                     ? 'bg-slate-100 border-slate-300' 
                     : 'bg-slate-950/90 border-white/20'
@@ -471,19 +511,17 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                   <div
                     style={{
                       width: `${timePercent}%`,
+                      ...(isUrgentTime
+                        ? {}
+                        : {
+                            background: `linear-gradient(to right, ${activeSecondary}, ${activePrimary})`,
+                            boxShadow: `0 0 10px ${activeGlow}`,
+                          }),
                     }}
                     className={`h-full rounded-full transition-[width] duration-1000 ease-linear relative flex items-center justify-end ${
                       isUrgentTime
                         ? 'bg-gradient-to-r from-orange-600 via-rose-500 to-rose-600 shadow-[0_0_12px_rgba(244,63,94,0.7)]'
-                        : timePercent < 40
-                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]'
-                        : currentLayout === 'neon_arcade'
-                        ? 'bg-gradient-to-r from-blue-600 via-cyan-400 to-teal-300 shadow-[0_0_12px_rgba(6,182,212,0.6)]'
-                        : currentLayout === 'bento_tech'
-                        ? 'bg-gradient-to-r from-emerald-600 to-teal-400'
-                        : currentLayout === 'synthwave_grid'
-                        ? 'bg-gradient-to-r from-pink-500 to-purple-600'
-                        : 'bg-gradient-to-r from-amber-500 to-yellow-400'
+                        : ''
                     }`}
                   >
                     {/* Glowing Slider Thumb / Knob Pin */}
@@ -507,13 +545,27 @@ export const GameContainer: React.FC<GameContainerProps> = ({
               </div>
             )}
 
-            <div className={`px-3 sm:px-4 py-1.5 sm:py-2 ${currentLayoutDef.buttonClass} ${
+            <div
+              style={{
+                ...(currentLayout === 'cartoon_pop'
+                  ? { background: `linear-gradient(to right, ${activePrimary}, ${activeSecondary})`, borderColor: '#FFFFFF', boxShadow: `0 3px 0 ${activeDarkShade}`, color: isLightMode ? '#000000' : '#FFFFFF' }
+                  : currentLayout === 'neon_arcade'
+                  ? { borderColor: activePrimary, color: activePrimary, boxShadow: `0 0 15px ${activeGlow}` }
+                  : currentLayout === 'pixel_retro'
+                  ? { borderColor: activePrimary, color: activePrimary, boxShadow: `2px 2px 0 ${activeDarkShade}` }
+                  : currentLayout === 'golden_casino'
+                  ? { background: `linear-gradient(to right, ${activePrimary}, ${activeSecondary})`, color: '#000000', boxShadow: `0 3px 0 ${activeDarkShade}` }
+                  : currentLayout === 'synthwave_grid'
+                  ? { borderColor: activePrimary, color: activePrimary, boxShadow: `0 0 12px ${activeGlow}` }
+                  : {}),
+              }}
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 ${currentLayoutDef.buttonClass} ${
               currentLayout === 'cartoon_pop'
-                ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950 border-2 border-amber-200 shadow-[0_3px_0_#92400e]'
+                ? 'border-2'
                 : currentLayout === 'cartoon_comic'
                 ? 'bg-emerald-400 text-black border-2 border-black shadow-[2px_2px_0_#000]'
                 : currentLayout === 'neon_arcade'
-                ? 'bg-black border border-cyan-400 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.3)]'
+                ? 'bg-black border'
                 : currentLayout === 'bento_tech'
                 ? 'bg-slate-800 border border-slate-700 text-white'
                 : isLightMode 

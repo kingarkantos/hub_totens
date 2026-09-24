@@ -16,21 +16,37 @@ interface FallingItem {
   type: 'gift' | 'star' | 'hazard';
 }
 
-export const CatcherGame: React.FC<CatcherGameProps> = ({
-  onExit,
-  rankingEnabled,
-  onSubmitScore,
-  themePrimary = '#7C3AED',
-  theme,
-  customBgStyle,
-  campaignName,
-  clientName,
-  splashImageUrl,
-  customContent,
-  isLight,
-  themeMode,
-  gameLayout,
-}) => {
+import { useActiveGamePalette } from '../context/GameLayoutContext';
+
+export const CatcherGame: React.FC<CatcherGameProps> = (props) => {
+  const {
+    onExit,
+    rankingEnabled,
+    onSubmitScore,
+    themePrimary = '#7C3AED',
+    theme,
+    customBgStyle,
+    campaignName,
+    clientName,
+    splashImageUrl,
+    customContent,
+    isLight,
+    themeMode,
+    gameLayout,
+    palette,
+    layoutColorHue,
+  } = props;
+
+  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
+
   const [basketX, setBasketX] = useState(50); // percentage 10 - 90
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(40);
@@ -143,11 +159,13 @@ export const CatcherGame: React.FC<CatcherGameProps> = ({
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
-      themePrimary={themePrimary}
+      themePrimary={layoutPrimary}
       theme={theme}
-      isLight={isLight}
+      isLight={isLightMode}
       themeMode={themeMode}
-      gameLayout={gameLayout}
+      gameLayout={activeLayout}
+      palette={palette}
+      layoutColorHue={layoutColorHue}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
       clientName={clientName}
@@ -157,9 +175,13 @@ export const CatcherGame: React.FC<CatcherGameProps> = ({
         ref={containerRef}
         onPointerMove={(e) => handleTouchMove(e.clientX)}
         onPointerDown={(e) => handleTouchMove(e.clientX)}
-        className="relative w-full max-w-4xl lg:max-w-5xl flex-1 max-h-[78vh] min-h-[480px] sm:min-h-[560px] my-auto bg-slate-900/80 backdrop-blur-xl rounded-3xl border-4 border-white/20 overflow-hidden select-none touch-none shadow-2xl animate-in fade-in duration-300"
+        style={{ borderColor: `${layoutPrimary}44` }}
+        className="relative w-full max-w-4xl lg:max-w-5xl flex-1 max-h-[78vh] min-h-[480px] sm:min-h-[560px] my-auto bg-slate-900/80 backdrop-blur-xl rounded-3xl border-4 overflow-hidden select-none touch-none shadow-2xl animate-in fade-in duration-300"
       >
-        <div className="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 px-6 sm:px-8 py-2.5 sm:py-3 rounded-full bg-black/70 border-2 border-white/20 text-sm sm:text-lg font-black text-amber-300 pointer-events-none z-10 shadow-2xl">
+        <div 
+          style={{ borderColor: `${layoutPrimary}55`, color: layoutPrimary }}
+          className="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 px-6 sm:px-8 py-2.5 sm:py-3 rounded-full bg-black/70 border-2 text-sm sm:text-lg font-black pointer-events-none z-10 shadow-2xl"
+        >
           Arraste o veículo para coletar os brindes! 🎁
         </div>
 
@@ -187,11 +209,21 @@ export const CatcherGame: React.FC<CatcherGameProps> = ({
           }}
           className="absolute flex flex-col items-center pointer-events-none transition-all duration-75"
         >
-          <div className="px-6 sm:px-8 py-3 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-black text-sm sm:text-lg border-4 border-white shadow-2xl flex items-center gap-3">
+          <div 
+            style={{
+              background: `linear-gradient(to right, ${layoutPrimary}, ${layoutSecondary})`,
+              boxShadow: `0 0 25px ${layoutGlow}`,
+              borderColor: `${darkPrimary}88`,
+            }}
+            className="px-6 sm:px-8 py-3 rounded-2xl sm:rounded-3xl text-white font-black text-sm sm:text-lg border-4 shadow-2xl flex items-center gap-3"
+          >
             <span className="text-2xl sm:text-3xl">🏎️</span>
             <span>COLETOR</span>
           </div>
-          <div className="w-28 h-5 bg-purple-900/70 rounded-full blur-md mt-1" />
+          <div 
+            style={{ backgroundColor: `${layoutPrimary}66` }}
+            className="w-28 h-5 rounded-full blur-md mt-1" 
+          />
         </div>
       </div>
     </GameContainer>

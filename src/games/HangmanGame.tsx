@@ -20,22 +20,36 @@ const DEFAULT_WORDS: HangmanCustomItem[] = [
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const MAX_MISTAKES = 6;
 
-export const HangmanGame: React.FC<HangmanGameProps> = ({
-  onExit,
-  rankingEnabled,
-  onSubmitScore,
-  themePrimary = '#10B981',
-  theme,
-  customBgStyle,
-  campaignName,
-  clientName,
-  splashImageUrl,
-  customContent,
-  isLight,
-  themeMode,
-  gameLayout,
-}) => {
-  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
+import { useActiveGamePalette } from '../context/GameLayoutContext';
+
+export const HangmanGame: React.FC<HangmanGameProps> = (props) => {
+  const {
+    onExit,
+    rankingEnabled,
+    onSubmitScore,
+    themePrimary = '#10B981',
+    theme,
+    customBgStyle,
+    campaignName,
+    clientName,
+    splashImageUrl,
+    customContent,
+    isLight,
+    themeMode,
+    gameLayout,
+    palette,
+    layoutColorHue,
+  } = props;
+
+  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
   const wordsList = useMemo(() => {
     return customContent && customContent.length > 0 ? customContent : DEFAULT_WORDS;
   }, [customContent]);
@@ -124,7 +138,7 @@ export const HangmanGame: React.FC<HangmanGameProps> = ({
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
-      themePrimary={themePrimary}
+      themePrimary={layoutPrimary}
       theme={theme}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
@@ -132,17 +146,29 @@ export const HangmanGame: React.FC<HangmanGameProps> = ({
       splashImageUrl={splashImageUrl}
       isLight={isLightMode}
       themeMode={isLightMode ? 'light' : 'dark'}
-      gameLayout={gameLayout}
+      gameLayout={activeLayout}
+      palette={palette}
+      layoutColorHue={layoutColorHue}
     >
       <div className="flex flex-col flex-1 w-full max-w-3xl lg:max-w-4xl mx-auto justify-between py-4 sm:py-8 px-2 sm:px-6 gap-5 sm:gap-8 select-none animate-in fade-in duration-300">
         {/* Header with Category and Lives */}
-        <div className={`flex items-center justify-between rounded-2xl px-5 py-3.5 shadow-sm border-2 ${
-          isLightMode
-            ? 'bg-emerald-50 border-emerald-200/80 text-emerald-900'
-            : 'bg-slate-900/90 border-emerald-500/30 text-emerald-300'
-        }`}>
+        <div 
+          style={{ borderColor: `${layoutPrimary}44` }}
+          className={`flex items-center justify-between rounded-2xl px-5 py-3.5 shadow-sm border-2 ${
+            isLightMode
+              ? 'bg-white/95 text-slate-900'
+              : 'bg-slate-900/90 text-white'
+          }`}
+        >
           <div className="flex items-center gap-3">
-            <span className="text-xs sm:text-sm font-black uppercase text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-600/50 px-3.5 py-1.5 rounded-xl">
+            <span 
+              style={{
+                backgroundColor: `${layoutPrimary}22`,
+                borderColor: `${layoutPrimary}66`,
+                color: layoutPrimary,
+              }}
+              className="text-xs sm:text-sm font-black uppercase border px-3.5 py-1.5 rounded-xl"
+            >
               {activeItem.category || 'Segurança'}
             </span>
             <span className="text-xs sm:text-sm font-black text-slate-500 dark:text-slate-300">
@@ -165,12 +191,18 @@ export const HangmanGame: React.FC<HangmanGameProps> = ({
         </div>
 
         {/* Clue Box */}
-        <div className={`my-auto rounded-3xl p-6 sm:p-8 border-2 shadow-xl text-center backdrop-blur-xl ${
-          isLightMode
-            ? 'bg-white/95 border-slate-200 shadow-slate-200/50'
-            : 'bg-slate-900/85 border-white/20 shadow-black/40'
-        }`}>
-          <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-2">
+        <div 
+          style={{ borderColor: `${layoutPrimary}44` }}
+          className={`my-auto rounded-3xl p-6 sm:p-8 border-2 shadow-xl text-center backdrop-blur-xl ${
+            isLightMode
+              ? 'bg-white/95 shadow-slate-200/50'
+              : 'bg-slate-900/85 shadow-black/40'
+          }`}
+        >
+          <div 
+            style={{ color: layoutPrimary }}
+            className="flex items-center justify-center gap-2 text-xs sm:text-sm font-black uppercase tracking-wider mb-2"
+          >
             <Lightbulb className="w-5 h-5 text-amber-400" />
             Dica do Desafio
           </div>
@@ -186,10 +218,19 @@ export const HangmanGame: React.FC<HangmanGameProps> = ({
             return (
               <div
                 key={idx}
+                style={
+                  isRevealed && guessedLetters.includes(char)
+                    ? {
+                        background: `linear-gradient(135deg, ${layoutPrimary}, ${layoutSecondary})`,
+                        borderColor: `${darkPrimary}88`,
+                        boxShadow: `0 0 20px ${layoutGlow}`,
+                      }
+                    : undefined
+                }
                 className={`w-14 h-18 sm:w-20 sm:h-24 flex items-center justify-center rounded-2xl sm:rounded-3xl text-3xl sm:text-5xl font-black transition-all shadow-lg border-2 ${
                   isRevealed
                     ? guessedLetters.includes(char)
-                      ? 'bg-emerald-600 text-white border-emerald-400 shadow-emerald-950/40 scale-105'
+                      ? 'text-white scale-105'
                       : 'bg-rose-500 text-white border-rose-300 animate-pulse'
                     : isLightMode
                     ? 'bg-slate-100 border-slate-300 text-transparent'

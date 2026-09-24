@@ -3,6 +3,7 @@ import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 import { BaseGameProps } from '../types';
 import { Gauge, Zap, Flame, Trophy, AlertTriangle, Play, RotateCcw, CheckCircle2 } from 'lucide-react';
+import { useActiveGamePalette } from '../context/GameLayoutContext';
 
 interface ReactionTimeGameProps extends BaseGameProps {
   customContent?: any;
@@ -10,20 +11,34 @@ interface ReactionTimeGameProps extends BaseGameProps {
 
 type Stage = 'idle' | 'arming' | 'counting' | 'ready' | 'go' | 'early' | 'round_complete' | 'finished';
 
-export const ReactionTimeGame: React.FC<ReactionTimeGameProps> = ({
-  onExit,
-  rankingEnabled,
-  onSubmitScore,
-  themePrimary = '#EF4444',
-  theme,
-  customBgStyle,
-  campaignName,
-  clientName,
-  splashImageUrl,
-  isLight,
-  themeMode,
-  gameLayout,
-}) => {
+export const ReactionTimeGame: React.FC<ReactionTimeGameProps> = (props) => {
+  const {
+    onExit,
+    rankingEnabled,
+    onSubmitScore,
+    themePrimary = '#EF4444',
+    theme,
+    customBgStyle,
+    campaignName,
+    clientName,
+    splashImageUrl,
+    isLight,
+    themeMode,
+    gameLayout,
+    palette,
+    layoutColorHue,
+  } = props;
+
+  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
+
   const [stage, setStage] = useState<Stage>('idle');
   const [litCount, setLitCount] = useState(0); // 0 to 5 lights
   const [currentRound, setCurrentRound] = useState(1);
@@ -36,8 +51,6 @@ export const ReactionTimeGame: React.FC<ReactionTimeGameProps> = ({
   const startTimeRef = useRef<number>(0);
   const lightsTimerRef = useRef<NodeJS.Timeout[]>([]);
   const randomGoTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  const isLightMode = isLight ?? (themeMode === 'light');
 
   // Clear timers on unmount
   useEffect(() => {
@@ -163,15 +176,17 @@ export const ReactionTimeGame: React.FC<ReactionTimeGameProps> = ({
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       customScoreLabel="Pontos"
-      themePrimary={themePrimary}
+      themePrimary={layoutPrimary}
       theme={theme}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
       clientName={clientName}
       splashImageUrl={splashImageUrl}
-      isLight={isLight}
-      themeMode={themeMode}
-      gameLayout={gameLayout}
+      isLight={isLightMode}
+      themeMode={isLightMode ? 'light' : 'dark'}
+      gameLayout={activeLayout}
+      palette={palette}
+      layoutColorHue={layoutColorHue}
     >
       <div 
         onClick={handleTouch}
@@ -179,10 +194,13 @@ export const ReactionTimeGame: React.FC<ReactionTimeGameProps> = ({
       >
         {/* Top Round Indicator & Best Time */}
         <div className="w-full flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
-            <Gauge className="w-5 h-5 text-red-500" />
+          <div 
+            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border"
+            style={{ borderColor: `${layoutPrimary}44` }}
+          >
+            <Gauge className="w-5 h-5" style={{ color: layoutPrimary }} />
             <span className="text-xs sm:text-sm font-black uppercase tracking-wider">
-              Largada: <strong className="text-white">{currentRound} de {totalRounds}</strong>
+              Largada: <strong className={isLightMode ? 'text-slate-900' : 'text-white'}>{currentRound} de {totalRounds}</strong>
             </span>
           </div>
 
@@ -199,7 +217,10 @@ export const ReactionTimeGame: React.FC<ReactionTimeGameProps> = ({
         {/* Central Display: Formula 1 Gantt Light Matrix */}
         <div className="my-auto w-full flex flex-col items-center">
           {/* 5 Light Columns */}
-          <div className="p-6 sm:p-10 rounded-3xl bg-slate-950 border-4 border-slate-800 shadow-2xl flex items-center justify-center gap-3 sm:gap-6 max-w-2xl w-full">
+          <div 
+            className="p-6 sm:p-10 rounded-3xl bg-slate-950 border-4 shadow-2xl flex items-center justify-center gap-3 sm:gap-6 max-w-2xl w-full"
+            style={{ borderColor: `${layoutPrimary}55`, boxShadow: `0 0 35px ${layoutGlow}` }}
+          >
             {[1, 2, 3, 4, 5].map((lightIdx) => {
               const isLit = litCount >= lightIdx;
               return (
@@ -298,7 +319,11 @@ export const ReactionTimeGame: React.FC<ReactionTimeGameProps> = ({
                     e.stopPropagation();
                     nextRound();
                   }}
-                  className="mt-6 px-8 py-4 rounded-2xl bg-gradient-to-r from-red-600 to-amber-600 text-white font-black text-base uppercase tracking-wider shadow-xl flex items-center gap-2"
+                  style={{
+                    background: `linear-gradient(135deg, ${layoutPrimary}, ${layoutSecondary})`,
+                    boxShadow: `0 0 25px ${layoutGlow}`
+                  }}
+                  className="mt-6 px-8 py-4 rounded-2xl text-white font-black text-base uppercase tracking-wider shadow-xl flex items-center gap-2"
                 >
                   <Play className="w-5 h-5 fill-current" />
                   <span>Próxima Largada ({currentRound + 1}/{totalRounds})</span>

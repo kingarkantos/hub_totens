@@ -9,21 +9,37 @@ interface SafeGameProps extends BaseGameProps {
   customContent?: any;
 }
 
-export const SafeGame: React.FC<SafeGameProps> = ({
-  onExit,
-  rankingEnabled,
-  onSubmitScore,
-  themePrimary = '#D97706',
-  theme,
-  customBgStyle,
-  campaignName,
-  clientName,
-  splashImageUrl,
-  customContent,
-  isLight,
-  themeMode,
-  gameLayout,
-}) => {
+import { useActiveGamePalette } from '../context/GameLayoutContext';
+
+export const SafeGame: React.FC<SafeGameProps> = (props) => {
+  const {
+    onExit,
+    rankingEnabled,
+    onSubmitScore,
+    themePrimary = '#D97706',
+    theme,
+    customBgStyle,
+    campaignName,
+    clientName,
+    splashImageUrl,
+    customContent,
+    isLight,
+    themeMode,
+    gameLayout,
+    palette,
+    layoutColorHue,
+  } = props;
+
+  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
+
   const [targetDigits, setTargetDigits] = useState<number[]>([3, 7, 5]);
   const [currentDials, setCurrentDials] = useState<number[]>([0, 0, 0]);
   const [timeLeft, setTimeLeft] = useState(40);
@@ -104,11 +120,13 @@ export const SafeGame: React.FC<SafeGameProps> = ({
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
-      themePrimary={themePrimary}
+      themePrimary={layoutPrimary}
       theme={theme}
-      isLight={isLight}
+      isLight={isLightMode}
       themeMode={themeMode}
-      gameLayout={gameLayout}
+      gameLayout={activeLayout}
+      palette={palette}
+      layoutColorHue={layoutColorHue}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
       clientName={clientName}
@@ -116,11 +134,14 @@ export const SafeGame: React.FC<SafeGameProps> = ({
     >
       <div className="w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl flex-1 flex flex-col items-center justify-between py-4 sm:py-8 px-2 sm:px-6 my-auto gap-6 sm:gap-8 select-none animate-in fade-in duration-300">
         {/* Safe Vault Graphic */}
-        <div className="w-28 h-28 sm:w-36 sm:h-36 p-5 sm:p-7 rounded-full bg-slate-900/90 border-4 border-amber-400 shadow-2xl flex items-center justify-center backdrop-blur-xl">
+        <div 
+          style={{ borderColor: layoutPrimary, boxShadow: `0 0 30px ${layoutGlow}` }}
+          className="w-28 h-28 sm:w-36 sm:h-36 p-5 sm:p-7 rounded-full bg-slate-900/90 border-4 shadow-2xl flex items-center justify-center backdrop-blur-xl"
+        >
           {unlocked ? (
             <Unlock className="w-14 h-14 sm:w-18 sm:h-18 text-emerald-400 animate-bounce" />
           ) : (
-            <Lock className="w-14 h-14 sm:w-18 sm:h-18 text-amber-400" />
+            <Lock style={{ color: layoutPrimary }} className="w-14 h-14 sm:w-18 sm:h-18" />
           )}
         </div>
 
@@ -135,7 +156,8 @@ export const SafeGame: React.FC<SafeGameProps> = ({
             return (
               <div
                 key={idx}
-                className="flex flex-col items-center p-4 sm:p-6 rounded-3xl bg-slate-900/85 border-2 sm:border-4 border-white/20 backdrop-blur-xl shadow-2xl"
+                style={{ borderColor: `${layoutPrimary}44` }}
+                className="flex flex-col items-center p-4 sm:p-6 rounded-3xl bg-slate-900/85 border-2 sm:border-4 backdrop-blur-xl shadow-2xl"
               >
                 <button
                   onClick={() => changeDial(idx, 1)}
@@ -144,7 +166,10 @@ export const SafeGame: React.FC<SafeGameProps> = ({
                   ▲
                 </button>
 
-                <div className="w-22 h-26 sm:w-30 sm:h-36 rounded-2xl sm:rounded-3xl bg-slate-950 border-2 sm:border-4 border-white/25 flex items-center justify-center text-5xl sm:text-7xl md:text-8xl font-mono font-black text-amber-400 shadow-inner">
+                <div 
+                  style={{ color: layoutPrimary, borderColor: `${layoutPrimary}55` }}
+                  className="w-22 h-26 sm:w-30 sm:h-36 rounded-2xl sm:rounded-3xl bg-slate-950 border-2 sm:border-4 flex items-center justify-center text-5xl sm:text-7xl md:text-8xl font-mono font-black shadow-inner"
+                >
                   {currentDials[idx]}
                 </div>
 
@@ -166,8 +191,12 @@ export const SafeGame: React.FC<SafeGameProps> = ({
         {/* Large Unlock Button */}
         <button
           onClick={testUnlock}
-          style={{ backgroundColor: themePrimary }}
-          className="w-full py-6 sm:py-8 px-8 rounded-3xl text-white font-black text-xl sm:text-3xl uppercase tracking-wider shadow-2xl active:scale-95 transition-all hover:brightness-110 flex items-center justify-center gap-4 border-4 border-white/20"
+          style={{ 
+            backgroundColor: layoutPrimary,
+            boxShadow: `0 10px 30px ${layoutGlow}`,
+            borderColor: `${darkPrimary}88`,
+          }}
+          className="w-full py-6 sm:py-8 px-8 rounded-3xl text-white font-black text-xl sm:text-3xl uppercase tracking-wider shadow-2xl active:scale-95 transition-all hover:brightness-110 flex items-center justify-center gap-4 border-4"
         >
           <Unlock className="w-8 h-8 sm:w-10 sm:h-10" />
           <span>DESTRANCAR COFRE</span>

@@ -4,6 +4,7 @@ import { sound } from '../lib/audio';
 import { MapPin, Check, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 
 import { BaseGameProps } from '../types';
+import { useActiveGamePalette } from '../context/GameLayoutContext';
 
 interface MapEpiGameProps extends BaseGameProps {}
 
@@ -22,21 +23,33 @@ const SECTORS: SectorMatch[] = [
   { id: 'weld', sectorName: 'Cabine de Soldagem Mig/Mag', requiredEpi: 'Máscara de Escurecimento', epiEmoji: '🥽', color: 'bg-rose-500' },
 ];
 
-export const MapEpiGame: React.FC<MapEpiGameProps> = ({
-  onExit,
-  rankingEnabled,
-  onSubmitScore,
-  themePrimary = '#E11D48',
-  theme,
-  customBgStyle,
-  campaignName,
-  clientName,
-  splashImageUrl,
-  isLight,
-  themeMode,
-  gameLayout,
-}) => {
-  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
+export const MapEpiGame: React.FC<MapEpiGameProps> = (props) => {
+  const {
+    onExit,
+    rankingEnabled,
+    onSubmitScore,
+    themePrimary = '#E11D48',
+    theme,
+    customBgStyle,
+    campaignName,
+    clientName,
+    splashImageUrl,
+    isLight,
+    themeMode,
+    gameLayout,
+    palette,
+    layoutColorHue,
+  } = props;
+
+  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
   const [selectedEpiId, setSelectedEpiId] = useState<string | null>(null);
   const [matchedIds, setMatchedIds] = useState<string[]>([]);
   const [score, setScore] = useState(0);
@@ -121,7 +134,7 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = ({
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
-      themePrimary={themePrimary}
+      themePrimary={layoutPrimary}
       theme={theme}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
@@ -129,17 +142,22 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = ({
       splashImageUrl={splashImageUrl}
       isLight={isLightMode}
       themeMode={isLightMode ? 'light' : 'dark'}
-      gameLayout={gameLayout}
+      gameLayout={activeLayout}
+      palette={palette}
+      layoutColorHue={layoutColorHue}
     >
       <div className="flex flex-col flex-1 w-full max-w-4xl lg:max-w-5xl mx-auto justify-between py-4 sm:py-8 px-2 sm:px-6 gap-5 sm:gap-8 select-none animate-in fade-in duration-300">
         {/* Instruction Header */}
-        <div className={`rounded-2xl px-6 py-3.5 shadow-sm border-2 text-center ${
-          isLightMode
-            ? 'bg-rose-50 border-rose-200/80 text-rose-950'
-            : 'bg-slate-900/90 border-rose-500/30 text-rose-300'
-        }`}>
+        <div 
+          className={`rounded-2xl px-6 py-3.5 shadow-sm border-2 text-center ${
+            isLightMode
+              ? 'bg-slate-50/90 text-slate-900'
+              : 'bg-slate-900/90 text-white'
+          }`}
+          style={{ borderColor: `${layoutPrimary}55` }}
+        >
           <span className="text-sm sm:text-base font-black uppercase tracking-wider flex items-center justify-center gap-2">
-            <MapPin className="w-5 h-5 text-rose-500" />
+            <MapPin className="w-5 h-5" style={{ color: layoutPrimary }} />
             Toque no EPI abaixo e depois toque no Setor correspondente no mapa
           </span>
         </div>
@@ -155,16 +173,23 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = ({
                 type="button"
                 disabled={isMatched}
                 onClick={() => handleSelectSector(sector.id)}
+                style={
+                  !isMatched && selectedEpiId
+                    ? { borderColor: layoutPrimary, boxShadow: `0 0 25px ${layoutGlow}` }
+                    : !isMatched
+                    ? { borderColor: `${layoutPrimary}44` }
+                    : undefined
+                }
                 className={`p-5 sm:p-7 rounded-3xl border-2 sm:border-4 transition-all active:scale-95 text-left flex flex-col justify-between min-h-[140px] sm:min-h-[160px] shadow-xl ${
                   isMatched
                     ? isLightMode
                       ? 'bg-emerald-50 border-emerald-500 text-emerald-950 opacity-90'
                       : 'bg-emerald-950/70 border-emerald-500 text-emerald-200 opacity-90'
                     : selectedEpiId
-                    ? 'bg-white dark:bg-slate-900 border-rose-400 hover:border-rose-600 ring-4 ring-rose-200/50'
+                    ? isLightMode ? 'bg-white ring-4 ring-offset-2' : 'bg-slate-900 ring-4 ring-offset-2 ring-offset-black'
                     : isLightMode
-                    ? 'bg-white border-slate-200 text-slate-900 shadow-md'
-                    : 'bg-slate-900/85 border-white/20 text-white shadow-md'
+                    ? 'bg-white text-slate-900 shadow-md'
+                    : 'bg-slate-900/85 text-white shadow-md'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -176,7 +201,7 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = ({
                       <Check className="w-5 h-5 stroke-[3]" />
                     </span>
                   ) : (
-                    <MapPin className="w-6 h-6 text-rose-500" />
+                    <MapPin className="w-6 h-6" style={{ color: layoutPrimary }} />
                   )}
                 </div>
 
@@ -196,7 +221,10 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = ({
         </div>
 
         {/* Available EPIs row */}
-        <div className="bg-slate-900/90 rounded-3xl p-4 sm:p-6 border-2 border-slate-800 shadow-2xl backdrop-blur-xl">
+        <div 
+          className="bg-slate-900/90 rounded-3xl p-4 sm:p-6 border-2 shadow-2xl backdrop-blur-xl"
+          style={{ borderColor: `${layoutPrimary}44` }}
+        >
           <div className="text-xs sm:text-sm font-black uppercase text-slate-400 text-center mb-3">
             EPIs Disponíveis (Toque para selecionar)
           </div>
@@ -211,12 +239,23 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = ({
                   type="button"
                   disabled={isMatched}
                   onClick={() => handleSelectEpi(epi.id)}
+                  style={
+                    isSelected
+                      ? {
+                          background: `linear-gradient(135deg, ${layoutPrimary}, ${layoutSecondary})`,
+                          borderColor: '#ffffff',
+                          boxShadow: `0 0 25px ${layoutGlow}`
+                        }
+                      : isMatched
+                      ? undefined
+                      : { borderColor: `${layoutPrimary}33` }
+                  }
                   className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center gap-2 transition-all active:scale-95 border-2 ${
                     isMatched
                       ? 'bg-slate-800/40 opacity-30 text-slate-500 line-through border-transparent'
                       : isSelected
-                      ? 'bg-rose-600 text-white shadow-xl shadow-rose-950/60 scale-105 ring-4 ring-white border-rose-400'
-                      : 'bg-slate-800 text-white hover:bg-slate-700 border-slate-700 shadow-md'
+                      ? 'text-white scale-105 ring-4 ring-white'
+                      : 'bg-slate-800 text-white hover:bg-slate-700 shadow-md'
                   }`}
                 >
                   <span className="text-4xl sm:text-5xl">{epi.epiEmoji}</span>

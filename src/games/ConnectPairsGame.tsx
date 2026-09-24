@@ -16,22 +16,36 @@ const DEFAULT_PAIRS: ConnectPairCustomItem[] = [
   { left: 'Inalação de poeiras e fumos', right: 'Máscara com Filtro PFF2' },
 ];
 
-export const ConnectPairsGame: React.FC<ConnectPairsGameProps> = ({
-  onExit,
-  rankingEnabled,
-  onSubmitScore,
-  themePrimary = '#0284C7',
-  theme,
-  customBgStyle,
-  campaignName,
-  clientName,
-  splashImageUrl,
-  customContent,
-  isLight,
-  themeMode,
-  gameLayout,
-}) => {
-  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
+import { useActiveGamePalette } from '../context/GameLayoutContext';
+
+export const ConnectPairsGame: React.FC<ConnectPairsGameProps> = (props) => {
+  const {
+    onExit,
+    rankingEnabled,
+    onSubmitScore,
+    themePrimary = '#0284C7',
+    theme,
+    customBgStyle,
+    campaignName,
+    clientName,
+    splashImageUrl,
+    customContent,
+    isLight,
+    themeMode,
+    gameLayout,
+    palette,
+    layoutColorHue,
+  } = props;
+
+  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
   const basePairs = useMemo(() => {
     return customContent && customContent.length >= 3 ? customContent.slice(0, 4) : DEFAULT_PAIRS;
   }, [customContent]);
@@ -145,7 +159,7 @@ export const ConnectPairsGame: React.FC<ConnectPairsGameProps> = ({
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
-      themePrimary={themePrimary}
+      themePrimary={layoutPrimary}
       theme={theme}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
@@ -153,17 +167,25 @@ export const ConnectPairsGame: React.FC<ConnectPairsGameProps> = ({
       splashImageUrl={splashImageUrl}
       isLight={isLightMode}
       themeMode={isLightMode ? 'light' : 'dark'}
-      gameLayout={gameLayout}
+      gameLayout={activeLayout}
+      palette={palette}
+      layoutColorHue={layoutColorHue}
     >
       <div className="flex flex-col flex-1 w-full max-w-4xl lg:max-w-5xl mx-auto justify-between py-4 sm:py-8 px-2 sm:px-6 gap-5 sm:gap-8 select-none animate-in fade-in duration-300">
         {/* Instruction Header */}
-        <div className={`rounded-2xl px-6 py-3.5 shadow-sm border-2 text-center ${
-          isLightMode 
-            ? 'bg-sky-50 border-sky-200/80 text-sky-900' 
-            : 'bg-slate-900/90 border-sky-500/30 text-sky-300'
-        }`}>
-          <span className="text-sm sm:text-base font-black uppercase tracking-wider flex items-center justify-center gap-2">
-            <Link className="w-5 h-5 text-sky-500" />
+        <div 
+          style={{ borderColor: `${layoutPrimary}44` }}
+          className={`rounded-2xl px-6 py-3.5 shadow-sm border-2 text-center ${
+            isLightMode 
+              ? 'bg-white/95 text-slate-900 shadow-slate-200/50' 
+              : 'bg-slate-900/90 text-white'
+          }`}
+        >
+          <span 
+            style={{ color: layoutPrimary }}
+            className="text-sm sm:text-base font-black uppercase tracking-wider flex items-center justify-center gap-2"
+          >
+            <Link className="w-5 h-5" />
             Toque em um item da esquerda e no correspondente da direita
           </span>
         </div>
@@ -185,16 +207,30 @@ export const ConnectPairsGame: React.FC<ConnectPairsGameProps> = ({
                   type="button"
                   disabled={isMatched}
                   onClick={() => handleLeftClick(pair.left)}
+                  style={
+                    isSelected
+                      ? {
+                          backgroundColor: layoutPrimary,
+                          color: '#020617',
+                          boxShadow: `0 0 20px ${layoutGlow}`,
+                          borderColor: '#ffffff',
+                        }
+                      : !isMatched
+                      ? {
+                          borderColor: `${layoutPrimary}33`,
+                        }
+                      : undefined
+                  }
                   className={`w-full min-h-[85px] sm:min-h-[105px] p-4 sm:p-6 rounded-2xl sm:rounded-3xl font-black text-base sm:text-xl text-left transition-all active:scale-95 border-2 flex items-center justify-between gap-3 shadow-lg ${
                     isMatched
                       ? isLightMode 
                         ? 'bg-emerald-50 text-emerald-950 border-emerald-400 opacity-80' 
                         : 'bg-emerald-950/60 text-emerald-200 border-emerald-500 opacity-70'
                       : isSelected
-                      ? 'bg-sky-500 text-white border-sky-400 shadow-xl shadow-sky-950/50 scale-[1.02] ring-4 ring-sky-300'
+                      ? 'scale-[1.02] ring-4 ring-white'
                       : isLightMode
-                      ? 'bg-white text-slate-900 border-slate-200 hover:border-sky-400 shadow-md'
-                      : 'bg-slate-900/85 text-white border-white/20 hover:border-sky-400 shadow-md'
+                      ? 'bg-white text-slate-900 border-slate-200 shadow-md'
+                      : 'bg-slate-900/85 text-white shadow-md'
                   }`}
                 >
                   <span className="leading-snug">{pair.left}</span>
@@ -221,16 +257,30 @@ export const ConnectPairsGame: React.FC<ConnectPairsGameProps> = ({
                   type="button"
                   disabled={isMatched}
                   onClick={() => handleRightClick(rightText)}
+                  style={
+                    isSelected
+                      ? {
+                          backgroundColor: layoutPrimary,
+                          color: '#020617',
+                          boxShadow: `0 0 20px ${layoutGlow}`,
+                          borderColor: '#ffffff',
+                        }
+                      : !isMatched
+                      ? {
+                          borderColor: `${layoutPrimary}33`,
+                        }
+                      : undefined
+                  }
                   className={`w-full min-h-[85px] sm:min-h-[105px] p-4 sm:p-6 rounded-2xl sm:rounded-3xl font-black text-base sm:text-xl text-left transition-all active:scale-95 border-2 flex items-center justify-between gap-3 shadow-lg ${
                     isMatched
                       ? isLightMode 
                         ? 'bg-emerald-50 text-emerald-950 border-emerald-400 opacity-80' 
                         : 'bg-emerald-950/60 text-emerald-200 border-emerald-500 opacity-70'
                       : isSelected
-                      ? 'bg-sky-500 text-white border-sky-400 shadow-xl shadow-sky-950/50 scale-[1.02] ring-4 ring-sky-300'
+                      ? 'scale-[1.02] ring-4 ring-white'
                       : isLightMode
-                      ? 'bg-white text-slate-900 border-slate-200 hover:border-sky-400 shadow-md'
-                      : 'bg-slate-900/85 text-white border-white/20 hover:border-sky-400 shadow-md'
+                      ? 'bg-white text-slate-900 border-slate-200 shadow-md'
+                      : 'bg-slate-900/85 text-white shadow-md'
                   }`}
                 >
                   <span className="leading-snug">{rightText}</span>

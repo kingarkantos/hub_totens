@@ -15,22 +15,36 @@ const PADS = [
   { id: 3, color: 'bg-blue-600', activeColor: 'bg-blue-300', border: 'border-blue-400', label: 'Azul' },
 ];
 
-export const GeniusGame: React.FC<GeniusGameProps> = ({
-  onExit,
-  rankingEnabled,
-  onSubmitScore,
-  themePrimary = '#06B6D4',
-  theme,
-  customBgStyle,
-  campaignName,
-  clientName,
-  splashImageUrl,
-  customContent,
-  isLight,
-  themeMode,
-  gameLayout,
-}) => {
-  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
+import { useActiveGamePalette } from '../context/GameLayoutContext';
+
+export const GeniusGame: React.FC<GeniusGameProps> = (props) => {
+  const {
+    onExit,
+    rankingEnabled,
+    onSubmitScore,
+    themePrimary = '#06B6D4',
+    theme,
+    customBgStyle,
+    campaignName,
+    clientName,
+    splashImageUrl,
+    customContent,
+    isLight,
+    themeMode,
+    gameLayout,
+    palette,
+    layoutColorHue,
+  } = props;
+
+  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
   const [sequence, setSequence] = useState<number[]>([]);
   const [playerIndex, setPlayerIndex] = useState(0);
   const [activePad, setActivePad] = useState<number | null>(null);
@@ -118,7 +132,7 @@ export const GeniusGame: React.FC<GeniusGameProps> = ({
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
-      themePrimary={themePrimary}
+      themePrimary={layoutPrimary}
       theme={theme}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
@@ -126,22 +140,30 @@ export const GeniusGame: React.FC<GeniusGameProps> = ({
       splashImageUrl={splashImageUrl}
       isLight={isLightMode}
       themeMode={isLightMode ? 'light' : 'dark'}
-      gameLayout={gameLayout}
+      gameLayout={activeLayout}
+      palette={palette}
+      layoutColorHue={layoutColorHue}
     >
       <div className="w-full max-w-xl sm:max-w-2xl lg:max-w-3xl flex-1 flex flex-col items-center justify-between py-4 sm:py-8 px-2 sm:px-6 my-auto gap-6 sm:gap-8 select-none animate-in fade-in duration-300">
-        <div className={`w-full flex items-center justify-between text-sm sm:text-lg font-black px-5 py-3.5 rounded-2xl border-2 ${
-          isLightMode
-            ? 'bg-white/90 border-slate-200 text-slate-800 shadow-sm'
-            : 'bg-slate-900/85 border-white/20 text-slate-300 backdrop-blur-xl'
-        }`}>
-          <span>Rodada: <strong className="text-amber-500 font-mono text-base sm:text-xl">{round}</strong></span>
-          <span className={isPlayingSeq ? 'text-amber-400 animate-pulse' : 'text-emerald-400'}>
+        <div 
+          style={{ borderColor: `${layoutPrimary}44` }}
+          className={`w-full flex items-center justify-between text-sm sm:text-lg font-black px-5 py-3.5 rounded-2xl border-2 ${
+            isLightMode
+              ? 'bg-white/90 border-slate-200 text-slate-800 shadow-sm'
+              : 'bg-slate-900/85 border-white/20 text-slate-300 backdrop-blur-xl'
+          }`}
+        >
+          <span>Rodada: <strong style={{ color: layoutPrimary }} className="font-mono text-base sm:text-xl">{round}</strong></span>
+          <span style={isPlayingSeq ? { color: layoutPrimary } : undefined} className={isPlayingSeq ? 'animate-pulse font-black' : 'text-emerald-400'}>
             {isPlayingSeq ? 'Observe a sequência...' : 'Sua vez de repetir!'}
           </span>
         </div>
 
         {/* 2x2 Genius Grid - Large Touch Pads */}
-        <div className="grid grid-cols-2 gap-5 sm:gap-8 w-full max-w-[520px] sm:max-w-[600px] aspect-square p-5 sm:p-8 bg-slate-900/90 backdrop-blur-xl rounded-3xl border-4 border-white/25 shadow-2xl my-auto">
+        <div 
+          style={{ borderColor: `${layoutPrimary}44`, boxShadow: `0 0 35px ${layoutGlow}33` }}
+          className="grid grid-cols-2 gap-5 sm:gap-8 w-full max-w-[520px] sm:max-w-[600px] aspect-square p-5 sm:p-8 bg-slate-900/90 backdrop-blur-xl rounded-3xl border-4 shadow-2xl my-auto"
+        >
           {PADS.map((pad) => {
             const isActive = activePad === pad.id;
             return (

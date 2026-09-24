@@ -527,6 +527,14 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
     const gameTimer = campaign.games_config?.[`${activeGame.id}_time_limit`];
     const gameTotalTimer = campaign.games_config?.[`${activeGame.id}_total_time_limit`];
 
+    const activeGameLayout: GameLayoutId = campaign.games_config?.[`${activeGame.id}_layout`] || campaign.games_config?.game_layout || 'modern_glass';
+    const activeGameHue = campaign.games_config?.[`${activeGame.id}_layout_color_hue`] !== undefined
+      ? Number(campaign.games_config[`${activeGame.id}_layout_color_hue`])
+      : layoutColorHue;
+    const activeGamePalette = activeGameHue !== undefined
+      ? generateLayoutPalette(activeGameHue, isLight)
+      : sliderPalette || undefined;
+
     const commonProps = {
       onExit: () => {
         setActiveGame(null);
@@ -537,7 +545,7 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
       rankingEnabled: campaign.ranking_enabled,
       onSubmitScore: (name: string, score: number) =>
         handleScoreSubmit(name, score),
-      themePrimary: theme.primary,
+      themePrimary: activeGamePalette?.primary || theme.primary,
       theme,
       isLight,
       themeMode: (isLight ? 'light' : 'dark') as 'light' | 'dark',
@@ -550,11 +558,11 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
       clientName: campaign.client_name,
       splashImageUrl: campaign.splash_image_url,
       customContent: campaign.games_config?.[activeGame.id],
-      gameLayout: campaign.games_config?.[`${activeGame.id}_layout`] || campaign.games_config?.game_layout || 'modern_glass',
+      gameLayout: activeGameLayout,
       fontId: campaign.games_config?.[`${activeGame.id}_font`] || campaign.games_config?.campaign_font || 'outfit',
       fontFamily: getFontFamilyById(campaign.games_config?.[`${activeGame.id}_font`] || campaign.games_config?.campaign_font || 'outfit'),
-      palette: sliderPalette || undefined,
-      layoutColorHue,
+      palette: activeGamePalette,
+      layoutColorHue: activeGameHue,
     };
 
     const renderActiveGame = () => {
@@ -611,7 +619,7 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
     };
 
     return (
-      <GameLayoutProvider layout={commonProps.gameLayout} hue={layoutColorHue} isLight={isLight} onLayoutChange={() => {}}>
+      <GameLayoutProvider layout={commonProps.gameLayout} hue={activeGameHue} isLight={isLight} onLayoutChange={() => {}}>
         {renderActiveGame()}
       </GameLayoutProvider>
     );

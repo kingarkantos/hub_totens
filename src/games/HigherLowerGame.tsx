@@ -3,6 +3,7 @@ import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 import { BaseGameProps } from '../types';
 import { ArrowUp, ArrowDown, Heart, Flame, Sparkles, TrendingUp, CheckCircle2, XCircle } from 'lucide-react';
+import { useActiveGamePalette } from '../context/GameLayoutContext';
 
 interface HigherLowerGameProps extends BaseGameProps {
   customContent?: any;
@@ -45,21 +46,35 @@ const getRandomCard = (excludeValue?: number): MetricCard => {
   return { ...selected, value: finalValue };
 };
 
-export const HigherLowerGame: React.FC<HigherLowerGameProps> = ({
-  onExit,
-  rankingEnabled,
-  onSubmitScore,
-  themePrimary = '#3B82F6',
-  theme,
-  customBgStyle,
-  campaignName,
-  clientName,
-  splashImageUrl,
-  isLight,
-  themeMode,
-  totalTimeLimit,
-  gameLayout,
-}) => {
+export const HigherLowerGame: React.FC<HigherLowerGameProps> = (props) => {
+  const {
+    onExit,
+    rankingEnabled,
+    onSubmitScore,
+    themePrimary = '#3B82F6',
+    theme,
+    customBgStyle,
+    campaignName,
+    clientName,
+    splashImageUrl,
+    isLight,
+    themeMode,
+    totalTimeLimit,
+    gameLayout,
+    palette,
+    layoutColorHue,
+  } = props;
+
+  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
+
   const initialTime = totalTimeLimit !== undefined && totalTimeLimit > 0 ? totalTimeLimit : 45;
   const [timeLeft, setTimeLeft] = useState(initialTime);
   const [score, setScore] = useState(0);
@@ -70,8 +85,6 @@ export const HigherLowerGame: React.FC<HigherLowerGameProps> = ({
   const [nextCard, setNextCard] = useState<MetricCard | null>(null);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
   const [gameOver, setGameOver] = useState(false);
-
-  const isLightMode = isLight ?? (themeMode === 'light');
 
   // Countdown timer
   useEffect(() => {
@@ -150,41 +163,54 @@ export const HigherLowerGame: React.FC<HigherLowerGameProps> = ({
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       correctAnswers={maxStreak}
       customScoreLabel="Pontos"
-      themePrimary={themePrimary}
+      themePrimary={layoutPrimary}
       theme={theme}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
       clientName={clientName}
       splashImageUrl={splashImageUrl}
-      isLight={isLight}
-      themeMode={themeMode}
-      gameLayout={gameLayout}
+      isLight={isLightMode}
+      themeMode={isLightMode ? 'light' : 'dark'}
+      gameLayout={activeLayout}
+      palette={palette}
+      layoutColorHue={layoutColorHue}
     >
       <div className="relative w-full h-full flex flex-col items-center justify-between p-4 sm:p-8 max-w-4xl mx-auto">
         {/* Top HUD: Lives & Streak */}
         <div className="w-full flex items-center justify-between gap-4">
           {/* Lives hearts */}
-          <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
+          <div 
+            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border"
+            style={{ borderColor: `${layoutPrimary}44` }}
+          >
             <span className="text-xs font-bold uppercase text-slate-300 mr-1">Vidas:</span>
             {[1, 2, 3].map((heart) => (
-              <Heart
-                key={heart}
-                className={`w-5 h-5 transition-transform ${
-                  heart <= lives
-                    ? 'text-rose-500 fill-rose-500 scale-110'
-                    : 'text-slate-600 scale-90 opacity-40'
-                }`}
-              />
-            ))}
+               <Heart
+                 key={heart}
+                 className={`w-5 h-5 transition-transform ${
+                   heart <= lives
+                     ? 'text-rose-500 fill-rose-500 scale-110'
+                     : 'text-slate-600 scale-90 opacity-40'
+                 }`}
+               />
+             ))}
           </div>
 
           {/* Current Streak with fire */}
           <div
             className={`flex items-center gap-2 px-5 py-2 rounded-2xl transition-all ${
               streak > 0
-                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-orange-500/25 scale-105 animate-pulse'
+                ? 'text-white shadow-lg scale-105 animate-pulse'
                 : 'bg-white/10 text-slate-300 border border-white/10'
             }`}
+            style={
+              streak > 0
+                ? {
+                    background: `linear-gradient(135deg, ${layoutPrimary}, ${layoutSecondary})`,
+                    boxShadow: `0 4px 20px ${layoutGlow}`
+                  }
+                : undefined
+            }
           >
             <Flame className="w-4 h-4 fill-current" />
             <span className="text-xs sm:text-sm font-black uppercase tracking-wider">
@@ -197,13 +223,25 @@ export const HigherLowerGame: React.FC<HigherLowerGameProps> = ({
         <div className="w-full max-w-2xl my-auto grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 items-center">
           {/* Card 1: Reference Card */}
           <div
+            style={{
+              borderColor: `${layoutPrimary}66`,
+              boxShadow: `0 0 30px ${layoutGlow}`
+            }}
             className={`p-6 sm:p-8 rounded-3xl border-2 transition-all shadow-2xl flex flex-col items-center text-center select-none ${
               isLightMode
-                ? 'bg-white/95 border-slate-200 text-slate-900'
-                : 'bg-slate-900/90 border-white/20 text-white'
+                ? 'bg-white/95 text-slate-900'
+                : 'bg-slate-900/90 text-white backdrop-blur-xl'
             }`}
           >
-            <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 mb-3">
+            <span 
+              className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full mb-3"
+              style={{
+                backgroundColor: `${layoutPrimary}22`,
+                borderColor: `${layoutPrimary}55`,
+                color: layoutPrimary,
+                borderWidth: 1
+              }}
+            >
               {currentCard.category}
             </span>
 
@@ -212,10 +250,13 @@ export const HigherLowerGame: React.FC<HigherLowerGameProps> = ({
             </h3>
 
             <div className="my-2">
-              <span className="text-5xl sm:text-6xl font-black font-mono tracking-tight text-white drop-shadow">
+              <span className={`text-5xl sm:text-6xl font-black font-mono tracking-tight drop-shadow ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
                 {currentCard.value}
               </span>
-              <span className="text-lg font-bold text-blue-400 ml-2 font-mono">
+              <span 
+                className="text-lg font-bold ml-2 font-mono"
+                style={{ color: layoutPrimary }}
+              >
                 {currentCard.unit}
               </span>
             </div>
@@ -227,6 +268,14 @@ export const HigherLowerGame: React.FC<HigherLowerGameProps> = ({
 
           {/* Card 2: Next Card / Prediction Target */}
           <div
+            style={
+              nextCard
+                ? {
+                    borderColor: `${layoutSecondary}66`,
+                    boxShadow: `0 0 25px ${layoutGlow}`
+                  }
+                : undefined
+            }
             className={`p-6 sm:p-8 rounded-3xl border-2 transition-all shadow-2xl flex flex-col items-center justify-center text-center relative select-none overflow-hidden ${
               feedback === 'correct'
                 ? 'bg-emerald-500/20 border-emerald-400 scale-[1.02]'
@@ -239,17 +288,28 @@ export const HigherLowerGame: React.FC<HigherLowerGameProps> = ({
           >
             {nextCard ? (
               <div className="animate-in zoom-in duration-200 flex flex-col items-center">
-                <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 mb-3">
+                <span 
+                  className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full mb-3"
+                  style={{
+                    backgroundColor: `${layoutSecondary}22`,
+                    borderColor: `${layoutSecondary}55`,
+                    color: layoutSecondary,
+                    borderWidth: 1
+                  }}
+                >
                   {nextCard.category}
                 </span>
                 <h3 className="text-base sm:text-lg font-bold text-slate-400 mb-2">
                   {nextCard.title}
                 </h3>
                 <div className="my-2">
-                  <span className="text-5xl sm:text-6xl font-black font-mono tracking-tight text-white drop-shadow">
+                  <span className={`text-5xl sm:text-6xl font-black font-mono tracking-tight drop-shadow ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
                     {nextCard.value}
                   </span>
-                  <span className="text-lg font-bold text-indigo-400 ml-2 font-mono">
+                  <span 
+                    className="text-lg font-bold ml-2 font-mono"
+                    style={{ color: layoutSecondary }}
+                  >
                     {nextCard.unit}
                   </span>
                 </div>
@@ -265,8 +325,11 @@ export const HigherLowerGame: React.FC<HigherLowerGameProps> = ({
               </div>
             ) : (
               <div className="flex flex-col items-center py-6">
-                <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-3 animate-pulse">
-                  <TrendingUp className="w-8 h-8 text-amber-400" />
+                <div 
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mb-3 animate-pulse"
+                  style={{ backgroundColor: `${layoutPrimary}22` }}
+                >
+                  <TrendingUp className="w-8 h-8" style={{ color: layoutPrimary }} />
                 </div>
                 <h4 className="text-lg font-black tracking-wide">Próximo Valor</h4>
                 <p className="text-xs text-slate-400 max-w-xs mt-1">

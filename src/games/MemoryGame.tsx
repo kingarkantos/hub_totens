@@ -25,22 +25,37 @@ const DEFAULT_ICONS: MemoryCustomPair[] = [
   { symbol: '🏁', label: 'Performance R' },
 ];
 
-export const MemoryGame: React.FC<MemoryGameProps> = ({
-  onExit,
-  rankingEnabled,
-  onSubmitScore,
-  themePrimary = '#059669',
-  theme,
-  customBgStyle,
-  campaignName,
-  clientName,
-  splashImageUrl,
-  customContent,
-  isLight,
-  themeMode,
-  gameLayout,
-}) => {
-  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
+import { useActiveGamePalette } from '../context/GameLayoutContext';
+
+export const MemoryGame: React.FC<MemoryGameProps> = (props) => {
+  const {
+    onExit,
+    rankingEnabled,
+    onSubmitScore,
+    themePrimary = '#059669',
+    theme,
+    customBgStyle,
+    campaignName,
+    clientName,
+    splashImageUrl,
+    customContent,
+    isLight,
+    themeMode,
+    gameLayout,
+    palette,
+    layoutColorHue,
+  } = props;
+
+  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
+
   const ICONS = customContent && customContent.length >= 4 ? customContent : DEFAULT_ICONS;
   const [cards, setCards] = useState<Card[]>([]);
   const [flipped, setFlipped] = useState<number[]>([]);
@@ -136,7 +151,7 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
-      themePrimary={themePrimary}
+      themePrimary={layoutPrimary}
       theme={theme}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
@@ -144,20 +159,28 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({
       splashImageUrl={splashImageUrl}
       isLight={isLightMode}
       themeMode={isLightMode ? 'light' : 'dark'}
-      gameLayout={gameLayout}
+      gameLayout={activeLayout}
+      palette={palette}
+      layoutColorHue={layoutColorHue}
     >
       <div className="w-full max-w-3xl sm:max-w-4xl lg:max-w-5xl flex-1 flex flex-col items-center justify-between gap-6 py-4 sm:py-8 px-2 sm:px-6 my-auto select-none animate-in fade-in duration-300">
-        <div className={`w-full flex justify-between text-sm sm:text-lg font-black px-4 py-3 rounded-2xl border-2 ${
-          isLightMode 
-            ? 'bg-white/90 border-slate-200 text-slate-800 shadow-sm' 
-            : 'bg-slate-900/80 border-white/20 text-slate-300 backdrop-blur-md'
-        }`}>
+        <div 
+          style={{ borderColor: `${layoutPrimary}44` }}
+          className={`w-full flex justify-between text-sm sm:text-lg font-black px-4 py-3 rounded-2xl border-2 ${
+            isLightMode 
+              ? 'bg-white/90 text-slate-800 shadow-sm' 
+              : 'bg-slate-900/80 text-slate-300 backdrop-blur-md'
+          }`}
+        >
           <span>Movimentos: <strong className={isLightMode ? 'text-slate-950 font-mono' : 'text-white font-mono'}>{moves}</strong></span>
-          <span>Pares Encontrados: <strong className="text-emerald-500 font-mono">{cards.filter(c => c.matched).length / 2} / {ICONS.length}</strong></span>
+          <span>Pares Encontrados: <strong style={{ color: layoutPrimary }} className="font-mono">{cards.filter(c => c.matched).length / 2} / {ICONS.length}</strong></span>
         </div>
 
         {/* 4x3 Grid - Super tactile, large touch cards for totems */}
-        <div className="grid grid-cols-4 gap-3.5 sm:gap-6 w-full p-5 sm:p-10 bg-slate-900/85 backdrop-blur-xl rounded-3xl border-4 border-white/20 shadow-2xl my-auto">
+        <div 
+          style={{ borderColor: `${layoutPrimary}44`, boxShadow: `0 0 35px ${layoutGlow}33` }}
+          className="grid grid-cols-4 gap-3.5 sm:gap-6 w-full p-5 sm:p-10 bg-slate-900/85 backdrop-blur-xl rounded-3xl border-4 shadow-2xl my-auto"
+        >
           {cards.map((card) => {
             const isFlipped = flipped.includes(card.id) || card.matched;
             return (
@@ -165,12 +188,28 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({
                 key={card.id}
                 onClick={() => handleCardClick(card.id)}
                 disabled={isFlipped}
+                style={
+                  isFlipped
+                    ? card.matched
+                      ? {
+                          borderColor: '#10b981',
+                          boxShadow: '0 0 20px rgba(16, 185, 129, 0.4)',
+                        }
+                      : {
+                          borderColor: layoutPrimary,
+                          boxShadow: `0 0 20px ${layoutGlow}`,
+                          backgroundColor: `${layoutPrimary}22`,
+                        }
+                    : {
+                        borderColor: `${layoutPrimary}33`,
+                      }
+                }
                 className={`aspect-square rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center p-2 sm:p-4 font-black border-2 sm:border-4 transition-all duration-300 active:scale-95 shadow-lg ${
                   isFlipped
                     ? card.matched
-                      ? 'bg-emerald-600/40 border-emerald-400 text-white shadow-xl shadow-emerald-950/60 scale-[1.02]'
-                      : 'bg-slate-800 border-amber-400 text-white shadow-xl shadow-amber-950/50 scale-[1.02]'
-                    : 'bg-gradient-to-br from-slate-800 to-slate-900 border-white/15 hover:border-white/40 text-slate-500'
+                      ? 'bg-emerald-600/40 text-white scale-[1.02]'
+                      : 'text-white scale-[1.02]'
+                    : 'bg-gradient-to-br from-slate-800 to-slate-900 hover:brightness-110 text-slate-500'
                 }`}
               >
                 {isFlipped ? (
@@ -183,7 +222,10 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({
                     </span>
                   </>
                 ) : (
-                  <span className="text-3xl sm:text-5xl md:text-6xl text-slate-600 font-mono font-black">
+                  <span 
+                    style={{ color: `${layoutPrimary}aa` }}
+                    className="text-3xl sm:text-5xl md:text-6xl font-mono font-black"
+                  >
                     ?
                   </span>
                 )}

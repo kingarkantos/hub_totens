@@ -3,6 +3,7 @@ import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 import { BaseGameProps } from '../types';
 import { Calculator, Zap, Flame, Award, CheckCircle2, XCircle } from 'lucide-react';
+import { useActiveGamePalette } from '../context/GameLayoutContext';
 
 interface MathBlitzGameProps extends BaseGameProps {
   customContent?: any;
@@ -66,21 +67,35 @@ const generateQuestion = (level: number): Question => {
   };
 };
 
-export const MathBlitzGame: React.FC<MathBlitzGameProps> = ({
-  onExit,
-  rankingEnabled,
-  onSubmitScore,
-  themePrimary = '#6366F1',
-  theme,
-  customBgStyle,
-  campaignName,
-  clientName,
-  splashImageUrl,
-  isLight,
-  themeMode,
-  totalTimeLimit,
-  gameLayout,
-}) => {
+export const MathBlitzGame: React.FC<MathBlitzGameProps> = (props) => {
+  const {
+    onExit,
+    rankingEnabled,
+    onSubmitScore,
+    themePrimary = '#6366F1',
+    theme,
+    customBgStyle,
+    campaignName,
+    clientName,
+    splashImageUrl,
+    isLight,
+    themeMode,
+    totalTimeLimit,
+    gameLayout,
+    palette,
+    layoutColorHue,
+  } = props;
+
+  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
+
   const initialTime = totalTimeLimit !== undefined && totalTimeLimit > 0 ? totalTimeLimit : 30;
   const [timeLeft, setTimeLeft] = useState(initialTime);
   const [score, setScore] = useState(0);
@@ -92,8 +107,6 @@ export const MathBlitzGame: React.FC<MathBlitzGameProps> = ({
   const [gameOver, setGameOver] = useState(false);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-
-  const isLightMode = isLight ?? (themeMode === 'light');
 
   // Countdown timer
   useEffect(() => {
@@ -166,23 +179,28 @@ export const MathBlitzGame: React.FC<MathBlitzGameProps> = ({
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       correctAnswers={correctCount}
       totalQuestions={answeredCount}
-      themePrimary={themePrimary}
+      themePrimary={layoutPrimary}
       theme={theme}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
       clientName={clientName}
       splashImageUrl={splashImageUrl}
-      isLight={isLight}
-      themeMode={themeMode}
-      gameLayout={gameLayout}
+      isLight={isLightMode}
+      themeMode={isLightMode ? 'light' : 'dark'}
+      gameLayout={activeLayout}
+      palette={palette}
+      layoutColorHue={layoutColorHue}
     >
       <div className="relative w-full h-full flex flex-col items-center justify-between p-4 sm:p-8 max-w-4xl mx-auto">
         {/* Top HUD: Combo and Stats */}
         <div className="w-full flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
-            <Calculator className="w-5 h-5 text-indigo-400" />
+          <div 
+            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border"
+            style={{ borderColor: `${layoutPrimary}44` }}
+          >
+            <Calculator className="w-5 h-5" style={{ color: layoutPrimary }} />
             <span className="text-xs sm:text-sm font-black uppercase tracking-wider">
-              Acertos: <strong className="text-white">{correctCount}</strong>
+              Acertos: <strong className={isLightMode ? 'text-slate-900' : 'text-white'}>{correctCount}</strong>
             </span>
           </div>
 
@@ -190,9 +208,17 @@ export const MathBlitzGame: React.FC<MathBlitzGameProps> = ({
           <div
             className={`flex items-center gap-2 px-5 py-2 rounded-2xl transition-all duration-300 ${
               combo > 1
-                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 scale-105 animate-pulse'
+                ? 'text-white shadow-lg scale-105 animate-pulse'
                 : 'bg-white/10 text-slate-300 border border-white/10'
             }`}
+            style={
+              combo > 1
+                ? {
+                    background: `linear-gradient(135deg, ${layoutPrimary}, ${layoutSecondary})`,
+                    boxShadow: `0 4px 20px ${layoutGlow}`
+                  }
+                : undefined
+            }
           >
             <Flame className="w-4 h-4 fill-current" />
             <span className="text-xs sm:text-sm font-black uppercase tracking-wider">
@@ -204,17 +230,28 @@ export const MathBlitzGame: React.FC<MathBlitzGameProps> = ({
         {/* Central Display: Equation Card */}
         <div className="relative my-auto w-full max-w-2xl flex flex-col items-center">
           <div
+            style={
+              feedback === null
+                ? {
+                    borderColor: `${layoutPrimary}66`,
+                    boxShadow: `0 0 35px ${layoutGlow}`
+                  }
+                : undefined
+            }
             className={`w-full p-8 sm:p-12 rounded-3xl border-2 transition-all duration-300 shadow-2xl flex flex-col items-center justify-center text-center ${
               feedback === 'correct'
                 ? 'bg-emerald-500/20 border-emerald-400 scale-[1.02]'
                 : feedback === 'wrong'
                 ? 'bg-rose-500/20 border-rose-400 animate-shake'
                 : isLightMode
-                ? 'bg-white/95 border-slate-200 text-slate-900'
-                : 'bg-slate-900/90 border-white/20 text-white'
+                ? 'bg-white/95 text-slate-900'
+                : 'bg-slate-900/90 text-white backdrop-blur-xl'
             }`}
           >
-            <span className="text-[11px] sm:text-xs font-black uppercase tracking-widest text-indigo-400 mb-3 flex items-center gap-1.5">
+            <span 
+              className="text-[11px] sm:text-xs font-black uppercase tracking-widest mb-3 flex items-center gap-1.5"
+              style={{ color: layoutPrimary }}
+            >
               <Zap className="w-4 h-4 fill-current" />
               Operação Rápida
             </span>
@@ -243,8 +280,8 @@ export const MathBlitzGame: React.FC<MathBlitzGameProps> = ({
                   onClick={() => handleSelect(option)}
                   disabled={feedback !== null}
                   style={
-                    !showSuccess && !showFail && !isLightMode
-                      ? { borderColor: 'rgba(255,255,255,0.15)' }
+                    !showSuccess && !showFail
+                      ? { borderColor: `${layoutPrimary}44` }
                       : {}
                   }
                   className={`py-6 sm:py-8 px-6 rounded-2xl sm:rounded-3xl border-2 font-mono font-black text-3xl sm:text-4xl sm:text-5xl transition-all duration-150 active:scale-95 shadow-xl flex items-center justify-center gap-3 relative select-none ${
@@ -253,8 +290,8 @@ export const MathBlitzGame: React.FC<MathBlitzGameProps> = ({
                       : showFail
                       ? 'bg-rose-600 border-rose-400 text-white scale-[0.98]'
                       : isLightMode
-                      ? 'bg-white hover:bg-slate-50 text-slate-900 border-slate-200 hover:border-indigo-400'
-                      : 'bg-slate-800/90 hover:bg-slate-800 text-white hover:border-indigo-500'
+                      ? 'bg-white hover:bg-slate-50 text-slate-900 shadow-sm'
+                      : 'bg-slate-800/90 hover:bg-slate-800 text-white'
                   }`}
                 >
                   <span>{option}</span>

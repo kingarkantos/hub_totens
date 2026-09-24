@@ -20,21 +20,37 @@ const DEFAULT_PRIZES: WheelItem[] = [
   { label: 'Chaveiro Turbo', score: 250, color: '#EA580C' },
 ];
 
-export const WheelGame: React.FC<WheelGameProps> = ({
-  onExit,
-  rankingEnabled,
-  onSubmitScore,
-  themePrimary = '#DC2626',
-  theme,
-  customBgStyle,
-  campaignName,
-  clientName,
-  splashImageUrl,
-  customContent,
-  isLight,
-  themeMode,
-  gameLayout,
-}) => {
+import { useActiveGamePalette } from '../context/GameLayoutContext';
+
+export const WheelGame: React.FC<WheelGameProps> = (props) => {
+  const {
+    onExit,
+    rankingEnabled,
+    onSubmitScore,
+    themePrimary = '#DC2626',
+    theme,
+    customBgStyle,
+    campaignName,
+    clientName,
+    splashImageUrl,
+    customContent,
+    isLight,
+    themeMode,
+    gameLayout,
+    palette,
+    layoutColorHue,
+  } = props;
+
+  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
+
   const PRIZES = customContent && customContent.length >= 3 ? customContent : DEFAULT_PRIZES;
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [spinning, setSpinning] = useState(false);
@@ -64,7 +80,7 @@ export const WheelGame: React.FC<WheelGameProps> = ({
     ctx.fillStyle = '#1e293b';
     ctx.fill();
     ctx.lineWidth = 6;
-    ctx.strokeStyle = '#f59e0b';
+    ctx.strokeStyle = layoutPrimary;
     ctx.stroke();
     ctx.restore();
 
@@ -114,7 +130,7 @@ export const WheelGame: React.FC<WheelGameProps> = ({
     ctx.fillStyle = '#0f172a';
     ctx.fill();
     ctx.lineWidth = 5;
-    ctx.strokeStyle = '#f59e0b';
+    ctx.strokeStyle = layoutPrimary;
     ctx.stroke();
 
     ctx.fillStyle = '#ffffff';
@@ -200,11 +216,13 @@ export const WheelGame: React.FC<WheelGameProps> = ({
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       customScoreLabel="Pts"
-      themePrimary={themePrimary}
+      themePrimary={layoutPrimary}
       theme={theme}
-      isLight={isLight}
+      isLight={isLightMode}
       themeMode={themeMode}
-      gameLayout={gameLayout}
+      gameLayout={activeLayout}
+      palette={palette}
+      layoutColorHue={layoutColorHue}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
       clientName={clientName}
@@ -213,9 +231,15 @@ export const WheelGame: React.FC<WheelGameProps> = ({
       <div className="flex flex-col items-center justify-between gap-6 sm:gap-10 w-full max-w-xl sm:max-w-2xl lg:max-w-3xl my-auto py-4 sm:py-8 px-2 sm:px-6 select-none animate-in fade-in duration-300">
         {/* Pointer indicator */}
         <div className="relative flex flex-col items-center">
-          <div className="w-0 h-0 border-x-[20px] sm:border-x-[26px] border-x-transparent border-t-[34px] sm:border-t-[44px] border-t-amber-400 drop-shadow-2xl z-20 -mb-6 sm:-mb-8" />
+          <div 
+            style={{ borderTopColor: layoutPrimary }}
+            className="w-0 h-0 border-x-[20px] sm:border-x-[26px] border-x-transparent border-t-[34px] sm:border-t-[44px] drop-shadow-2xl z-20 -mb-6 sm:-mb-8" 
+          />
           
-          <div className="relative rounded-full p-3 sm:p-4 bg-slate-900/90 border-4 border-white/25 shadow-2xl backdrop-blur-xl">
+          <div 
+            style={{ borderColor: `${layoutPrimary}44` }}
+            className="relative rounded-full p-3 sm:p-4 bg-slate-900/90 border-4 shadow-2xl backdrop-blur-xl"
+          >
             <canvas
               ref={canvasRef}
               width={440}
@@ -230,15 +254,22 @@ export const WheelGame: React.FC<WheelGameProps> = ({
         <button
           onClick={spin}
           disabled={spinning || gameOver}
-          style={{ backgroundColor: themePrimary }}
-          className="w-full py-6 sm:py-8 px-10 rounded-3xl text-white font-black text-2xl sm:text-3xl tracking-wider uppercase shadow-2xl active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none hover:brightness-110 flex items-center justify-center gap-4 animate-totem-pulse border-4 border-white/20"
+          style={{ 
+            backgroundColor: layoutPrimary,
+            boxShadow: `0 10px 30px ${layoutGlow}`,
+            borderColor: `${darkPrimary}66`,
+          }}
+          className="w-full py-6 sm:py-8 px-10 rounded-3xl text-white font-black text-2xl sm:text-3xl tracking-wider uppercase shadow-2xl active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none hover:brightness-110 flex items-center justify-center gap-4 animate-totem-pulse border-4"
         >
           <span className="text-3xl">🎯</span>
           <span>{spinning ? 'GIRANDO...' : 'TOQUE PARA GIRAR!'}</span>
         </button>
 
         {wonPrize && !gameOver && (
-          <div className="text-center font-black text-amber-300 text-lg sm:text-2xl">
+          <div 
+            style={{ color: layoutPrimary }}
+            className="text-center font-black text-lg sm:text-2xl"
+          >
             Você ganhou: <span className="text-white text-xl sm:text-3xl">{wonPrize.label}</span>!
           </div>
         )}

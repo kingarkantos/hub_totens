@@ -4,7 +4,7 @@ import { sound } from '../lib/audio';
 import { Check, X, ThumbsUp, ThumbsDown, Zap, ArrowRight, Award } from 'lucide-react';
 import { BaseGameProps } from '../types';
 import { TrueFalseCustomItem } from '../types/gameContent';
-import { useGameLayout } from '../context/GameLayoutContext';
+import { useGameLayout, useActiveGamePalette } from '../context/GameLayoutContext';
 import { GameLayoutId } from '../types/gameLayouts';
 import { LayoutColorPalette, generateLayoutPalette, getDefaultHueForLayout } from '../lib/colorHarmony';
 
@@ -40,61 +40,38 @@ const DEFAULT_STATEMENTS: TrueFalseCustomItem[] = [
   },
 ];
 
-export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
-  onExit,
-  rankingEnabled,
-  onSubmitScore,
-  themePrimary = '#3B82F6',
-  theme,
-  customBgStyle,
-  campaignName,
-  clientName,
-  splashImageUrl,
-  isLight,
-  themeMode,
-  orderMode = 'random',
-  questionsCount,
-  timeLimit,
-  totalTimeLimit,
-  customContent,
-  gameLayout,
-  palette,
-  layoutColorHue,
-}) => {
-  const contextLayout = useGameLayout();
-  const activeLayout: GameLayoutId = gameLayout || contextLayout?.layout || 'cartoon_pop';
+export const TrueFalseGame: React.FC<TrueFalseGameProps> = (props) => {
+  const {
+    onExit,
+    rankingEnabled,
+    onSubmitScore,
+    themePrimary = '#3B82F6',
+    theme,
+    customBgStyle,
+    campaignName,
+    clientName,
+    splashImageUrl,
+    isLight,
+    themeMode,
+    orderMode = 'random',
+    questionsCount,
+    timeLimit,
+    totalTimeLimit,
+    customContent,
+    gameLayout,
+    palette,
+    layoutColorHue,
+  } = props;
 
-  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
-
-  const activePalette = useMemo(() => {
-    if (palette && (layoutColorHue === undefined || palette.hue === layoutColorHue)) {
-      return palette;
-    }
-    if (layoutColorHue !== undefined) {
-      return generateLayoutPalette(layoutColorHue, isLightMode);
-    }
-    if (theme?.primary && theme.primary !== '#DC2626') {
-      return {
-        hue: layoutColorHue || 185,
-        primary: theme.primary,
-        secondary: theme.secondary || '#3B82F6',
-        darkShade: theme.secondary || '#78350f',
-        accent: theme.accent || '#F59E0B',
-        glowColor: theme.glowColor || `${theme.primary}66`,
-        glowHex: theme.primary,
-        textColor: isLightMode ? '#0F172A' : '#FFFFFF',
-      };
-    }
-    if (contextLayout?.palette) {
-      return contextLayout.palette;
-    }
-    return generateLayoutPalette(getDefaultHueForLayout(activeLayout), isLightMode);
-  }, [palette, layoutColorHue, isLightMode, theme, contextLayout?.palette, activeLayout]);
-
-  const layoutPrimary = activePalette.primary || themePrimary || '#06B6D4';
-  const layoutSecondary = activePalette.secondary || '#3B82F6';
-  const darkPrimary = activePalette.darkShade || '#78350f';
-  const layoutGlow = activePalette.glowColor || 'rgba(6, 182, 212, 0.45)';
+  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
   const rawStatements = useMemo(() => {
     return customContent && customContent.length > 0 ? customContent : DEFAULT_STATEMENTS;
   }, [customContent]);
@@ -247,8 +224,8 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
       campaignName={campaignName}
       clientName={clientName}
       gameLayout={activeLayout}
-      palette={activePalette}
-      layoutColorHue={activePalette.hue}
+      palette={palette}
+      layoutColorHue={palette?.hue ?? layoutColorHue}
     >
       <div className="flex flex-col w-full max-w-3xl lg:max-w-4xl mx-auto my-auto py-2 sm:py-4 px-2 sm:px-4 gap-4 sm:gap-5 select-none animate-in fade-in duration-300">
         {/* Progress & Streak Header */}

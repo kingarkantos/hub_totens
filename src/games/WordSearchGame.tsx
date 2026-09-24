@@ -12,22 +12,36 @@ interface WordSearchGameProps extends BaseGameProps {
 const DEFAULT_WORDS = ['CAPACETE', 'LUVAS', 'OCULOS', 'BOTA', 'EXTINTOR'];
 const GRID_SIZE = 9;
 
-export const WordSearchGame: React.FC<WordSearchGameProps> = ({
-  onExit,
-  rankingEnabled,
-  onSubmitScore,
-  themePrimary = '#D97706',
-  theme,
-  customBgStyle,
-  campaignName,
-  clientName,
-  splashImageUrl,
-  customContent,
-  isLight,
-  themeMode,
-  gameLayout,
-}) => {
-  const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
+import { useActiveGamePalette } from '../context/GameLayoutContext';
+
+export const WordSearchGame: React.FC<WordSearchGameProps> = (props) => {
+  const {
+    onExit,
+    rankingEnabled,
+    onSubmitScore,
+    themePrimary = '#D97706',
+    theme,
+    customBgStyle,
+    campaignName,
+    clientName,
+    splashImageUrl,
+    customContent,
+    isLight,
+    themeMode,
+    gameLayout,
+    palette,
+    layoutColorHue,
+  } = props;
+
+  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+    palette,
+    layoutColorHue,
+    isLight,
+    themeMode,
+    theme,
+    themePrimary,
+    gameLayout,
+  });
   const targetWords = useMemo(() => {
     if (customContent?.words && customContent.words.length > 0) {
       return customContent.words.map((w) => w.toUpperCase().trim().replace(/[^A-Z]/g, ''));
@@ -183,7 +197,7 @@ export const WordSearchGame: React.FC<WordSearchGameProps> = ({
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
-      themePrimary={themePrimary}
+      themePrimary={layoutPrimary}
       theme={theme}
       customBgStyle={customBgStyle}
       campaignName={campaignName}
@@ -191,22 +205,37 @@ export const WordSearchGame: React.FC<WordSearchGameProps> = ({
       splashImageUrl={splashImageUrl}
       isLight={isLightMode}
       themeMode={isLightMode ? 'light' : 'dark'}
-      gameLayout={gameLayout}
+      gameLayout={activeLayout}
+      palette={palette}
+      layoutColorHue={layoutColorHue}
     >
       <div className="flex flex-col flex-1 w-full max-w-4xl lg:max-w-5xl mx-auto justify-between py-4 sm:py-8 px-2 sm:px-6 gap-5 sm:gap-8 select-none animate-in fade-in duration-300">
         {/* Words Checklist */}
-        <div className={`rounded-3xl p-5 sm:p-6 border-2 shadow-xl backdrop-blur-xl ${
-          isLightMode
-            ? 'bg-amber-50/90 border-amber-200 shadow-amber-950/5'
-            : 'bg-slate-900/85 border-amber-500/30 shadow-black/40'
-        }`}>
+        <div 
+          style={{ borderColor: `${layoutPrimary}44` }}
+          className={`rounded-3xl p-5 sm:p-6 border-2 shadow-xl backdrop-blur-xl ${
+            isLightMode
+              ? 'bg-amber-50/90 shadow-amber-950/5'
+              : 'bg-slate-900/85 shadow-black/40'
+          }`}
+        >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-amber-500" />
+            <span 
+              style={{ color: layoutPrimary }}
+              className="text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-2"
+            >
+              <Sparkles style={{ color: layoutPrimary }} className="w-5 h-5" />
               Palavras a Encontrar ({foundWords.length}/{targetWords.length})
             </span>
             {currentSelectionWord && (
-              <span className="text-xs sm:text-sm font-black text-amber-950 dark:text-amber-200 bg-amber-200 dark:bg-amber-950/90 border border-amber-400 px-3.5 py-1 rounded-full shadow-xs">
+              <span 
+                style={{ 
+                  backgroundColor: `${layoutPrimary}33`, 
+                  borderColor: layoutPrimary,
+                  color: isLightMode ? '#020617' : '#FFFFFF',
+                }}
+                className="text-xs sm:text-sm font-black border px-3.5 py-1 rounded-full shadow-xs"
+              >
                 Formando: {currentSelectionWord}
               </span>
             )}
@@ -217,12 +246,19 @@ export const WordSearchGame: React.FC<WordSearchGameProps> = ({
               return (
                 <span
                   key={word}
+                  style={
+                    isFound
+                      ? undefined
+                      : {
+                          borderColor: `${layoutPrimary}33`,
+                        }
+                  }
                   className={`text-xs sm:text-base font-extrabold px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-2xl transition-all flex items-center gap-1.5 shadow-sm ${
                     isFound
                       ? 'bg-emerald-600 text-white shadow-emerald-950/40 scale-105'
                       : isLightMode
-                      ? 'bg-white text-slate-800 border-2 border-amber-200'
-                      : 'bg-slate-800 text-slate-200 border-2 border-slate-700'
+                      ? 'bg-white text-slate-800 border-2'
+                      : 'bg-slate-800 text-slate-200 border-2'
                   }`}
                 >
                   {isFound && <Check className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3]" />}
@@ -235,7 +271,10 @@ export const WordSearchGame: React.FC<WordSearchGameProps> = ({
 
         {/* 9x9 Grid - Large Totem Touch Grid */}
         <div className="my-auto py-2 flex justify-center w-full">
-          <div className="grid grid-cols-9 gap-2 sm:gap-3 p-3 sm:p-5 bg-slate-900/90 rounded-3xl shadow-2xl border-4 border-amber-500/40 max-w-[580px] sm:max-w-[650px] lg:max-w-[700px] w-full aspect-square backdrop-blur-xl">
+          <div 
+            style={{ borderColor: `${layoutPrimary}55`, boxShadow: `0 0 35px ${layoutGlow}33` }}
+            className="grid grid-cols-9 gap-2 sm:gap-3 p-3 sm:p-5 bg-slate-900/90 rounded-3xl shadow-2xl border-4 max-w-[580px] sm:max-w-[650px] lg:max-w-[700px] w-full aspect-square backdrop-blur-xl"
+          >
             {grid.map((row, r) =>
               row.map((letter, c) => {
                 const isSelected = selectedCells.some((cell) => cell.r === r && cell.c === c);
@@ -244,9 +283,18 @@ export const WordSearchGame: React.FC<WordSearchGameProps> = ({
                     key={`${r}-${c}`}
                     type="button"
                     onClick={() => handleCellClick(r, c)}
+                    style={
+                      isSelected
+                        ? {
+                            backgroundColor: layoutPrimary,
+                            color: '#020617',
+                            boxShadow: `0 0 15px ${layoutGlow}`,
+                          }
+                        : undefined
+                    }
                     className={`flex items-center justify-center rounded-xl sm:rounded-2xl font-black text-xl sm:text-2xl md:text-3xl transition-all active:scale-95 ${
                       isSelected
-                        ? 'bg-amber-400 text-slate-950 scale-105 shadow-lg shadow-amber-400/50 ring-4 ring-white'
+                        ? 'scale-105 shadow-lg ring-4 ring-white'
                         : 'bg-slate-800/90 text-white hover:bg-slate-700 border-2 border-slate-700/60 shadow-sm'
                     }`}
                   >

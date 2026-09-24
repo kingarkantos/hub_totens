@@ -230,7 +230,7 @@ export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
 
         {/* Game Canvas Container with dynamic layout context */}
         <div className="flex-1 w-full h-full relative overflow-hidden">
-          <GameLayoutProvider layout={activeLayout} onLayoutChange={handleSelectLayout}>
+          <GameLayoutProvider layout={activeLayout} hue={activePalette.hue} isLight={isLight} onLayoutChange={handleSelectLayout}>
             {renderGame()}
           </GameLayoutProvider>
         </div>
