@@ -387,41 +387,24 @@ export const QuizGame: React.FC<QuizGameProps> = ({
               </div>
             )}
 
-            {/* Neon Arcade Matrix Tag */}
-            {activeLayout === 'neon_arcade' && (
-              <div
-                className="inline-block px-3 py-0.5 rounded-full text-[10px] sm:text-xs font-mono font-black uppercase tracking-widest mb-2 border"
-                style={{
-                  borderColor: layoutPrimary,
-                  color: layoutPrimary,
-                  backgroundColor: `${layoutPrimary}20`,
-                  boxShadow: `0 0 10px ${layoutGlow}`,
-                }}
-              >
-                ⚡ ARCADE MATRIX ⚡
-              </div>
-            )}
-
             {/* Question Label */}
-            {activeLayout !== 'neon_arcade' && (
-              <span
-                className={`inline-block text-[11px] sm:text-xs font-black uppercase tracking-widest mb-1.5 sm:mb-2 ${
-                  activeLayout === 'cartoon_pop'
-                    ? 'text-amber-300'
-                    : activeLayout === 'cartoon_comic'
-                    ? 'text-sky-300'
-                    : activeLayout === 'bento_tech'
-                    ? 'text-emerald-400/90 font-mono'
-                    : activeLayout === 'neumorphic_luxe'
-                    ? 'text-amber-300'
-                    : isLightMode
-                    ? 'text-slate-500'
-                    : 'text-amber-300/90'
-                }`}
-              >
-                {activeLayout === 'bento_tech' ? '[ INPUT REQUIRED // CHOOSE ONE ]' : 'Selecione a resposta correta:'}
-              </span>
-            )}
+            <span
+              className={`inline-block text-[11px] sm:text-xs font-black uppercase tracking-widest mb-1.5 sm:mb-2 ${
+                activeLayout === 'cartoon_pop'
+                  ? 'text-amber-300'
+                  : activeLayout === 'cartoon_comic'
+                  ? 'text-sky-300'
+                  : activeLayout === 'bento_tech'
+                  ? 'text-emerald-400/90 font-mono'
+                  : activeLayout === 'neumorphic_luxe'
+                  ? 'text-amber-300'
+                  : isLightMode
+                  ? 'text-slate-500'
+                  : 'text-amber-300/90'
+              }`}
+            >
+              {activeLayout === 'bento_tech' ? '[ INPUT REQUIRED // CHOOSE ONE ]' : 'Selecione a resposta correta:'}
+            </span>
 
             {/* Question Image (if provided) */}
             {(currentQ.imageUrl || currentQ.image_url) && (

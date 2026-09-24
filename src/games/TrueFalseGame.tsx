@@ -259,14 +259,6 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = ({
             </div>
           )}
 
-          {/* Layout 4: GAME SHOW VIP - Floating Gold Trophy Ribbon */}
-          {activeLayout === 'neumorphic_luxe' && (
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-4 py-1 rounded-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 border-2 border-yellow-200 shadow-[0_4px_16px_rgba(245,158,11,0.5)] text-slate-950 font-black text-xs uppercase tracking-widest pointer-events-none">
-              <Award className="w-3.5 h-3.5 fill-current" />
-              <span>Desafio VIP</span>
-            </div>
-          )}
-
           {/* Neon Arcade Horizontal Glowing Tubes */}
           {activeLayout === 'neon_arcade' && (
             <>

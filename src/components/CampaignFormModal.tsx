@@ -1106,16 +1106,6 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                       </div>
 
                       <div>
-                        <div
-                          style={{
-                            color: activeLayoutPalette.primary,
-                            borderColor: activeLayoutPalette.primary,
-                            backgroundColor: `${activeLayoutPalette.primary}20`,
-                          }}
-                          className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black uppercase tracking-wider mb-1 border transition-all duration-300"
-                        >
-                          ⚡ {GAME_LAYOUTS.find((l) => l.id === gameLayout)?.name.toUpperCase()} ⚡
-                        </div>
                         <h5 className="text-sm sm:text-base font-black text-white leading-tight">
                           Quiz &amp; Desafios da Campanha
                         </h5>

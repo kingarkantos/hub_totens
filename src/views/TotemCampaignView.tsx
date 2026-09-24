@@ -48,10 +48,6 @@ interface ScrollableDescriptionProps {
 interface SplashDescriptionStyleConfig {
   wrapperClass: string;
   cardClass: string;
-  badge?: {
-    text: string;
-    className: string;
-  };
   fadeClass: string;
   indicatorClass: string;
   style?: React.CSSProperties;
@@ -63,10 +59,6 @@ const getSplashDescriptionStyle = (layout: GameLayoutId = 'modern_glass'): Splas
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
         cardClass: 'rounded-3xl border-4 border-black bg-white/95 text-slate-900 shadow-[8px_8px_0_#000] font-bold p-6 sm:p-7 leading-relaxed backdrop-blur-md',
-        badge: {
-          text: 'DESAFIO INTERATIVO 💬',
-          className: 'bg-yellow-400 text-slate-950 border-2 border-black font-black uppercase text-xs tracking-wider px-4 py-1 rounded-full shadow-[2px_2px_0_#000]',
-        },
         fadeClass: 'from-white via-white/80 to-transparent',
         indicatorClass: 'bg-yellow-400 text-black border-2 border-black font-black shadow-[2px_2px_0_#000]',
       };
@@ -75,10 +67,6 @@ const getSplashDescriptionStyle = (layout: GameLayoutId = 'modern_glass'): Splas
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
         cardClass: 'rounded-3xl border-4 border-amber-400/90 bg-amber-950/85 backdrop-blur-xl text-amber-50 shadow-[0_10px_0_#92400e,0_20px_40px_rgba(0,0,0,0.6)] font-bold p-6 sm:p-7 leading-relaxed',
-        badge: {
-          text: 'DESAFIO ESPECIAL ⭐',
-          className: 'bg-gradient-to-r from-amber-400 to-orange-400 text-amber-950 border-2 border-amber-300 font-black uppercase text-xs tracking-wider px-4 py-1 rounded-full shadow-md',
-        },
         fadeClass: 'from-amber-950 via-amber-950/70 to-transparent',
         indicatorClass: 'bg-amber-400 text-amber-950 border-2 border-amber-600 font-black shadow-md',
       };
@@ -87,10 +75,6 @@ const getSplashDescriptionStyle = (layout: GameLayoutId = 'modern_glass'): Splas
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
         cardClass: 'rounded-[32px] border-2 border-cyan-400 bg-slate-950/90 backdrop-blur-2xl text-cyan-100 shadow-[0_0_35px_rgba(6,182,212,0.4),inset_0_0_20px_rgba(6,182,212,0.15)] p-6 sm:p-7 leading-relaxed',
-        badge: {
-          text: 'NEON MISSION // BRIEFING 🕹️',
-          className: 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/60 font-mono font-bold uppercase text-xs tracking-widest px-4 py-1 rounded-full shadow-[0_0_12px_rgba(6,182,212,0.4)]',
-        },
         fadeClass: 'from-slate-950 via-slate-950/80 to-transparent',
         indicatorClass: 'bg-slate-900 border border-cyan-400 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.4)] font-mono',
       };
@@ -99,10 +83,6 @@ const getSplashDescriptionStyle = (layout: GameLayoutId = 'modern_glass'): Splas
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
         cardClass: 'border-2 border-emerald-500/80 bg-slate-950/95 backdrop-blur-2xl text-emerald-200 font-mono shadow-[0_0_30px_rgba(16,185,129,0.3)] p-6 sm:p-7 leading-relaxed',
-        badge: {
-          text: 'SYS_DIRECTIVE // 01 ⚡',
-          className: 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 font-mono font-bold uppercase text-xs tracking-widest px-3.5 py-1 rounded-sm shadow-sm',
-        },
         fadeClass: 'from-slate-950 via-slate-950/80 to-transparent',
         indicatorClass: 'bg-slate-950 border border-emerald-400 text-emerald-300 font-mono shadow-[0_0_12px_rgba(16,185,129,0.3)]',
         style: {
@@ -114,10 +94,6 @@ const getSplashDescriptionStyle = (layout: GameLayoutId = 'modern_glass'): Splas
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
         cardClass: 'rounded-[32px] border-2 border-amber-400/60 bg-gradient-to-b from-slate-900/95 via-amber-950/40 to-slate-950/95 backdrop-blur-2xl text-amber-100 shadow-[0_20px_50px_rgba(245,158,11,0.25)] p-6 sm:p-7 leading-relaxed',
-        badge: {
-          text: 'SHOW VIP // REGULAMENTO 🏆',
-          className: 'bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 border border-amber-200 font-black uppercase text-xs tracking-wider px-4 py-1 rounded-full shadow-md',
-        },
         fadeClass: 'from-slate-950 via-slate-950/80 to-transparent',
         indicatorClass: 'bg-slate-900 border border-amber-400 text-amber-300 shadow-md',
       };
@@ -126,10 +102,6 @@ const getSplashDescriptionStyle = (layout: GameLayoutId = 'modern_glass'): Splas
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
         cardClass: 'rounded-none border-4 border-yellow-400 bg-black/95 text-yellow-300 font-mono shadow-[6px_6px_0_#ca8a04] p-6 sm:p-7 leading-relaxed',
-        badge: {
-          text: '▶ STAGE BRIEFING 👾',
-          className: 'bg-yellow-400 text-black border-2 border-black font-mono font-black uppercase text-xs tracking-wider px-4 py-1',
-        },
         fadeClass: 'from-black via-black/80 to-transparent',
         indicatorClass: 'bg-yellow-400 text-black border-2 border-black font-mono font-bold shadow-[2px_2px_0_#ca8a04]',
       };
@@ -138,10 +110,6 @@ const getSplashDescriptionStyle = (layout: GameLayoutId = 'modern_glass'): Splas
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
         cardClass: 'rounded-xl border-2 border-emerald-400/90 bg-black/95 text-emerald-300 font-mono shadow-[0_0_30px_rgba(16,185,129,0.35)] p-6 sm:p-7 leading-relaxed',
-        badge: {
-          text: '> ROOT_INSTRUCTION.LOG 💻',
-          className: 'bg-emerald-950/90 text-emerald-300 border border-emerald-400 font-mono font-bold uppercase text-xs tracking-wider px-4 py-1 rounded-sm shadow-[0_0_10px_rgba(16,185,129,0.3)]',
-        },
         fadeClass: 'from-black via-black/80 to-transparent',
         indicatorClass: 'bg-black border border-emerald-400 text-emerald-300 font-mono',
       };
@@ -150,10 +118,6 @@ const getSplashDescriptionStyle = (layout: GameLayoutId = 'modern_glass'): Splas
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
         cardClass: 'rounded-3xl border-2 border-pink-400/80 bg-purple-950/85 backdrop-blur-2xl text-pink-100 shadow-[0_0_35px_rgba(244,63,94,0.35)] p-6 sm:p-7 leading-relaxed',
-        badge: {
-          text: 'SYNTHWAVE // INFO 🌴',
-          className: 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border border-pink-300/40 font-black uppercase text-xs tracking-wider px-4 py-1 rounded-full shadow-md',
-        },
         fadeClass: 'from-purple-950 via-purple-950/80 to-transparent',
         indicatorClass: 'bg-purple-900 border border-pink-400 text-pink-200 shadow-md',
       };
@@ -162,10 +126,6 @@ const getSplashDescriptionStyle = (layout: GameLayoutId = 'modern_glass'): Splas
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
         cardClass: 'rounded-3xl border-4 border-amber-300 bg-stone-950/95 backdrop-blur-xl text-amber-100 shadow-[0_0_40px_rgba(245,158,11,0.4)] p-6 sm:p-7 leading-relaxed',
-        badge: {
-          text: 'REGULAMENTO OFICIAL ✦ 💎',
-          className: 'bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 text-slate-950 border border-yellow-100 font-black uppercase text-xs tracking-wider px-4 py-1 rounded-full shadow-lg',
-        },
         fadeClass: 'from-stone-950 via-stone-950/80 to-transparent',
         indicatorClass: 'bg-stone-900 border border-amber-300 text-amber-300 shadow-md font-bold',
       };
@@ -174,10 +134,6 @@ const getSplashDescriptionStyle = (layout: GameLayoutId = 'modern_glass'): Splas
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
         cardClass: 'rounded-[36px] border-4 border-pink-300/80 bg-pink-950/70 backdrop-blur-2xl text-pink-100 shadow-[0_12px_28px_rgba(244,114,182,0.35)] font-bold p-6 sm:p-7 leading-relaxed',
-        badge: {
-          text: 'INFORMAÇÕES DO JOGO 🎈',
-          className: 'bg-pink-400 text-white border-2 border-pink-200 font-black uppercase text-xs tracking-wider px-4 py-1 rounded-full shadow-md',
-        },
         fadeClass: 'from-pink-950 via-pink-950/80 to-transparent',
         indicatorClass: 'bg-pink-500 text-white border border-pink-300 font-black shadow-md rounded-full',
       };
@@ -186,10 +142,6 @@ const getSplashDescriptionStyle = (layout: GameLayoutId = 'modern_glass'): Splas
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
         cardClass: 'rounded-3xl border-2 border-purple-400/60 bg-slate-950/85 backdrop-blur-2xl text-purple-100 shadow-[0_25px_60px_-15px_rgba(147,51,234,0.4)] p-6 sm:p-7 leading-relaxed',
-        badge: {
-          text: 'SPATIAL EXPERIENCE 🌌',
-          className: 'bg-purple-500/25 text-purple-200 border border-purple-400/50 font-bold uppercase text-xs tracking-wider px-4 py-1 rounded-full shadow-md',
-        },
         fadeClass: 'from-slate-950 via-slate-950/80 to-transparent',
         indicatorClass: 'bg-purple-950 border border-purple-400 text-purple-200 shadow-md',
       };
@@ -199,10 +151,6 @@ const getSplashDescriptionStyle = (layout: GameLayoutId = 'modern_glass'): Splas
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
         cardClass: 'rounded-3xl border-2 border-white/20 bg-black/50 backdrop-blur-2xl text-slate-100 shadow-2xl p-6 sm:p-7 leading-relaxed',
-        badge: {
-          text: 'INFORMAÇÕES ✦',
-          className: 'bg-white/15 text-white border border-white/30 font-bold uppercase text-xs tracking-wider px-4 py-1 rounded-full backdrop-blur-md',
-        },
         fadeClass: 'from-black/85 via-black/40 to-transparent',
         indicatorClass: 'bg-slate-950/90 text-white border border-white/30 shadow-2xl',
       };
@@ -259,13 +207,6 @@ const ScrollableDescription: React.FC<ScrollableDescriptionProps> = ({
 
   return (
     <div className={`relative ${config.wrapperClass}`}>
-      {/* Thematic Top Tag/Badge */}
-      {config.badge && (
-        <div className="flex justify-center -mb-3.5 relative z-20">
-          <span className={config.badge.className}>{config.badge.text}</span>
-        </div>
-      )}
-
       <div
         ref={containerRef}
         onScroll={handleScroll}
