@@ -21,7 +21,9 @@ import {
   Palette,
   Phone,
   Gamepad2,
-  Share2
+  Share2,
+  CopyPlus,
+  Loader2
 } from 'lucide-react';
 import { Campaign, GameDefinition, Reseller } from '../types';
 import { supabase, TABLES } from '../lib/supabase';
@@ -61,6 +63,7 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({
   // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [showCreateResellerModal, setShowCreateResellerModal] = useState(false);
   const [editingReseller, setEditingReseller] = useState<Reseller | null>(null);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -189,6 +192,88 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({
     } catch (err) {
       console.error(err);
       sound.playError();
+    }
+  };
+
+  const handleDuplicateCampaign = async (camp: Campaign) => {
+    sound.playClick();
+    setDuplicatingId(camp.id);
+    try {
+      const existingSlugs = new Set(campaigns.map((c) => c.slug.toLowerCase().trim()));
+      const existingNames = new Set(campaigns.map((c) => c.name.toLowerCase().trim()));
+
+      // 1. Slug increment with number: e.g. "rota-original" -> "rota-original-2"
+      const slugMatch = camp.slug.match(/^(.*?)-(\d+)$/);
+      const baseSlug = slugMatch ? slugMatch[1] : camp.slug;
+      let nextNum = slugMatch ? parseInt(slugMatch[2], 10) + 1 : 2;
+
+      let newSlug = `${baseSlug}-${nextNum}`;
+      while (existingSlugs.has(newSlug.toLowerCase())) {
+        nextNum++;
+        newSlug = `${baseSlug}-${nextNum}`;
+      }
+
+      // 2. Name increment:
+      let newName = '';
+      const nameNumMatch = camp.name.match(/^(.*?)(?: (\d+))$/);
+      if (nameNumMatch) {
+        const base = nameNumMatch[1];
+        let num = parseInt(nameNumMatch[2], 10) + 1;
+        newName = `${base} ${num}`;
+        while (existingNames.has(newName.toLowerCase())) {
+          num++;
+          newName = `${base} ${num}`;
+        }
+      } else {
+        newName = `${camp.name} (Cópia)`;
+        if (existingNames.has(newName.toLowerCase())) {
+          let copyNum = 2;
+          while (existingNames.has(`${camp.name} (Cópia ${copyNum})`.toLowerCase())) {
+            copyNum++;
+          }
+          newName = `${camp.name} (Cópia ${copyNum})`;
+        }
+      }
+
+      // Deep clone games_config so all content is preserved
+      const clonedGamesConfig = camp.games_config
+        ? JSON.parse(JSON.stringify(camp.games_config))
+        : {};
+
+      const duplicatePayload = {
+        name: newName,
+        slug: newSlug,
+        client_name: camp.client_name,
+        description: camp.description || '',
+        splash_image_url: camp.splash_image_url || '',
+        theme_id: camp.theme_id || 'honda-red',
+        selected_games: Array.isArray(camp.selected_games) ? [...camp.selected_games] : [],
+        games_config: {
+          ...clonedGamesConfig,
+          ...(camp.reseller_id ? { reseller_id: camp.reseller_id } : {}),
+          ...(camp.reseller_name ? { reseller_name: camp.reseller_name } : {}),
+        },
+        theme_mode: camp.theme_mode || 'dark',
+        ranking_enabled: camp.ranking_enabled ?? false,
+        active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from(TABLES.CAMPAIGNS)
+        .insert(duplicatePayload);
+
+      if (error) throw error;
+
+      sound.playSuccess();
+      await fetchData();
+    } catch (err: any) {
+      console.error('Error duplicating campaign:', err);
+      sound.playError();
+      alert(`Erro ao duplicar campanha: ${err.message || 'Tente novamente.'}`);
+    } finally {
+      setDuplicatingId(null);
     }
   };
 
@@ -528,6 +613,19 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({
                             title="Editar Campanha"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            onClick={() => handleDuplicateCampaign(camp)}
+                            disabled={duplicatingId === camp.id}
+                            className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 active:scale-95 text-indigo-600 border border-indigo-200 disabled:opacity-50 transition-all"
+                            title="Duplicar Campanha com Conteúdo"
+                          >
+                            {duplicatingId === camp.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-600" />
+                            ) : (
+                              <CopyPlus className="w-3.5 h-3.5" />
+                            )}
                           </button>
 
                           <button
