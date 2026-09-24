@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { 
   ArrowLeft, Volume2, VolumeX, Trophy, RotateCcw, Keyboard, CheckCircle2
 } from 'lucide-react';
@@ -15,6 +15,7 @@ interface GameContainerProps {
   category: string;
   score: number;
   timeRemaining?: number;
+  totalTime?: number;
   gameOver: boolean;
   gameWon?: boolean;
   onRestart: () => void;
@@ -43,6 +44,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   category,
   score,
   timeRemaining,
+  totalTime,
   gameOver,
   gameWon = true,
   onRestart,
@@ -69,6 +71,33 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const [playerName, setPlayerName] = useState('');
   const [showKeyboard, setShowKeyboard] = useState(false);
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
+
+  // Dynamic slider timer calculation
+  const [maxObservedTime, setMaxObservedTime] = useState<number>(() => {
+    if (totalTime && totalTime > 0) return totalTime;
+    if (timeRemaining && timeRemaining > 0) return timeRemaining;
+    return 30;
+  });
+  const prevTimeRef = useRef<number | undefined>(timeRemaining);
+
+  useEffect(() => {
+    if (totalTime && totalTime > 0) {
+      setMaxObservedTime(totalTime);
+      return;
+    }
+    if (timeRemaining !== undefined && timeRemaining > 0) {
+      if (prevTimeRef.current !== undefined && timeRemaining > prevTimeRef.current) {
+        setMaxObservedTime(timeRemaining);
+      } else if (timeRemaining > maxObservedTime) {
+        setMaxObservedTime(timeRemaining);
+      }
+      prevTimeRef.current = timeRemaining;
+    }
+  }, [timeRemaining, totalTime, maxObservedTime]);
+
+  const effectiveMaxTime = Math.max(1, totalTime || maxObservedTime || 30);
+  const timePercent = timeRemaining !== undefined ? Math.max(0, Math.min(100, (timeRemaining / effectiveMaxTime) * 100)) : 100;
+  const isUrgentTime = timeRemaining !== undefined && timeRemaining <= 5;
   const contextLayout = useGameLayout();
   const [currentLayout, setCurrentLayout] = useState<GameLayoutId>(
     gameLayout || contextLayout?.layout || 'modern_glass'
@@ -391,21 +420,69 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           {/* Right: Timer, Score, Sound */}
           <div className="flex items-center gap-2 sm:gap-3.5">
             {timeRemaining !== undefined && timeRemaining > 0 && (
-              <div className={`px-3 sm:px-4 py-1.5 sm:py-2 ${currentLayoutDef.buttonClass} ${
-                currentLayout === 'cartoon_pop'
-                  ? 'bg-amber-400 text-amber-950 border-2 border-amber-200 shadow-[0_3px_0_#92400e]'
-                  : currentLayout === 'cartoon_comic'
-                  ? 'bg-yellow-400 text-black border-2 border-black shadow-[2px_2px_0_#000]'
-                  : currentLayout === 'neon_arcade'
-                  ? 'bg-black border border-amber-400 text-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.3)]'
-                  : currentLayout === 'bento_tech'
-                  ? 'bg-slate-800 border border-amber-500/40 text-amber-400'
-                  : isLightMode 
-                  ? 'bg-amber-50 border border-amber-200 text-amber-800' 
-                  : 'bg-slate-800/95 border border-white/15 text-amber-400'
-              } flex items-center gap-1.5 font-mono text-sm sm:text-base font-black shadow-sm`}>
-                <span>⏱️</span>
-                <span>{timeRemaining}s</span>
+              <div
+                className={`relative min-w-[125px] sm:min-w-[160px] md:min-w-[190px] h-8 sm:h-9.5 ${currentLayoutDef.buttonClass} overflow-hidden p-0.5 sm:p-1 border-2 transition-all shadow-md flex items-center select-none ${
+                  currentLayout === 'cartoon_pop'
+                    ? 'bg-amber-950/80 border-amber-300 shadow-[0_3px_0_#92400e]'
+                    : currentLayout === 'cartoon_comic'
+                    ? 'bg-white border-2 border-black shadow-[2px_2px_0_#000]'
+                    : currentLayout === 'neon_arcade'
+                    ? 'bg-slate-950 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.35)]'
+                    : currentLayout === 'bento_tech'
+                    ? 'bg-slate-900 border-emerald-400 font-mono shadow-sm'
+                    : currentLayout === 'neumorphic_luxe'
+                    ? 'bg-slate-900/90 border-amber-400/80 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
+                    : currentLayout === 'pixel_retro'
+                    ? 'bg-black border-2 border-yellow-400 shadow-[2px_2px_0_#ca8a04]'
+                    : currentLayout === 'cyber_matrix'
+                    ? 'bg-black border border-emerald-400 font-mono shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                    : currentLayout === 'synthwave_grid'
+                    ? 'bg-purple-950 border border-pink-400 shadow-[0_0_12px_rgba(244,63,94,0.35)]'
+                    : isLightMode 
+                    ? 'bg-slate-100 border-slate-300' 
+                    : 'bg-slate-950/90 border-white/20'
+                } ${isUrgentTime ? 'animate-pulse ring-2 ring-rose-500/50' : ''}`}
+                title={`Tempo restante: ${timeRemaining}s`}
+              >
+                {/* Background Slider Track Slot */}
+                <div className="absolute inset-1 rounded-full bg-black/40 shadow-inner overflow-hidden pointer-events-none">
+                  {/* Sliding Progress Fill */}
+                  <div
+                    style={{
+                      width: `${timePercent}%`,
+                    }}
+                    className={`h-full rounded-full transition-[width] duration-1000 ease-linear relative flex items-center justify-end ${
+                      isUrgentTime
+                        ? 'bg-gradient-to-r from-orange-600 via-rose-500 to-rose-600 shadow-[0_0_12px_rgba(244,63,94,0.7)]'
+                        : timePercent < 40
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]'
+                        : currentLayout === 'neon_arcade'
+                        ? 'bg-gradient-to-r from-blue-600 via-cyan-400 to-teal-300 shadow-[0_0_12px_rgba(6,182,212,0.6)]'
+                        : currentLayout === 'bento_tech'
+                        ? 'bg-gradient-to-r from-emerald-600 to-teal-400'
+                        : currentLayout === 'synthwave_grid'
+                        ? 'bg-gradient-to-r from-pink-500 to-purple-600'
+                        : 'bg-gradient-to-r from-amber-500 to-yellow-400'
+                    }`}
+                  >
+                    {/* Glowing Slider Thumb / Knob Pin */}
+                    <span className="w-2.5 sm:w-3.5 h-2.5 sm:h-3.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)] border border-black/30 flex-shrink-0 -mr-1 z-10 animate-pulse" />
+                  </div>
+                </div>
+
+                {/* Overlay Text & Stopwatch Icon */}
+                <div className="relative z-10 w-full flex items-center justify-between px-2 sm:px-2.5 text-xs sm:text-sm font-black pointer-events-none">
+                  <span className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] text-xs sm:text-sm">⏱️</span>
+                  <span className={`font-mono drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] ${
+                    isUrgentTime
+                      ? 'text-rose-300 font-black scale-105'
+                      : currentLayout === 'cartoon_comic'
+                      ? 'text-black font-black'
+                      : 'text-white font-black'
+                  }`}>
+                    {timeRemaining}s
+                  </span>
+                </div>
               </div>
             )}
 
@@ -437,6 +514,24 @@ export const GameContainer: React.FC<GameContainerProps> = ({
               {soundOn ? <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" /> : <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />}
             </button>
           </div>
+
+          {/* Synchronized Ambient Full-Width Slider Line at bottom of header */}
+          {timeRemaining !== undefined && timeRemaining > 0 && (
+            <div className="absolute bottom-0 inset-x-0 h-1 sm:h-1.5 bg-black/40 overflow-hidden pointer-events-none">
+              <div
+                style={{ width: `${timePercent}%` }}
+                className={`h-full transition-[width] duration-1000 ease-linear shadow-xs ${
+                  isUrgentTime
+                    ? 'bg-gradient-to-r from-orange-500 via-rose-500 to-rose-600'
+                    : currentLayout === 'neon_arcade'
+                    ? 'bg-gradient-to-r from-blue-500 via-cyan-400 to-teal-300'
+                    : currentLayout === 'bento_tech'
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                    : 'bg-gradient-to-r from-amber-400 to-yellow-300'
+                }`}
+              />
+            </div>
+          )}
         </header>
 
         {/* Main Game Play Area - Styled dynamically per layout */}
