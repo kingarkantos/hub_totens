@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw, Shuffle, Clock, Gamepad2, LayoutGrid, Gem, Box, AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, List, AlertTriangle, Store, Type } from 'lucide-react';
+import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw, Shuffle, Clock, Gamepad2, LayoutGrid, Gem, Box, AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, List, AlertTriangle, Store, Type, Sliders, Eye } from 'lucide-react';
 import { Campaign, GameDefinition, ThemeId, CustomColorsConfig, GameLayoutId, GAME_LAYOUTS, Reseller, SplashButtonStyleId, SPLASH_BUTTON_STYLES } from '../types';
-import { BackgroundEffectId, BACKGROUND_EFFECTS } from './BackgroundEffectOverlay';
+import { BackgroundEffectId, BACKGROUND_EFFECTS, BackgroundEffectOverlay } from './BackgroundEffectOverlay';
+import { SplashButtonRenderer } from './SplashButtonRenderer';
 import { THEME_LIST, THEMES } from '../lib/themes';
 import { GAMES_CATALOG, GAME_CATEGORIES } from '../lib/gamesCatalog';
 import { GamePreviewModal } from '../games/GamePreviewModal';
@@ -104,9 +105,20 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
   const [splashButtonStyle, setSplashButtonStyle] = useState<SplashButtonStyleId>(
     campaignToEdit?.games_config?.splash_button_style || 'default'
   );
+  const initialSplashButtonHue: number =
+    campaignToEdit?.games_config?.splash_button_hue !== undefined
+      ? Number(campaignToEdit.games_config.splash_button_hue)
+      : (campaignToEdit?.games_config?.layout_color_hue !== undefined ? Number(campaignToEdit.games_config.layout_color_hue) : 38);
+  const [splashButtonHue, setSplashButtonHue] = useState<number>(initialSplashButtonHue);
+
+  const splashButtonPalette = useMemo(() => {
+    return generateLayoutPalette(splashButtonHue, themeMode === 'light');
+  }, [splashButtonHue, themeMode]);
+
   const [splashBgEffect, setSplashBgEffect] = useState<BackgroundEffectId>(
     campaignToEdit?.games_config?.splash_bg_effect || 'none'
   );
+  const [bgPreviewBackdrop, setBgPreviewBackdrop] = useState<'splash' | 'dark' | 'night' | 'cyber'>('splash');
   const [resellers, setResellers] = useState<Reseller[]>([]);
   const [selectedResellerId, setSelectedResellerId] = useState<string>(
     campaignToEdit?.reseller_id || campaignToEdit?.games_config?.reseller_id || ''
@@ -286,6 +298,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           description_align: descriptionAlign,
           description_size: descriptionSize,
           splash_button_style: splashButtonStyle,
+          splash_button_hue: splashButtonHue,
           splash_bg_effect: splashBgEffect,
           custom_colors: {
             enabled: true,
@@ -749,18 +762,145 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
               </div>
 
               {/* 1. Estilo do Botão "Toque para Jogar" */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                    <Gamepad2 className="w-3.5 h-3.5 text-red-600" />
-                    <span>Estilo do Botão "Toque para Jogar"</span>
+                    <Gamepad2 className="w-4 h-4 text-red-600" />
+                    <span>Estilo do Botão "Toque para Jogar" (17 Modelos Exclusivos)</span>
                   </label>
                   <span className="text-xs text-slate-500">
                     Estilo ativo: <strong className="text-slate-900">{SPLASH_BUTTON_STYLES.find(s => s.id === splashButtonStyle)?.name}</strong>
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {/* PRÉ-VISUALIZAÇÃO INTERATIVA EM TEMPO REAL DO BOTÃO */}
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-black border-2 border-slate-800 text-white shadow-xl space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-white/10 flex-wrap gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        style={{ backgroundColor: splashButtonPalette.primary, boxShadow: `0 0 15px ${splashButtonPalette.glowColor}` }}
+                        className="w-8 h-8 rounded-xl flex items-center justify-center text-white flex-shrink-0 transition-all duration-300"
+                      >
+                        <Eye className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-black flex items-center gap-2">
+                          <span>Pré-visualização do Botão de Início</span>
+                          <span style={{ color: splashButtonPalette.primary }} className="font-mono text-xs">
+                            ({SPLASH_BUTTON_STYLES.find(s => s.id === splashButtonStyle)?.name})
+                          </span>
+                        </h4>
+                        <p className="text-[11px] text-slate-400">
+                          Toque no botão abaixo para testar a resposta táctil, animação e áudio exatamente como no totem:
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-xs font-mono">
+                      <span className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-slate-300 flex items-center gap-1.5">
+                        <span style={{ backgroundColor: splashButtonPalette.primary }} className="w-2.5 h-2.5 rounded-full inline-block" />
+                        <span>{splashButtonPalette.primary}</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Visualização Central do Botão */}
+                  <div className="py-8 px-4 rounded-xl bg-slate-900/80 border border-white/10 flex items-center justify-center relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-radial from-white/5 to-transparent pointer-events-none" />
+                    <div className="scale-90 sm:scale-100 transition-transform">
+                      <SplashButtonRenderer
+                        styleId={splashButtonStyle}
+                        palette={splashButtonPalette}
+                        size="md"
+                        label="TOQUE PARA JOGAR"
+                      />
+                    </div>
+                  </div>
+
+                  {/* SLIDER DE VARIAÇÃO DE CORES DO BOTÃO */}
+                  <div className="pt-2 space-y-3">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-300 flex-wrap gap-2">
+                      <span className="flex items-center gap-2">
+                        <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                        <span>🎨 Barra de Arrastar para Variar Cores do Botão:</span>
+                        <span
+                          style={{ backgroundColor: splashButtonPalette.primary }}
+                          className="px-2 py-0.5 rounded-md text-[10px] font-black text-white shadow-xs font-mono"
+                        >
+                          {splashButtonHue}° ({splashButtonPalette.primary})
+                        </span>
+                      </span>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sound.playClick();
+                            setSplashButtonHue(layoutColorHue);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-[11px] text-slate-300 hover:text-white transition-all"
+                          title="Copiar a mesma tonalidade do Design dos Jogos"
+                        >
+                          Usar Cor dos Jogos
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sound.playClick();
+                            setSplashButtonHue(38);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-[11px] text-slate-300 hover:text-white flex items-center gap-1 transition-all"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          <span>Padrão</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="relative flex items-center">
+                      <input
+                        type="range"
+                        min="0"
+                        max="360"
+                        step="1"
+                        value={splashButtonHue}
+                        onChange={(e) => setSplashButtonHue(Number(e.target.value))}
+                        className="w-full h-3 rounded-lg appearance-none cursor-pointer focus:outline-none transition-all shadow-inner"
+                        style={{
+                          background: 'linear-gradient(to right, #ef4444 0%, #f97316 12%, #eab308 25%, #22c55e 38%, #06b6d4 50%, #3b82f6 65%, #8b5cf6 78%, #ec4899 90%, #ef4444 100%)',
+                        }}
+                      />
+                    </div>
+
+                    {/* Presets Rápidos de Cores para o Botão */}
+                    <div className="flex items-center justify-between flex-wrap gap-2 pt-1 text-[11px] text-slate-400">
+                      <span>Paletas Rápidas:</span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {QUICK_HUE_PRESETS.map((preset) => (
+                          <button
+                            key={preset.name}
+                            type="button"
+                            onClick={() => {
+                              sound.playClick();
+                              setSplashButtonHue(preset.hue);
+                            }}
+                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5 border ${
+                              Math.abs(splashButtonHue - preset.hue) < 10
+                                ? 'bg-white text-slate-900 border-white shadow-sm font-black'
+                                : 'bg-slate-800/80 text-slate-300 border-slate-700 hover:border-slate-500 hover:text-white'
+                            }`}
+                          >
+                            <span style={{ backgroundColor: preset.previewHex }} className="w-2.5 h-2.5 rounded-full shadow-2xs" />
+                            <span>{preset.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Grid dos 17 Modelos de Botão */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                   {SPLASH_BUTTON_STYLES.map((styleDef) => {
                     const isSelected = splashButtonStyle === styleDef.id;
                     return (
@@ -773,13 +913,13 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                         }}
                         className={`p-3.5 rounded-2xl border-2 text-left transition-all flex flex-col justify-between gap-3 relative ${
                           isSelected
-                            ? 'border-red-600 bg-white shadow-md ring-2 ring-red-500/20'
+                            ? 'border-red-600 bg-white shadow-md ring-2 ring-red-500/20 scale-[1.01]'
                             : 'border-slate-200 bg-white/80 hover:border-slate-300 hover:bg-white'
                         }`}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-lg">{styleDef.icon}</span>
+                            <span className="text-xl">{styleDef.icon}</span>
                             <div>
                               <div className="text-xs font-black text-slate-900">{styleDef.name}</div>
                               <div className="text-[10px] text-slate-500">{styleDef.tagline}</div>
@@ -792,15 +932,19 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                           )}
                         </div>
 
-                        {/* Visual Miniature Button Preview */}
-                        <div className="w-full py-2 px-3 rounded-xl flex items-center justify-center gap-2 text-[11px] font-bold shadow-2xs truncate select-none border border-slate-200 bg-slate-900">
-                          <span className={`w-full py-1.5 px-3 rounded-xl flex items-center justify-center gap-1.5 text-[10px] font-black uppercase tracking-wider ${styleDef.previewClass}`}>
-                            <Play className="w-3 h-3 fill-current" />
-                            <span>Jogar</span>
-                          </span>
+                        {/* Visual Miniature Button Preview renderizado dinamicamente */}
+                        <div className="w-full py-2.5 px-2 rounded-xl flex items-center justify-center border border-slate-800 bg-slate-950 overflow-hidden shadow-inner">
+                          <div className="scale-75 origin-center pointer-events-none w-full flex justify-center">
+                            <SplashButtonRenderer
+                              styleId={styleDef.id}
+                              palette={splashButtonPalette}
+                              size="sm"
+                              label="JOGAR"
+                            />
+                          </div>
                         </div>
 
-                        <p className="text-[10px] text-slate-500 leading-tight">
+                        <p className="text-[10px] text-slate-500 leading-tight line-clamp-2">
                           {styleDef.description}
                         </p>
                       </button>
@@ -810,21 +954,133 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
               </div>
 
               {/* 2. Efeito de Animação de Fundo (Sobreposição / Overlay) */}
-              <div className="space-y-3 pt-3 border-t border-slate-200">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>Animação de Fundo (Sobreposição / Overlay)</span>
-                  </label>
+              <div className="space-y-4 pt-4 border-t border-slate-200">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-indigo-600" />
+                      <span>Animação de Fundo (18 Efeitos em Tempo Real)</span>
+                    </label>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Partículas e efeitos visuais animados sobrepostos à tela de abertura do totem:
+                    </p>
+                  </div>
                   <span className="text-xs text-slate-500">
-                    Efeito ativo: <strong className="text-slate-900">{BACKGROUND_EFFECTS.find(e => e.id === splashBgEffect)?.name}</strong>
+                    Efeito ativo: <strong className="text-indigo-600 font-black">{BACKGROUND_EFFECTS.find(e => e.id === splashBgEffect)?.name}</strong>
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 -mt-1">
-                  Efeitos visuais animados em tempo real que ficam sobre a imagem de fundo:
-                </p>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3">
+                {/* PRÉ-VISUALIZAÇÃO EM TEMPO REAL DO EFEITO DE FUNDO */}
+                <div className="p-4 rounded-2xl bg-slate-900 border-2 border-indigo-950 text-white shadow-xl space-y-3">
+                  <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="font-bold uppercase tracking-wider text-slate-300">
+                        Preview em Tempo Real do Fundo:
+                      </span>
+                      <span className="px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/30">
+                        {BACKGROUND_EFFECTS.find(e => e.id === splashBgEffect)?.name}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-[11px]">
+                      <span className="text-slate-400">Cenário de Teste:</span>
+                      <button
+                        type="button"
+                        onClick={() => setBgPreviewBackdrop('splash')}
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                          bgPreviewBackdrop === 'splash' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Splash Atual
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBgPreviewBackdrop('dark')}
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                          bgPreviewBackdrop === 'dark' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Dark Studio
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBgPreviewBackdrop('night')}
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                          bgPreviewBackdrop === 'night' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Cyber Night
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBgPreviewBackdrop('cyber')}
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                          bgPreviewBackdrop === 'cyber' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Eco Nature
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Janela de Simulação do Totem com Animação Overlay */}
+                  <div className="relative w-full h-56 sm:h-64 rounded-xl border border-white/15 overflow-hidden flex flex-col items-center justify-center text-center shadow-inner">
+                    {/* Fundo Selecionado */}
+                    {bgPreviewBackdrop === 'splash' ? (
+                      <img
+                        src={splashUrl}
+                        alt="Splash Backdrop"
+                        className="absolute inset-0 w-full h-full object-cover brightness-[0.55]"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = SPLASH_PRESETS[0].url;
+                        }}
+                      />
+                    ) : bgPreviewBackdrop === 'dark' ? (
+                      <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-black" />
+                    ) : bgPreviewBackdrop === 'night' ? (
+                      <div className="absolute inset-0 bg-gradient-to-b from-indigo-950 via-slate-950 to-purple-950" />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-b from-emerald-950 via-teal-950 to-slate-950" />
+                    )}
+
+                    {/* Camada da Animação do Fundo */}
+                    <div className="absolute inset-0 z-10 pointer-events-none">
+                      <BackgroundEffectOverlay effect={splashBgEffect} />
+                    </div>
+
+                    {/* Conteúdo Ilustrativo do Totem na Frente da Animação */}
+                    <div className="relative z-20 flex flex-col items-center p-4 max-w-sm pointer-events-none">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 drop-shadow-sm">
+                        {clientName || 'Cliente'}
+                      </span>
+                      <h3 className="text-base sm:text-lg font-black text-white drop-shadow-md truncate max-w-full">
+                        {name || 'Nome da Campanha'}
+                      </h3>
+                      <p className="text-[11px] text-slate-200 drop-shadow-sm line-clamp-1 mt-0.5">
+                        {description || 'Toque na tela para iniciar os desafios'}
+                      </p>
+
+                      <div className="mt-4 scale-75 origin-center pointer-events-auto">
+                        <SplashButtonRenderer
+                          styleId={splashButtonStyle}
+                          palette={splashButtonPalette}
+                          size="sm"
+                          label="TOQUE PARA JOGAR"
+                        />
+                      </div>
+                    </div>
+
+                    {splashBgEffect === 'none' && (
+                      <div className="absolute bottom-2 left-3 z-20 text-[10px] text-slate-400 bg-black/60 px-2 py-0.5 rounded backdrop-blur-xs">
+                        Nenhum efeito visual de sobreposição selecionado
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Grid dos 18 Efeitos de Fundo */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   {BACKGROUND_EFFECTS.map((eff) => {
                     const isSelected = splashBgEffect === eff.id;
                     return (
@@ -837,7 +1093,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                         }}
                         className={`p-3 rounded-2xl border-2 text-left transition-all flex flex-col justify-between gap-2 relative ${
                           isSelected
-                            ? 'border-indigo-600 bg-white shadow-md ring-2 ring-indigo-500/20'
+                            ? 'border-indigo-600 bg-white shadow-md ring-2 ring-indigo-500/20 scale-[1.01]'
                             : 'border-slate-200 bg-white/80 hover:border-slate-300 hover:bg-white'
                         }`}
                       >
