@@ -9,6 +9,7 @@ import { GameContentEditorModal, getContentCount } from './GameContentEditorModa
 import { sound } from '../lib/audio';
 import { supabase, TABLES, BUCKETS } from '../lib/supabase';
 import { resellersService } from '../lib/resellersService';
+import { QUICK_HUE_PRESETS, generateLayoutPalette, getDefaultHueForLayout } from '../lib/colorHarmony';
 
 interface CampaignFormModalProps {
   campaignToEdit?: Campaign | null;
@@ -74,9 +75,19 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
     'dark';
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>(initialThemeMode);
   // Per-game orderMode and questionsCount are configured in each game's content editor modal
-  const [gameLayout, setGameLayout] = useState<GameLayoutId>(
-    campaignToEdit?.games_config?.game_layout || 'modern_glass'
-  );
+  const initialLayout: GameLayoutId = campaignToEdit?.games_config?.game_layout || 'neon_arcade';
+  const [gameLayout, setGameLayout] = useState<GameLayoutId>(initialLayout);
+
+  const initialLayoutHue: number =
+    campaignToEdit?.games_config?.layout_color_hue !== undefined
+      ? Number(campaignToEdit.games_config.layout_color_hue)
+      : getDefaultHueForLayout(initialLayout);
+  const [layoutColorHue, setLayoutColorHue] = useState<number>(initialLayoutHue);
+
+  const activeLayoutPalette = useMemo(() => {
+    return generateLayoutPalette(layoutColorHue, themeMode === 'light');
+  }, [layoutColorHue, themeMode]);
+
   const [gameCategoryFilter, setGameCategoryFilter] = useState<string>('all');
   const [descriptionAlign, setDescriptionAlign] = useState<'left' | 'center' | 'right' | 'justify'>(
     campaignToEdit?.games_config?.description_align || 'left'
@@ -248,13 +259,14 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
     setSaving(true);
     try {
       const chosenReseller = resellers.find((r) => r.id === selectedResellerId);
+      const finalPalette = generateLayoutPalette(layoutColorHue, themeMode === 'light');
       await onSave({
         name: name.trim(),
         slug: slug.trim().toLowerCase(),
         client_name: clientName.trim(),
         description: description.trim(),
         splash_image_url: splashUrl.trim(),
-        theme_id: themeId,
+        theme_id: campaignToEdit?.theme_id || 'honda-red',
         selected_games: selectedGames,
         games_config: {
           ...gamesConfig,
@@ -263,13 +275,20 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           theme_mode: themeMode,
           order_mode: gamesConfig?.order_mode || 'random',
           game_layout: gameLayout,
+          layout_color_hue: layoutColorHue,
           description_align: descriptionAlign,
           description_size: descriptionSize,
           splash_button_style: splashButtonStyle,
           splash_bg_effect: splashBgEffect,
           custom_colors: {
-            ...customColors,
-            bgType: customColors.enabled ? customColors.bgType : (themeMode === 'light' ? 'light' : 'dark'),
+            enabled: true,
+            primary: finalPalette.primary,
+            secondary: finalPalette.secondary,
+            accent: finalPalette.accent,
+            glowColor: finalPalette.glowColor,
+            bgType: themeMode === 'light' ? 'light' : 'dark',
+            bgFrom: '#0F172A',
+            bgTo: '#020617',
           },
         },
         ranking_enabled: rankingEnabled,
@@ -840,17 +859,22 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
               </div>
             </div>
 
-            {/* Design System Themes Section (10 Themes) */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2 text-sm font-bold text-red-600 uppercase tracking-wider">
-                  <Layers className="w-4 h-4" />
-                  <span>3. Estilo Visual do Design System (15 Temas)</span>
+            {/* 3. Design & Layout dos Jogos com Variação de Cores em Tempo Real */}
+            <div className="space-y-5 p-5 sm:p-6 rounded-3xl bg-white border-2 border-slate-200/90 shadow-sm">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-2.5 text-sm sm:text-base font-black text-red-600 uppercase tracking-wider">
+                  <Palette className="w-5 h-5" />
+                  <span>3. Design &amp; Layout dos Jogos (12 Estilos Exclusivos)</span>
                 </div>
-                <span className="text-xs text-slate-500">
-                  Tema Selecionado: <strong className="text-slate-900">{THEME_LIST.find((t) => t.id === themeId)?.name}</strong>
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
+                    Estilo Selecionado: <strong className="text-red-600">{GAME_LAYOUTS.find((l) => l.id === gameLayout)?.name}</strong>
+                  </span>
+                </div>
               </div>
+              <p className="text-xs sm:text-sm text-slate-500 leading-relaxed -mt-2">
+                Escolha o design visual exclusivo para todos os jogos da campanha. Você pode variar as cores em tempo real arrastando o controle deslizante abaixo sem precisar escolher cor por cor!
+              </p>
 
               {/* Modo Visual do Totem: Tema Claro vs Tema Escuro */}
               <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100/90 border-2 border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
@@ -862,7 +886,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                       <Moon className="w-5 h-5 text-indigo-500" />
                     )}
                     <h4 className="text-sm font-black text-slate-900">
-                      Modo Visual do Totem & Jogos
+                      Modo Visual do Totem &amp; Jogos
                     </h4>
                     <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${
                       themeMode === 'light' 
@@ -883,7 +907,6 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                     onClick={() => {
                       sound.playClick();
                       setThemeMode('light');
-                      setCustomColors((prev) => ({ ...prev, bgType: 'light' }));
                     }}
                     className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition-all ${
                       themeMode === 'light'
@@ -900,7 +923,6 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                     onClick={() => {
                       sound.playClick();
                       setThemeMode('dark');
-                      setCustomColors((prev) => ({ ...prev, bgType: 'dark' }));
                     }}
                     className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition-all ${
                       themeMode === 'dark'
@@ -914,441 +936,8 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                {THEME_LIST.map((theme) => {
-                  const isSelected = themeId === theme.id;
-                  return (
-                    <button
-                      key={theme.id}
-                      type="button"
-                      onClick={() => {
-                        sound.playClick();
-                        setThemeId(theme.id);
-                      }}
-                      className={`p-3.5 rounded-2xl border-2 text-left transition-all relative flex flex-col justify-between ${
-                        isSelected
-                          ? 'border-red-600 scale-[1.02] shadow-md bg-red-50/40'
-                          : 'border-slate-200 hover:border-slate-300 bg-white'
-                      }`}
-                    >
-                      {isSelected && (
-                        <span className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-black shadow">
-                          <Check className="w-3.5 h-3.5 stroke-[3]" />
-                        </span>
-                      )}
-
-                      <div>
-                        {/* Palette preview pills */}
-                        <div className="flex items-center gap-1.5 mb-2.5">
-                          <div
-                            style={{ backgroundColor: theme.primary }}
-                            className="w-5 h-5 rounded-full shadow-xs"
-                          />
-                          <div
-                            style={{ backgroundColor: theme.secondary }}
-                            className="w-4 h-4 rounded-full shadow-xs"
-                          />
-                          <div
-                            style={{ backgroundColor: theme.accent }}
-                            className="w-3.5 h-3.5 rounded-full shadow-xs"
-                          />
-                        </div>
-
-                        <h4 className="text-xs font-bold text-slate-900 leading-snug">{theme.name}</h4>
-                        <p className="text-[10px] text-slate-500 leading-tight mt-1 line-clamp-2">
-                          {theme.tagline}
-                        </p>
-                      </div>
-
-                      <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between">
-                        <span
-                          style={{ backgroundColor: theme.primary }}
-                          className="w-full py-1 rounded-md text-[10px] font-black text-center text-white"
-                        >
-                          Amostra de Botão
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Extra Option: Custom Campaign Colors */}
-              <div className={`mt-4 rounded-3xl border-2 transition-all p-5 ${
-                customColors.enabled
-                  ? 'border-red-500/80 bg-gradient-to-br from-red-50/50 via-white to-amber-50/30 shadow-md ring-2 ring-red-500/10'
-                  : 'border-slate-200 bg-slate-50/70 hover:border-slate-300 hover:bg-slate-100/70'
-              }`}>
-                <div
-                  onClick={() => {
-                    sound.playClick();
-                    setCustomColors((prev) => ({ ...prev, enabled: !prev.enabled }));
-                  }}
-                  className="cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none group"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-600 via-pink-600 to-amber-500 flex items-center justify-center text-white shadow-md shadow-red-500/25 flex-shrink-0 group-hover:scale-105 transition-transform">
-                      <Palette className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="text-sm sm:text-base font-black text-slate-900 group-hover:text-red-600 transition-colors">
-                          Personalizar Cores da Campanha
-                        </h4>
-                        <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-xs">
-                          Opção Extra
-                        </span>
-                        {customColors.enabled && (
-                          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 animate-in fade-in">
-                            <Check className="w-3 h-3 stroke-[3]" /> Ativo
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        Defina suas próprias cores hexadecimais, degradês e efeitos neon para o totem
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Toggle Switch */}
-                  <div className="flex items-center gap-3 self-end sm:self-auto">
-                    <span className={`text-xs font-black uppercase tracking-wider transition-colors ${
-                      customColors.enabled ? 'text-red-600' : 'text-slate-400 group-hover:text-slate-600'
-                    }`}>
-                      {customColors.enabled ? 'Ativado' : 'Clique para Ativar'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        sound.playClick();
-                        setCustomColors((prev) => ({ ...prev, enabled: !prev.enabled }));
-                      }}
-                      className={`relative inline-flex h-8 w-14 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-inner ${
-                        customColors.enabled ? 'bg-red-600' : 'bg-slate-300'
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-7 w-7 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                          customColors.enabled ? 'translate-x-6' : 'translate-x-0'
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Expanded Controls when Enabled */}
-                {customColors.enabled && (
-                  <div className="mt-5 pt-5 border-t border-slate-200/80 space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
-                    {/* Quick Presets / Harmonizers */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                          Paletas Rápidas em 1-Clique:
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            sound.playClick();
-                            const activeTheme = THEMES[themeId] || THEMES['honda-red'];
-                            setCustomColors({
-                              enabled: true,
-                              primary: activeTheme.primary,
-                              secondary: activeTheme.secondary,
-                              accent: activeTheme.accent,
-                              glowColor: activeTheme.glowColor,
-                              bgType: 'dark',
-                              bgFrom: '#0F172A',
-                              bgTo: '#020617',
-                            });
-                          }}
-                          className="text-[11px] font-bold text-slate-500 hover:text-red-600 flex items-center gap-1 transition-colors"
-                        >
-                          <RotateCcw className="w-3 h-3" />
-                          Copiar cores do tema ({THEMES[themeId]?.name})
-                        </button>
-                      </div>
-
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {COLOR_PRESETS.map((preset) => (
-                          <button
-                            key={preset.name}
-                            type="button"
-                            onClick={() => {
-                              sound.playClick();
-                              setCustomColors((prev) => ({
-                                ...prev,
-                                primary: preset.primary,
-                                secondary: preset.secondary,
-                                glowColor: preset.glow,
-                              }));
-                            }}
-                            className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:border-slate-400 active:scale-95 transition-all text-xs font-bold text-slate-700 flex items-center gap-2 shadow-xs"
-                          >
-                            <span
-                              style={{ backgroundColor: preset.primary }}
-                              className="w-3 h-3 rounded-full shadow-xs"
-                            />
-                            <span>{preset.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Color Pickers Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      {/* 1. Primary Color */}
-                      <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2">
-                        <label className="block text-xs font-black uppercase text-slate-700">
-                          Cor Primária (Principal)
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            value={customColors.primary}
-                            onChange={(e) =>
-                              setCustomColors((prev) => ({ ...prev, primary: e.target.value.toUpperCase() }))
-                            }
-                            className="w-10 h-10 rounded-xl cursor-pointer border-0 bg-transparent p-0"
-                          />
-                          <input
-                            type="text"
-                            value={customColors.primary}
-                            onChange={(e) =>
-                              setCustomColors((prev) => ({ ...prev, primary: e.target.value.toUpperCase() }))
-                            }
-                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono text-xs font-bold text-slate-800 uppercase focus:bg-white focus:outline-none focus:border-red-500"
-                            placeholder="#DC2626"
-                          />
-                        </div>
-                        <p className="text-[11px] text-slate-400 leading-tight">
-                          Botões de ação "JOGAR AGORA", títulos principais e indicadores.
-                        </p>
-                      </div>
-
-                      {/* 2. Secondary Color */}
-                      <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2">
-                        <label className="block text-xs font-black uppercase text-slate-700">
-                          Cor Secundária (Degradê)
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            value={customColors.secondary}
-                            onChange={(e) =>
-                              setCustomColors((prev) => ({ ...prev, secondary: e.target.value.toUpperCase() }))
-                            }
-                            className="w-10 h-10 rounded-xl cursor-pointer border-0 bg-transparent p-0"
-                          />
-                          <input
-                            type="text"
-                            value={customColors.secondary}
-                            onChange={(e) =>
-                              setCustomColors((prev) => ({ ...prev, secondary: e.target.value.toUpperCase() }))
-                            }
-                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono text-xs font-bold text-slate-800 uppercase focus:bg-white focus:outline-none focus:border-red-500"
-                            placeholder="#991B1B"
-                          />
-                        </div>
-                        <p className="text-[11px] text-slate-400 leading-tight">
-                          Final dos degradês de botões e contrastes visuais.
-                        </p>
-                      </div>
-
-                      {/* 3. Glow Color */}
-                      <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2">
-                        <label className="block text-xs font-black uppercase text-slate-700">
-                          Glow / Brilho Neon
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            value={customColors.glowColor}
-                            onChange={(e) =>
-                              setCustomColors((prev) => ({ ...prev, glowColor: e.target.value.toUpperCase() }))
-                            }
-                            className="w-10 h-10 rounded-xl cursor-pointer border-0 bg-transparent p-0"
-                          />
-                          <input
-                            type="text"
-                            value={customColors.glowColor}
-                            onChange={(e) =>
-                              setCustomColors((prev) => ({ ...prev, glowColor: e.target.value.toUpperCase() }))
-                            }
-                            className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono text-xs font-bold text-slate-800 uppercase focus:bg-white focus:outline-none focus:border-red-500"
-                            placeholder="#DC2626"
-                          />
-                        </div>
-                        <p className="text-[11px] text-slate-400 leading-tight">
-                          Efeito neon pulsante no botão do totem e nas auras dos cards.
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Background Mode Selector */}
-                    <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-3">
-                      <label className="block text-xs font-black uppercase text-slate-700">
-                        Estilo de Fundo do Totem
-                      </label>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            sound.playClick();
-                            setCustomColors((prev) => ({ ...prev, bgType: 'dark' }));
-                            setThemeMode('dark');
-                          }}
-                          className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 text-xs font-bold transition-all ${
-                            customColors.bgType === 'dark'
-                              ? 'border-red-600 bg-slate-900 text-white shadow-xs'
-                              : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
-                          }`}
-                        >
-                          <Moon className="w-4 h-4" />
-                          <span>Escuro (Dark Totem)</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            sound.playClick();
-                            setCustomColors((prev) => ({ ...prev, bgType: 'light' }));
-                            setThemeMode('light');
-                          }}
-                          className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 text-xs font-bold transition-all ${
-                            customColors.bgType === 'light'
-                              ? 'border-red-600 bg-white text-slate-950 shadow-xs ring-2 ring-red-100'
-                              : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
-                          }`}
-                        >
-                          <Sun className="w-4 h-4 text-amber-500" />
-                          <span>Claro (Light Totem)</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            sound.playClick();
-                            setCustomColors((prev) => ({ ...prev, bgType: 'custom' }));
-                          }}
-                          className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 text-xs font-bold transition-all ${
-                            customColors.bgType === 'custom'
-                              ? 'border-red-600 bg-red-50 text-red-700 shadow-xs'
-                              : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
-                          }`}
-                        >
-                          <Palette className="w-4 h-4 text-red-600" />
-                          <span>Degradê Personalizado</span>
-                        </button>
-                      </div>
-
-                      {/* Custom Gradient Inputs if bgType === 'custom' */}
-                      {customColors.bgType === 'custom' && (
-                        <div className="grid grid-cols-2 gap-3 pt-2 animate-in fade-in">
-                          <div>
-                            <span className="block text-[11px] font-bold text-slate-600 mb-1">Cor Superior (Início)</span>
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="color"
-                                value={customColors.bgFrom || '#0F172A'}
-                                onChange={(e) =>
-                                  setCustomColors((prev) => ({ ...prev, bgFrom: e.target.value.toUpperCase() }))
-                                }
-                                className="w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent p-0"
-                              />
-                              <input
-                                type="text"
-                                value={customColors.bgFrom || '#0F172A'}
-                                onChange={(e) =>
-                                  setCustomColors((prev) => ({ ...prev, bgFrom: e.target.value.toUpperCase() }))
-                                }
-                                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg font-mono text-xs font-bold text-slate-800 uppercase"
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <span className="block text-[11px] font-bold text-slate-600 mb-1">Cor Inferior (Fim)</span>
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="color"
-                                value={customColors.bgTo || '#020617'}
-                                onChange={(e) =>
-                                  setCustomColors((prev) => ({ ...prev, bgTo: e.target.value.toUpperCase() }))
-                                }
-                                className="w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent p-0"
-                              />
-                              <input
-                                type="text"
-                                value={customColors.bgTo || '#020617'}
-                                onChange={(e) =>
-                                  setCustomColors((prev) => ({ ...prev, bgTo: e.target.value.toUpperCase() }))
-                                }
-                                className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg font-mono text-xs font-bold text-slate-800 uppercase"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Live Preview Card */}
-                    <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-white shadow-xl">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-3">
-                        Pré-visualização em Tempo Real no Totem:
-                      </span>
-
-                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-black/40 border border-white/10">
-                        <div className="flex items-center gap-3">
-                          <div
-                            style={{ color: customColors.primary }}
-                            className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center font-black text-xl shadow-inner"
-                          >
-                            1
-                          </div>
-                          <div>
-                            <div className="text-[10px] font-bold uppercase text-slate-400">Card de Jogo</div>
-                            <div className="text-sm font-black text-white">Roleta Premiada</div>
-                          </div>
-                        </div>
-
-                        {/* Button with custom styles */}
-                        <button
-                          type="button"
-                          style={{
-                            background: `linear-gradient(to right, ${customColors.primary}, ${customColors.secondary})`,
-                            boxShadow: `0 0 25px ${customColors.glowColor}80`,
-                          }}
-                          className="px-6 py-3 rounded-xl text-white font-black text-xs uppercase tracking-wider shadow-lg flex items-center gap-2 transition-transform active:scale-95"
-                        >
-                          <Play className="w-4 h-4 fill-current" />
-                          <span>JOGAR AGORA</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 5 Distinct Game Layouts Selector Section */}
-            <div className="space-y-4 p-5 rounded-2xl bg-white border border-slate-200 shadow-xs">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2 text-sm font-bold text-red-600 uppercase tracking-wider">
-                  <Palette className="w-4 h-4" />
-                  <span>Design &amp; Layout dos Jogos (12 Estilos Exclusivos)</span>
-                </div>
-                <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
-                  Layout Selecionado: <strong>{GAME_LAYOUTS.find((l) => l.id === gameLayout)?.name}</strong>
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Cada jogo da campanha terá este design visual exclusivo aplicado (containers, bordas, animações, efeitos e iluminação).
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+              {/* Grid dos 12 Estilos */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {GAME_LAYOUTS.map((layoutDef) => {
                   const isSelected = layoutDef.id === gameLayout;
                   return (
@@ -1358,6 +947,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                       onClick={() => {
                         sound.playClick();
                         setGameLayout(layoutDef.id);
+                        setLayoutColorHue(getDefaultHueForLayout(layoutDef.id));
                         setGamesConfig((prev) => {
                           const updated: Record<string, any> = {
                             ...prev,
@@ -1369,42 +959,246 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                           return updated;
                         });
                       }}
-                      className={`p-3.5 rounded-xl border-2 text-left transition-all flex flex-col justify-between gap-3 active:scale-95 ${
+                      className={`p-4 rounded-2xl border-2 text-left transition-all flex flex-col justify-between gap-3 active:scale-[0.98] relative ${
                         isSelected
-                          ? 'border-red-500 bg-red-50/60 shadow-sm ring-2 ring-red-500/20'
-                          : 'border-slate-200 bg-slate-50/70 hover:bg-slate-100 hover:border-slate-300'
+                          ? 'border-red-600 bg-red-50/50 shadow-md ring-2 ring-red-500/20 scale-[1.02]'
+                          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full">
-                        <div className={`p-2 rounded-lg bg-gradient-to-br ${layoutDef.previewBg} text-white shadow-xs`}>
+                        <div className={`p-2.5 rounded-xl bg-gradient-to-br ${layoutDef.previewBg} text-white shadow-sm`}>
                           {layoutDef.id === 'neon_arcade' ? (
-                            <Gamepad2 className="w-4 h-4" />
+                            <Gamepad2 className="w-5 h-5" />
                           ) : layoutDef.id === 'bento_tech' ? (
-                            <LayoutGrid className="w-4 h-4" />
+                            <LayoutGrid className="w-5 h-5" />
                           ) : layoutDef.id === 'neumorphic_luxe' ? (
-                            <Gem className="w-4 h-4" />
+                            <Gem className="w-5 h-5" />
                           ) : layoutDef.id === 'spatial_3d' ? (
-                            <Box className="w-4 h-4" />
+                            <Box className="w-5 h-5" />
                           ) : (
-                            <Sparkles className="w-4 h-4" />
+                            <Sparkles className="w-5 h-5" />
                           )}
                         </div>
                         {isSelected && (
-                          <span className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px] font-black shadow-xs">
+                          <span className="w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-black shadow-sm">
                             ✓
                           </span>
                         )}
                       </div>
+
                       <div>
-                        <h4 className="text-xs font-black text-slate-900">{layoutDef.name}</h4>
-                        <span className="text-[10px] font-bold text-red-600 block mb-1">{layoutDef.tagline}</span>
-                        <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed">
+                        <h4 className="text-xs sm:text-sm font-black text-slate-900 leading-tight">
+                          {layoutDef.name}
+                        </h4>
+                        <span className="text-[10px] font-black text-red-600 block mt-0.5 mb-1.5 uppercase tracking-wide">
+                          {layoutDef.tagline}
+                        </span>
+                        <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
                           {layoutDef.description}
                         </p>
                       </div>
+
+                      {/* Botão no card para variar cores quando selecionado */}
+                      {isSelected ? (
+                        <div className="mt-2 pt-2.5 border-t border-red-200/80 flex items-center justify-between">
+                          <span className="text-[11px] font-black text-red-700 flex items-center gap-1.5">
+                            <Palette className="w-3.5 h-3.5" />
+                            Cores Personalizadas
+                          </span>
+                          <span
+                            style={{ backgroundColor: activeLayoutPalette.primary }}
+                            className="w-4 h-4 rounded-full shadow-xs border border-white"
+                            title={`Cor ativa: ${activeLayoutPalette.primary}`}
+                          />
+                        </div>
+                      ) : (
+                        <div className="mt-2 pt-2 border-t border-slate-100 flex items-center text-[10px] font-bold text-slate-400">
+                          Clique para selecionar
+                        </div>
+                      )}
                     </button>
                   );
                 })}
+              </div>
+
+              {/* Painel de Variação de Cores com Slider e Mini Preview em Cima */}
+              <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-black border-2 border-slate-800 text-white shadow-xl space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
+                  <div className="flex items-center gap-3">
+                    <div
+                      style={{ backgroundColor: activeLayoutPalette.primary, boxShadow: `0 0 15px ${activeLayoutPalette.glowColor}` }}
+                      className="w-10 h-10 rounded-2xl flex items-center justify-center text-white flex-shrink-0 transition-all duration-300"
+                    >
+                      <Palette className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm sm:text-base font-black flex items-center gap-2">
+                        <span>Variação de Cores do Estilo:</span>
+                        <span style={{ color: activeLayoutPalette.primary }} className="transition-colors duration-300">
+                          {GAME_LAYOUTS.find((l) => l.id === gameLayout)?.name}
+                        </span>
+                      </h4>
+                      <p className="text-xs text-slate-400">
+                        Deslize a barra para mudar todas as cores de uma vez só (bordas, neon, botões e auras)
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setLayoutColorHue(getDefaultHueForLayout(gameLayout));
+                    }}
+                    className="self-start sm:self-auto px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 active:scale-95 text-xs font-bold text-slate-300 hover:text-white border border-white/15 flex items-center gap-1.5 transition-all"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Restaurar Cor Original</span>
+                  </button>
+                </div>
+
+                {/* 1. Mini Preview em Cima Mostrando a Variação naquele Tema */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs text-slate-400 font-bold">
+                    <span>PRÉ-VISUALIZAÇÃO EM TEMPO REAL NO ESTILO ESCOLHIDO:</span>
+                    <div className="flex items-center gap-2 text-[11px] font-mono">
+                      <span className="flex items-center gap-1">
+                        <span style={{ backgroundColor: activeLayoutPalette.primary }} className="w-2.5 h-2.5 rounded-full" />
+                        {activeLayoutPalette.primary}
+                      </span>
+                      <span className="text-slate-600">•</span>
+                      <span className="flex items-center gap-1">
+                        <span style={{ backgroundColor: activeLayoutPalette.secondary }} className="w-2.5 h-2.5 rounded-full" />
+                        {activeLayoutPalette.secondary}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      borderColor: activeLayoutPalette.primary,
+                      boxShadow: `0 0 30px ${activeLayoutPalette.glowColor}, inset 0 0 20px ${activeLayoutPalette.glowColor}25`,
+                    }}
+                    className="p-5 rounded-3xl bg-black/60 border-2 flex flex-col md:flex-row items-center justify-between gap-5 transition-all duration-300 relative overflow-hidden"
+                  >
+                    {/* Ambient glow accent inside preview */}
+                    <div
+                      style={{ backgroundColor: activeLayoutPalette.primary }}
+                      className="absolute -top-12 -left-12 w-48 h-48 rounded-full blur-3xl opacity-20 pointer-events-none transition-all duration-300"
+                    />
+
+                    <div className="flex items-center gap-4 relative z-10 w-full md:w-auto">
+                      <div
+                        style={{
+                          borderColor: activeLayoutPalette.primary,
+                          color: activeLayoutPalette.primary,
+                          boxShadow: `0 0 15px ${activeLayoutPalette.glowColor}`,
+                        }}
+                        className="w-14 h-14 rounded-2xl bg-white/5 border-2 flex items-center justify-center font-black text-2xl flex-shrink-0 transition-all duration-300"
+                      >
+                        ?
+                      </div>
+
+                      <div>
+                        <div
+                          style={{
+                            color: activeLayoutPalette.primary,
+                            borderColor: activeLayoutPalette.primary,
+                            backgroundColor: `${activeLayoutPalette.primary}20`,
+                          }}
+                          className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black uppercase tracking-wider mb-1 border transition-all duration-300"
+                        >
+                          ⚡ {GAME_LAYOUTS.find((l) => l.id === gameLayout)?.name.toUpperCase()} ⚡
+                        </div>
+                        <h5 className="text-sm sm:text-base font-black text-white leading-tight">
+                          Quiz &amp; Desafios da Campanha
+                        </h5>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          Bordas, botões, barras de progresso e luzes sincronizadas
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 w-full md:w-auto justify-end relative z-10">
+                      <button
+                        type="button"
+                        style={{
+                          background: `linear-gradient(to right, ${activeLayoutPalette.primary}, ${activeLayoutPalette.secondary})`,
+                          boxShadow: `0 0 25px ${activeLayoutPalette.glowColor}`,
+                        }}
+                        className="w-full md:w-auto px-7 py-3.5 rounded-2xl text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg flex items-center justify-center gap-2.5 transition-all duration-300 hover:scale-[1.02] active:scale-95"
+                      >
+                        <Play className="w-4 h-4 fill-current" />
+                        <span>JOGAR AGORA</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Barra de Arrastar (Slider Horizontal Esquerda <-> Direita) */}
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+                    <span className="flex items-center gap-2">
+                      <span>🎨 Barra de Arrastar para Variar Cores:</span>
+                      <span
+                        style={{ backgroundColor: activeLayoutPalette.primary }}
+                        className="px-2 py-0.5 rounded-md text-[10px] font-black text-white shadow-xs font-mono"
+                      >
+                        {layoutColorHue}° MATIZ
+                      </span>
+                    </span>
+                    <span className="text-slate-400 text-[11px]">
+                      ← Arraste para Esquerda ou Direita →
+                    </span>
+                  </div>
+
+                  <div className="relative flex items-center py-2">
+                    <input
+                      type="range"
+                      min="0"
+                      max="360"
+                      step="1"
+                      value={layoutColorHue}
+                      onChange={(e) => {
+                        setLayoutColorHue(Number(e.target.value));
+                      }}
+                      className="w-full h-4 rounded-full appearance-none cursor-pointer focus:outline-none shadow-inner"
+                      style={{
+                        background:
+                          'linear-gradient(to right, #EF4444 0%, #F97316 14%, #F59E0B 28%, #10B981 42%, #06B6D4 56%, #3B82F6 70%, #8B5CF6 84%, #EC4899 94%, #EF4444 100%)',
+                      }}
+                    />
+                  </div>
+
+                  {/* 3. Atalhos Rápidos de Cores em 1-Clique */}
+                  <div className="flex items-center gap-2 flex-wrap pt-1">
+                    <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                      Tons Rápidos:
+                    </span>
+                    {QUICK_HUE_PRESETS.map((preset) => (
+                      <button
+                        key={preset.name}
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setLayoutColorHue(preset.hue);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-2 transition-all active:scale-95 ${
+                          Math.abs(layoutColorHue - preset.hue) <= 15
+                            ? 'bg-white text-slate-900 border-white shadow-md scale-105'
+                            : 'bg-white/10 text-slate-300 border-white/15 hover:bg-white/20 hover:text-white'
+                        }`}
+                      >
+                        <span
+                          style={{ backgroundColor: preset.previewHex }}
+                          className="w-3 h-3 rounded-full shadow-xs"
+                        />
+                        <span>{preset.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 

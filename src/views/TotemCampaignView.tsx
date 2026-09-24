@@ -10,6 +10,7 @@ import { GameCardThumbnail } from '../components/GameCardThumbnail';
 import { GameLayoutProvider } from '../context/GameLayoutContext';
 import { BackgroundEffectOverlay, BackgroundEffectId } from '../components/BackgroundEffectOverlay';
 import { GameLayoutId } from '../types/gameLayouts';
+import { generateLayoutPalette } from '../lib/colorHarmony';
 
 // Games
 import { WheelGame } from '../games/WheelGame';
@@ -477,22 +478,30 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
 
   const baseTheme = THEMES[campaign.theme_id] || THEMES['honda-red'];
   const customColors: CustomColorsConfig | undefined = campaign.games_config?.custom_colors;
-  const isCustomActive = !!(customColors && customColors.enabled);
+  const layoutColorHue = campaign.games_config?.layout_color_hue !== undefined
+    ? Number(campaign.games_config.layout_color_hue)
+    : undefined;
 
   const isLight = 
     campaign.games_config?.theme_mode === 'light' || 
     campaign.theme_mode === 'light' || 
-    (isCustomActive && customColors?.bgType === 'light') ||
-    (!isCustomActive && campaign.games_config?.theme_mode === 'light') ||
+    (customColors && customColors?.bgType === 'light') ||
     customColors?.bgType === 'light';
+
+  // Compute dynamic palette from slider if defined
+  const sliderPalette = layoutColorHue !== undefined
+    ? generateLayoutPalette(layoutColorHue, isLight)
+    : null;
+
+  const isCustomActive = !!((customColors && customColors.enabled) || sliderPalette);
 
   const theme: ThemeDefinition = {
     ...baseTheme,
-    name: isCustomActive ? 'Personalizado' : baseTheme.name,
-    primary: isCustomActive ? (customColors?.primary || baseTheme.primary) : baseTheme.primary,
-    secondary: isCustomActive ? (customColors?.secondary || baseTheme.secondary) : baseTheme.secondary,
-    accent: isCustomActive ? (customColors?.accent || baseTheme.accent) : baseTheme.accent,
-    glowColor: isCustomActive ? (customColors?.glowColor || baseTheme.glowColor) : baseTheme.glowColor,
+    name: sliderPalette ? 'Personalizado' : (isCustomActive ? 'Personalizado' : baseTheme.name),
+    primary: sliderPalette ? sliderPalette.primary : (isCustomActive ? (customColors?.primary || baseTheme.primary) : baseTheme.primary),
+    secondary: sliderPalette ? sliderPalette.secondary : (isCustomActive ? (customColors?.secondary || baseTheme.secondary) : baseTheme.secondary),
+    accent: sliderPalette ? sliderPalette.accent : (isCustomActive ? (customColors?.accent || baseTheme.accent) : baseTheme.accent),
+    glowColor: sliderPalette ? sliderPalette.glowColor : (isCustomActive ? (customColors?.glowColor || baseTheme.glowColor) : baseTheme.glowColor),
     bgGradient: isLight
       ? 'from-slate-100 via-slate-50 to-slate-200'
       : (isCustomActive && customColors?.bgType === 'custom')
@@ -511,9 +520,9 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
   };
 
   const customBgStyle: React.CSSProperties =
-    isCustomActive && customColors.bgType === 'custom'
+    isCustomActive && customColors?.bgType === 'custom'
       ? {
-          background: `linear-gradient(to bottom, ${customColors.bgFrom || '#0F172A'}, ${customColors.bgTo || '#020617'})`,
+          background: `linear-gradient(to bottom, ${customColors?.bgFrom || '#0F172A'}, ${customColors?.bgTo || '#020617'})`,
         }
       : {};
 
@@ -734,7 +743,7 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
     };
 
     return (
-      <GameLayoutProvider layout={commonProps.gameLayout} onLayoutChange={() => {}}>
+      <GameLayoutProvider layout={commonProps.gameLayout} hue={layoutColorHue} isLight={isLight} onLayoutChange={() => {}}>
         {renderActiveGame()}
       </GameLayoutProvider>
     );

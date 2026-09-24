@@ -206,6 +206,8 @@ export const QuizGame: React.FC<QuizGameProps> = ({
 
   const contextLayout = useGameLayout();
   const activeLayout: GameLayoutId = gameLayout || contextLayout?.layout || 'cartoon_pop';
+  const layoutPrimary = contextLayout?.palette?.primary || themePrimary || '#06B6D4';
+  const layoutGlow = contextLayout?.palette?.glowColor || 'rgba(6, 182, 212, 0.45)';
 
   const activeTimeDisplay = !isUnlimitedTime
     ? timeLeft
@@ -316,15 +318,32 @@ export const QuizGame: React.FC<QuizGameProps> = ({
           {/* Neon Arcade - Horizontal glowing connector tubes */}
           {activeLayout === 'neon_arcade' && (
             <>
-              <div className="hidden sm:block absolute -left-5 top-1/2 -translate-y-1/2 w-6 h-1.5 bg-gradient-to-r from-transparent to-cyan-400 shadow-[0_0_10px_#22d3ee] rounded-full pointer-events-none" />
-              <div className="hidden sm:block absolute -right-5 top-1/2 -translate-y-1/2 w-6 h-1.5 bg-gradient-to-l from-transparent to-cyan-400 shadow-[0_0_10px_#22d3ee] rounded-full pointer-events-none" />
+              <div
+                className="hidden sm:block absolute -left-5 top-1/2 -translate-y-1/2 w-6 h-1.5 rounded-full pointer-events-none"
+                style={{
+                  background: `linear-gradient(to right, transparent, ${layoutPrimary})`,
+                  boxShadow: `0 0 10px ${layoutPrimary}`,
+                }}
+              />
+              <div
+                className="hidden sm:block absolute -right-5 top-1/2 -translate-y-1/2 w-6 h-1.5 rounded-full pointer-events-none"
+                style={{
+                  background: `linear-gradient(to left, transparent, ${layoutPrimary})`,
+                  boxShadow: `0 0 10px ${layoutPrimary}`,
+                }}
+              />
             </>
           )}
 
           {/* Card Body */}
           <div
             style={
-              activeLayout === 'bento_tech'
+              activeLayout === 'neon_arcade'
+                ? {
+                    borderColor: layoutPrimary,
+                    boxShadow: `0 0 35px ${layoutGlow}, inset 0 0 20px ${layoutGlow}`,
+                  }
+                : activeLayout === 'bento_tech'
                 ? {
                     clipPath:
                       'polygon(20px 0, calc(100% - 20px) 0, 100% 20px, 100% calc(100% - 20px), calc(100% - 20px) 100%, 20px 100%, 0 calc(100% - 20px), 0 20px)',
@@ -337,7 +356,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({
                 : activeLayout === 'cartoon_comic'
                 ? 'rounded-3xl border-4 border-black bg-gradient-to-b from-slate-900 via-sky-950/60 to-slate-900 shadow-[8px_8px_0_#000] pt-9 pb-6 px-6 sm:px-8'
                 : activeLayout === 'neon_arcade'
-                ? 'rounded-[32px] sm:rounded-[40px] border-2 border-cyan-400 bg-slate-950/90 shadow-[0_0_35px_rgba(6,182,212,0.45),inset_0_0_20px_rgba(6,182,212,0.2)] py-6 px-6 sm:px-10'
+                ? 'rounded-[32px] sm:rounded-[40px] border-2 bg-slate-950/90 py-6 px-6 sm:px-10'
                 : activeLayout === 'bento_tech'
                 ? 'border-2 border-emerald-500/80 bg-slate-950/95 shadow-[0_0_30px_rgba(16,185,129,0.25)] p-6 sm:p-8 font-mono'
                 : activeLayout === 'neumorphic_luxe'
@@ -370,7 +389,15 @@ export const QuizGame: React.FC<QuizGameProps> = ({
 
             {/* Neon Arcade Matrix Tag */}
             {activeLayout === 'neon_arcade' && (
-              <div className="inline-block px-3 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/60 text-cyan-300 text-[10px] sm:text-xs font-mono font-black uppercase tracking-widest mb-2 shadow-[0_0_10px_rgba(6,182,212,0.4)]">
+              <div
+                className="inline-block px-3 py-0.5 rounded-full text-[10px] sm:text-xs font-mono font-black uppercase tracking-widest mb-2 border"
+                style={{
+                  borderColor: layoutPrimary,
+                  color: layoutPrimary,
+                  backgroundColor: `${layoutPrimary}20`,
+                  boxShadow: `0 0 10px ${layoutGlow}`,
+                }}
+              >
                 ⚡ ARCADE MATRIX ⚡
               </div>
             )}
@@ -668,15 +695,25 @@ export const QuizGame: React.FC<QuizGameProps> = ({
               }
             }
 
+            const optionInlineStyle = (activeLayout === 'neon_arcade' && !answered)
+              ? { borderColor: layoutPrimary, boxShadow: `0 0 14px ${layoutGlow}` }
+              : undefined;
+
+            const badgeInlineStyle = (activeLayout === 'neon_arcade' && !answered)
+              ? { borderColor: layoutPrimary, color: layoutPrimary, boxShadow: `0 0 8px ${layoutGlow}` }
+              : undefined;
+
             return (
               <button
                 key={idx}
                 onClick={() => handleSelect(idx)}
                 disabled={answered}
+                style={optionInlineStyle}
                 className={`w-full p-3.5 sm:p-4 md:p-4.5 min-h-[58px] sm:min-h-[68px] font-bold text-base sm:text-lg md:text-xl flex items-center justify-between gap-3 sm:gap-4 transition-all active:scale-[0.98] ${btnStyle}`}
               >
                 <div className="flex items-center gap-3 sm:gap-4 text-left flex-1">
                   <span
+                    style={badgeInlineStyle}
                     className={`flex items-center justify-center font-black flex-shrink-0 ${
                       badgeStyle.includes('w-') ? badgeStyle : `w-9 h-9 sm:w-11 sm:h-11 rounded-xl ${badgeStyle}`
                     }`}

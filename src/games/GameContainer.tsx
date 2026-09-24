@@ -81,6 +81,10 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const currentLayoutDef: GameLayoutDefinition = 
     GAME_LAYOUTS.find((l) => l.id === currentLayout) || GAME_LAYOUTS[0];
 
+  const activePrimary = contextLayout?.palette?.primary || theme?.primary || themePrimary || '#06B6D4';
+  const activeSecondary = contextLayout?.palette?.secondary || theme?.secondary || '#3B82F6';
+  const activeGlow = contextLayout?.palette?.glowColor || theme?.glowColor || `${activePrimary}66`;
+
   const isLightMode = isLight ?? (themeMode === 'light' || theme?.textColor?.includes('text-slate-900') || theme?.bgGradient?.includes('slate-100'));
 
   useEffect(() => {
@@ -112,7 +116,10 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     <GameLayoutProvider layout={currentLayout} onLayoutChange={setCurrentLayout}>
       <div
         style={{
-          '--glow-color': theme?.glowColor || themePrimary,
+          '--glow-color': activeGlow,
+          '--layout-primary': activePrimary,
+          '--layout-secondary': activeSecondary,
+          '--layout-glow': activeGlow,
           ...customBgStyle,
         } as React.CSSProperties}
         className={`absolute inset-0 w-full h-full flex flex-col bg-gradient-to-b ${
@@ -162,9 +169,15 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           <>
             {/* Retro-futuristic scanlines overlay */}
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.35)_50%)] bg-[length:100%_4px] opacity-25 z-10" />
-            {/* Pulsing Neon Cyan / Magenta corner ambient glows */}
-            <div className="absolute top-0 left-0 w-96 h-96 bg-cyan-500/20 blur-[130px] pointer-events-none animate-pulse" />
-            <div className="absolute bottom-0 right-0 w-96 h-96 bg-fuchsia-500/20 blur-[130px] pointer-events-none animate-pulse delay-700" />
+            {/* Pulsing Neon corner ambient glows with dynamic colors */}
+            <div
+              className="absolute top-0 left-0 w-96 h-96 blur-[130px] pointer-events-none animate-pulse"
+              style={{ backgroundColor: activePrimary, opacity: 0.22 }}
+            />
+            <div
+              className="absolute bottom-0 right-0 w-96 h-96 blur-[130px] pointer-events-none animate-pulse delay-700"
+              style={{ backgroundColor: activeSecondary, opacity: 0.22 }}
+            />
           </>
         )}
 
@@ -423,11 +436,26 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           {/* Neon Arcade HUD Brackets */}
           {currentLayout === 'neon_arcade' && (
             <div className="absolute inset-4 pointer-events-none">
-              <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-cyan-400 shadow-[0_0_10px_#22d3ee]" />
-              <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-cyan-400 shadow-[0_0_10px_#22d3ee]" />
-              <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-cyan-400 shadow-[0_0_10px_#22d3ee]" />
-              <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-cyan-400 shadow-[0_0_10px_#22d3ee]" />
-              <div className="absolute top-1 left-12 text-[8px] font-mono uppercase text-cyan-400/70 tracking-widest">
+              <div
+                className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2"
+                style={{ borderColor: activePrimary, filter: `drop-shadow(0 0 8px ${activePrimary})` }}
+              />
+              <div
+                className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2"
+                style={{ borderColor: activePrimary, filter: `drop-shadow(0 0 8px ${activePrimary})` }}
+              />
+              <div
+                className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2"
+                style={{ borderColor: activePrimary, filter: `drop-shadow(0 0 8px ${activePrimary})` }}
+              />
+              <div
+                className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2"
+                style={{ borderColor: activePrimary, filter: `drop-shadow(0 0 8px ${activePrimary})` }}
+              />
+              <div
+                className="absolute top-1 left-12 text-[8px] font-mono uppercase tracking-widest"
+                style={{ color: activePrimary, textShadow: `0 0 8px ${activePrimary}` }}
+              >
                 [ ARCADE HUD TOUCH MATRIX ]
               </div>
             </div>
