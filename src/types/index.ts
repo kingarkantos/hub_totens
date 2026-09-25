@@ -127,6 +127,10 @@ export interface CampaignStylePackage {
   splash_button_style?: import('./splashCustomization').SplashButtonStyleId;
   splash_button_hue?: number;
   custom_colors?: CustomColorsConfig;
+  splash_overlay_mode?: 'color' | 'original' | 'black' | 'white';
+  splash_overlay_hue?: number;
+  splash_overlay_opacity?: number;
+  splash_overlay_brightness?: number;
   game_specific_styles?: Record<string, any>;
   copiedAt: string;
 }

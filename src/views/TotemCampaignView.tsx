@@ -10,7 +10,7 @@ import { GameCardThumbnail } from '../components/GameCardThumbnail';
 import { GameLayoutProvider } from '../context/GameLayoutContext';
 import { BackgroundEffectOverlay, BackgroundEffectId } from '../components/BackgroundEffectOverlay';
 import { GameLayoutId } from '../types/gameLayouts';
-import { generateLayoutPalette } from '../lib/colorHarmony';
+import { generateLayoutPalette, getSplashOverlayStyle } from '../lib/colorHarmony';
 import { getFontFamilyById } from '../lib/fonts';
 import { SplashButtonRenderer } from '../components/SplashButtonRenderer';
 
@@ -491,6 +491,33 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
 
   const splashButtonPalette = generateLayoutPalette(splashButtonHue, isLight);
 
+  // Splash Background Color Blend & Overlay
+  const splashOverlayMode: 'color' | 'original' | 'black' | 'white' =
+    campaign.games_config?.splash_overlay_mode || 
+    (campaign.games_config?.splash_overlay_opacity === 0 ? 'original' : 'color');
+
+  const splashOverlayHue: number =
+    campaign.games_config?.splash_overlay_hue !== undefined
+      ? Number(campaign.games_config.splash_overlay_hue)
+      : (layoutColorHue !== undefined ? layoutColorHue : 145);
+
+  const splashOverlayOpacity: number =
+    campaign.games_config?.splash_overlay_opacity !== undefined
+      ? Number(campaign.games_config.splash_overlay_opacity)
+      : (splashOverlayMode === 'original' ? 0 : 35);
+
+  const splashOverlayBrightness: number =
+    campaign.games_config?.splash_overlay_brightness !== undefined
+      ? Number(campaign.games_config.splash_overlay_brightness)
+      : (splashOverlayOpacity === 0 ? 100 : 95);
+
+  const splashOverlayStyle = getSplashOverlayStyle(
+    splashOverlayMode,
+    splashOverlayHue,
+    splashOverlayOpacity,
+    splashOverlayBrightness
+  );
+
   const handleStartPlay = () => {
     sound.playSuccess();
     if (gamesList.length === 1) {
@@ -631,7 +658,7 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
         '--glow-color': theme.glowColor,
         ...customBgStyle,
       } as React.CSSProperties}
-      className={`fixed inset-0 w-full h-full overflow-hidden select-none bg-gradient-to-b ${theme.bgGradient} ${theme.textColor} ${theme.fontClass}`}
+      className={`fixed inset-0 w-full h-full overflow-hidden select-none ${inSplash ? 'bg-slate-950' : `bg-gradient-to-b ${theme.bgGradient}`} ${theme.textColor} ${theme.fontClass}`}
     >
       {/* Floating Top Control Bar (Fullscreen Button only) */}
       <div className="absolute top-4 right-4 z-40 flex items-center gap-2">
@@ -647,15 +674,25 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
       {/* 1. SPLASH SCREEN VIEW */}
       {inSplash ? (
         <div className="relative w-full h-full flex flex-col items-center justify-between p-8 text-center animate-in fade-in duration-500 overflow-hidden">
-          {/* Background image with gradient vignette overlay */}
+          {/* Background image with custom color blend overlay */}
           <div className="absolute inset-0 z-0">
             <img
               src={campaign.splash_image_url}
               alt={campaign.name}
-              className="w-full h-full object-cover brightness-[0.4] contrast-125 scale-105 transition-transform duration-10000 animate-float"
+              style={{
+                filter: `brightness(${splashOverlayStyle.imageBrightness}) contrast(1.05)`,
+              }}
+              className="w-full h-full object-cover scale-105 transition-transform duration-10000 animate-float"
             />
-            <div className={`absolute inset-0 bg-gradient-to-t ${theme.bgGradient} opacity-90`} />
-            <div className="absolute inset-0 bg-radial-vignette opacity-80" />
+            {/* Camada Dinâmica de Mistura da Cor Personalizada */}
+            <div
+              style={{
+                background: splashOverlayStyle.overlayGradient,
+                opacity: splashOverlayStyle.overlayOpacity,
+              }}
+              className="absolute inset-0 pointer-events-none transition-all duration-300"
+            />
+            <div className="absolute inset-0 bg-radial-vignette opacity-50 pointer-events-none" />
           </div>
 
           {/* Background Overlay Animation Effect (Matrix, Stars, Rain, Nanotech, etc.) */}
@@ -675,12 +712,12 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
                   ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 font-mono px-3 py-1 rounded-sm'
                   : campaignLayout === 'golden_casino'
                   ? 'bg-amber-400/20 text-amber-200 border border-amber-300/40 px-3.5 py-1 rounded-full shadow-md'
-                  : 'text-white/80'
+                  : 'text-white/90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]'
               }`}>
                 {campaign.client_name}
               </span>
             )}
-            <h1 className={`text-4xl sm:text-6xl md:text-7xl font-black tracking-tight drop-shadow-2xl max-w-3xl leading-tight ${
+            <h1 className={`text-4xl sm:text-6xl md:text-7xl font-black tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)] max-w-3xl leading-tight ${
               campaignLayout === 'pixel_retro' ? 'font-mono text-yellow-300' : 'text-white'
             }`}>
               {campaign.name}

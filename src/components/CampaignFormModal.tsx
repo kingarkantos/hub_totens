@@ -10,7 +10,7 @@ import { GameContentEditorModal, getContentCount } from './GameContentEditorModa
 import { sound } from '../lib/audio';
 import { supabase, TABLES, BUCKETS } from '../lib/supabase';
 import { resellersService } from '../lib/resellersService';
-import { QUICK_HUE_PRESETS, generateLayoutPalette, getDefaultHueForLayout } from '../lib/colorHarmony';
+import { QUICK_HUE_PRESETS, generateLayoutPalette, getDefaultHueForLayout, getSplashOverlayStyle } from '../lib/colorHarmony';
 import { GAME_FONTS, getFontFamilyById } from '../lib/fonts';
 import { RealtimeLayoutPreviewCard } from './RealtimeLayoutPreviewCard';
 import { getCopiedStyle } from '../lib/campaignStyleHelper';
@@ -123,6 +123,39 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
     campaignToEdit?.games_config?.splash_bg_effect || 'none'
   );
   const [bgPreviewBackdrop, setBgPreviewBackdrop] = useState<'splash' | 'dark' | 'night' | 'cyber'>('splash');
+
+  // Splash Background Color Blend Controls
+  const initialSplashOverlayMode: 'color' | 'original' | 'black' | 'white' =
+    campaignToEdit?.games_config?.splash_overlay_mode ||
+    (campaignToEdit?.games_config?.splash_overlay_opacity === 0 ? 'original' : 'color');
+  const [splashOverlayMode, setSplashOverlayMode] = useState<'color' | 'original' | 'black' | 'white'>(initialSplashOverlayMode);
+
+  const initialSplashOverlayHue: number =
+    campaignToEdit?.games_config?.splash_overlay_hue !== undefined
+      ? Number(campaignToEdit.games_config.splash_overlay_hue)
+      : (initialLayoutHue !== undefined ? initialLayoutHue : 145);
+  const [splashOverlayHue, setSplashOverlayHue] = useState<number>(initialSplashOverlayHue);
+
+  const initialSplashOverlayOpacity: number =
+    campaignToEdit?.games_config?.splash_overlay_opacity !== undefined
+      ? Number(campaignToEdit.games_config.splash_overlay_opacity)
+      : (initialSplashOverlayMode === 'original' ? 0 : 35);
+  const [splashOverlayOpacity, setSplashOverlayOpacity] = useState<number>(initialSplashOverlayOpacity);
+
+  const initialSplashOverlayBrightness: number =
+    campaignToEdit?.games_config?.splash_overlay_brightness !== undefined
+      ? Number(campaignToEdit.games_config.splash_overlay_brightness)
+      : (initialSplashOverlayOpacity === 0 ? 100 : 95);
+  const [splashOverlayBrightness, setSplashOverlayBrightness] = useState<number>(initialSplashOverlayBrightness);
+
+  const splashOverlayStyle = useMemo(() => {
+    return getSplashOverlayStyle(
+      splashOverlayMode,
+      splashOverlayHue,
+      splashOverlayOpacity,
+      splashOverlayBrightness
+    );
+  }, [splashOverlayMode, splashOverlayHue, splashOverlayOpacity, splashOverlayBrightness]);
   const [resellers, setResellers] = useState<Reseller[]>([]);
   const [selectedResellerId, setSelectedResellerId] = useState<string>(
     campaignToEdit?.reseller_id || campaignToEdit?.games_config?.reseller_id || ''
@@ -178,6 +211,10 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
     if (copiedStyle.splash_bg_effect) setSplashBgEffect(copiedStyle.splash_bg_effect as BackgroundEffectId);
     if (copiedStyle.splash_button_style) setSplashButtonStyle(copiedStyle.splash_button_style as SplashButtonStyleId);
     if (copiedStyle.splash_button_hue !== undefined) setSplashButtonHue(copiedStyle.splash_button_hue);
+    if (copiedStyle.splash_overlay_mode) setSplashOverlayMode(copiedStyle.splash_overlay_mode);
+    if (copiedStyle.splash_overlay_hue !== undefined) setSplashOverlayHue(copiedStyle.splash_overlay_hue);
+    if (copiedStyle.splash_overlay_opacity !== undefined) setSplashOverlayOpacity(copiedStyle.splash_overlay_opacity);
+    if (copiedStyle.splash_overlay_brightness !== undefined) setSplashOverlayBrightness(copiedStyle.splash_overlay_brightness);
     if (copiedStyle.custom_colors) setCustomColors(copiedStyle.custom_colors);
 
     setGamesConfig((prev) => {
@@ -190,6 +227,10 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
         splash_bg_effect: copiedStyle.splash_bg_effect,
         splash_button_style: copiedStyle.splash_button_style,
         splash_button_hue: copiedStyle.splash_button_hue,
+        splash_overlay_mode: copiedStyle.splash_overlay_mode,
+        splash_overlay_hue: copiedStyle.splash_overlay_hue,
+        splash_overlay_opacity: copiedStyle.splash_overlay_opacity,
+        splash_overlay_brightness: copiedStyle.splash_overlay_brightness,
       };
       if (copiedStyle.custom_colors) updated.custom_colors = copiedStyle.custom_colors;
       if (copiedStyle.game_specific_styles) {
@@ -439,6 +480,10 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           splash_button_style: splashButtonStyle,
           splash_button_hue: splashButtonHue,
           splash_bg_effect: splashBgEffect,
+          splash_overlay_mode: splashOverlayMode,
+          splash_overlay_hue: splashOverlayHue,
+          splash_overlay_opacity: splashOverlayOpacity,
+          splash_overlay_brightness: splashOverlayBrightness,
           custom_colors: {
             enabled: true,
             primary: finalPalette.primary,
@@ -996,21 +1041,37 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                     <img
                       src={splashUrl}
                       alt="Preview Splash"
-                      className="w-full h-full object-cover brightness-[0.7]"
+                      style={{
+                        filter: `brightness(${splashOverlayStyle.imageBrightness}) contrast(1.05)`,
+                      }}
+                      className="w-full h-full object-cover transition-all duration-300"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = SPLASH_PRESETS[0].url;
                       }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">
+                    {/* Camada Dinâmica de Mistura da Cor */}
+                    <div
+                      style={{
+                        background: splashOverlayStyle.overlayGradient,
+                        opacity: splashOverlayStyle.overlayOpacity,
+                      }}
+                      className="absolute inset-0 pointer-events-none transition-all duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent flex flex-col justify-end p-3 pointer-events-none">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 drop-shadow-sm">
                         {clientName || 'Cliente'}
                       </span>
-                      <h4 className="text-sm font-black text-white leading-tight truncate">
+                      <h4 className="text-sm font-black text-white leading-tight truncate drop-shadow-md">
                         {name || 'Nome da Campanha'}
                       </h4>
-                      <span className="text-[9px] text-slate-300 mt-0.5">
-                        Preview no Totem Touch
-                      </span>
+                      <div className="flex items-center justify-between text-[9px] text-slate-300 mt-0.5">
+                        <span>Preview no Totem Touch</span>
+                        <span className="font-mono text-amber-300 font-bold">
+                          {splashOverlayMode === 'original' || splashOverlayOpacity === 0
+                            ? '🌟 100% Original'
+                            : `💧 ${splashOverlayOpacity}% (${splashOverlayStyle.primaryColor})`}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1063,8 +1124,279 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                 </span>
               </div>
 
-              {/* 1. Estilo do Botão "Toque para Jogar" */}
+              {/* 1. Cor & Mistura de Fundo do Splash (Color Blend Slider) */}
               <div className="space-y-4">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sliders className="w-4 h-4 text-emerald-600" />
+                    <span>Cor &amp; Mistura do Fundo com a Imagem (Slider de Cor &amp; Intensidade)</span>
+                  </label>
+                  <span className="text-xs text-slate-500">
+                    Modo: <strong className="text-slate-900">
+                      {splashOverlayMode === 'original' || splashOverlayOpacity === 0
+                        ? '🌟 100% Original (Sem Mistura)'
+                        : splashOverlayMode === 'black'
+                        ? '🖤 Preto Neutro'
+                        : splashOverlayMode === 'white'
+                        ? '🤍 Branco Suave'
+                        : `🎨 Cor do Slider (${splashOverlayHue}°) - ${splashOverlayOpacity}%`}
+                    </strong>
+                  </span>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-black border-2 border-slate-800 text-white shadow-xl space-y-4">
+                  {/* Seletor de Modo de Mistura */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setSplashOverlayMode('original');
+                        setSplashOverlayOpacity(0);
+                      }}
+                      className={`p-2.5 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-1 ${
+                        splashOverlayMode === 'original' || splashOverlayOpacity === 0
+                          ? 'bg-emerald-600 text-white border-emerald-400 shadow-md ring-2 ring-emerald-400/30'
+                          : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      <span className="text-sm">🌟 Original Puro</span>
+                      <span className="text-[10px] opacity-80">100% Imagem (0% Mistura)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setSplashOverlayMode('color');
+                        if (splashOverlayOpacity === 0) setSplashOverlayOpacity(35);
+                      }}
+                      className={`p-2.5 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-1 ${
+                        splashOverlayMode === 'color' && splashOverlayOpacity > 0
+                          ? 'bg-indigo-600 text-white border-indigo-400 shadow-md ring-2 ring-indigo-400/30'
+                          : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      <span className="text-sm">🎨 Cor do Slider</span>
+                      <span className="text-[10px] opacity-80">Mistura Personalizada</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setSplashOverlayMode('black');
+                        if (splashOverlayOpacity === 0) setSplashOverlayOpacity(45);
+                      }}
+                      className={`p-2.5 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-1 ${
+                        splashOverlayMode === 'black'
+                          ? 'bg-slate-800 text-white border-slate-600 shadow-md ring-2 ring-white/20'
+                          : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      <span className="text-sm">🖤 Preto Neutro</span>
+                      <span className="text-[10px] opacity-80">Degradê Dark Elegante</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setSplashOverlayMode('white');
+                        if (splashOverlayOpacity === 0) setSplashOverlayOpacity(35);
+                      }}
+                      className={`p-2.5 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-1 ${
+                        splashOverlayMode === 'white'
+                          ? 'bg-slate-100 text-slate-900 border-white shadow-md ring-2 ring-white/50'
+                          : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      <span className="text-sm">🤍 Branco Clean</span>
+                      <span className="text-[10px] opacity-80">Véu Claro Suave</span>
+                    </button>
+                  </div>
+
+                  {/* Slider de Cor (Matiz 0-360°) */}
+                  <div className="space-y-2 pt-2 border-t border-white/10">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-300 flex-wrap gap-2">
+                      <span className="flex items-center gap-2">
+                        <Palette className="w-3.5 h-3.5 text-amber-400" />
+                        <span>🎨 Cor de Mistura com o Fundo:</span>
+                        <span
+                          style={{ backgroundColor: splashOverlayStyle.primaryColor }}
+                          className="px-2 py-0.5 rounded-md text-[10px] font-black text-white shadow-xs font-mono"
+                        >
+                          {splashOverlayHue}° ({splashOverlayStyle.primaryColor})
+                        </span>
+                      </span>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sound.playClick();
+                            setSplashOverlayHue(layoutColorHue);
+                            setSplashOverlayMode('color');
+                            if (splashOverlayOpacity === 0) setSplashOverlayOpacity(35);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-[11px] text-slate-300 hover:text-white transition-all"
+                        >
+                          Usar Cor dos Jogos
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sound.playClick();
+                            setSplashOverlayHue(splashButtonHue);
+                            setSplashOverlayMode('color');
+                            if (splashOverlayOpacity === 0) setSplashOverlayOpacity(35);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-[11px] text-slate-300 hover:text-white transition-all"
+                        >
+                          Usar Cor do Botão
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="relative flex items-center">
+                      <input
+                        type="range"
+                        min="0"
+                        max="360"
+                        step="1"
+                        value={splashOverlayHue}
+                        onChange={(e) => {
+                          setSplashOverlayHue(Number(e.target.value));
+                          if (splashOverlayMode !== 'color') setSplashOverlayMode('color');
+                          if (splashOverlayOpacity === 0) setSplashOverlayOpacity(35);
+                        }}
+                        className="w-full h-3 rounded-lg appearance-none cursor-pointer focus:outline-none transition-all shadow-inner"
+                        style={{
+                          background: 'linear-gradient(to right, #ef4444 0%, #f97316 12%, #eab308 25%, #22c55e 38%, #06b6d4 50%, #3b82f6 65%, #8b5cf6 78%, #ec4899 90%, #ef4444 100%)',
+                        }}
+                      />
+                    </div>
+
+                    {/* Paletas Rápidas */}
+                    <div className="flex items-center justify-between flex-wrap gap-2 pt-1 text-[11px] text-slate-400">
+                      <span>Cores Sugeridas:</span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {QUICK_HUE_PRESETS.map((preset) => (
+                          <button
+                            key={preset.name}
+                            type="button"
+                            onClick={() => {
+                              sound.playClick();
+                              setSplashOverlayHue(preset.hue);
+                              setSplashOverlayMode('color');
+                              if (splashOverlayOpacity === 0) setSplashOverlayOpacity(35);
+                            }}
+                            className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5 border ${
+                              splashOverlayMode === 'color' && Math.abs(splashOverlayHue - preset.hue) < 10
+                                ? 'bg-white text-slate-900 border-white shadow-sm font-black'
+                                : 'bg-slate-800/80 text-slate-300 border-slate-700 hover:border-slate-500 hover:text-white'
+                            }`}
+                          >
+                            <span style={{ backgroundColor: preset.previewHex }} className="w-2.5 h-2.5 rounded-full shadow-2xs" />
+                            <span>{preset.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Slider de Intensidade / Opacidade da Mistura */}
+                  <div className="space-y-2 pt-2 border-t border-white/10">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-300 flex-wrap gap-2">
+                      <span className="flex items-center gap-2">
+                        <span>💧 Intensidade da Mistura:</span>
+                        <span className="px-2 py-0.5 rounded-md bg-white/15 text-white font-mono text-[10px]">
+                          {splashOverlayOpacity}% {splashOverlayOpacity === 0 ? '(Nenhuma Mistura - 100% Original)' : splashOverlayOpacity <= 30 ? '(Suave)' : splashOverlayOpacity <= 60 ? '(Equilibrada)' : '(Intensa)'}
+                        </span>
+                      </span>
+
+                      <div className="flex items-center gap-1">
+                        {[0, 25, 50, 75].map((op) => (
+                          <button
+                            key={op}
+                            type="button"
+                            onClick={() => {
+                              sound.playClick();
+                              setSplashOverlayOpacity(op);
+                              if (op === 0) setSplashOverlayMode('original');
+                              else if (splashOverlayMode === 'original') setSplashOverlayMode('color');
+                            }}
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
+                              splashOverlayOpacity === op
+                                ? 'bg-amber-500 text-slate-950 font-black shadow-xs'
+                                : 'bg-white/10 hover:bg-white/15 text-slate-300 hover:text-white'
+                            }`}
+                          >
+                            {op === 0 ? '0% (Puro)' : `${op}%`}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="relative flex items-center">
+                      <input
+                        type="range"
+                        min="0"
+                        max="90"
+                        step="5"
+                        value={splashOverlayOpacity}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setSplashOverlayOpacity(val);
+                          if (val === 0) setSplashOverlayMode('original');
+                          else if (splashOverlayMode === 'original') setSplashOverlayMode('color');
+                        }}
+                        className="w-full h-2.5 rounded-lg appearance-none cursor-pointer focus:outline-none transition-all accent-amber-400 bg-slate-800 shadow-inner"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Slider de Brilho da Imagem */}
+                  <div className="space-y-2 pt-2 border-t border-white/10">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-300 flex-wrap gap-2">
+                      <span className="flex items-center gap-2">
+                        <Sun className="w-3.5 h-3.5 text-amber-400" />
+                        <span>☀️ Brilho da Imagem de Fundo:</span>
+                        <span className="px-2 py-0.5 rounded-md bg-white/15 text-white font-mono text-[10px]">
+                          {splashOverlayBrightness}%
+                        </span>
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setSplashOverlayBrightness(100);
+                        }}
+                        className="px-2 py-0.5 rounded-lg bg-white/10 hover:bg-white/15 text-[10px] text-slate-300 hover:text-white flex items-center gap-1 transition-all"
+                      >
+                        <RotateCcw className="w-2.5 h-2.5" />
+                        <span>Restaurar 100%</span>
+                      </button>
+                    </div>
+
+                    <div className="relative flex items-center">
+                      <input
+                        type="range"
+                        min="50"
+                        max="130"
+                        step="5"
+                        value={splashOverlayBrightness}
+                        onChange={(e) => setSplashOverlayBrightness(Number(e.target.value))}
+                        className="w-full h-2.5 rounded-lg appearance-none cursor-pointer focus:outline-none transition-all accent-amber-400 bg-slate-800 shadow-inner"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Estilo do Botão "Toque para Jogar" */}
+              <div className="space-y-4 pt-4 border-t border-slate-200">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                     <Gamepad2 className="w-4 h-4 text-red-600" />
@@ -1330,14 +1662,26 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                   <div className="relative w-full h-56 sm:h-64 rounded-xl border border-white/15 overflow-hidden flex flex-col items-center justify-center text-center shadow-inner">
                     {/* Fundo Selecionado */}
                     {bgPreviewBackdrop === 'splash' ? (
-                      <img
-                        src={splashUrl}
-                        alt="Splash Backdrop"
-                        className="absolute inset-0 w-full h-full object-cover brightness-[0.55]"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = SPLASH_PRESETS[0].url;
-                        }}
-                      />
+                      <div className="absolute inset-0 w-full h-full">
+                        <img
+                          src={splashUrl}
+                          alt="Splash Backdrop"
+                          style={{
+                            filter: `brightness(${splashOverlayStyle.imageBrightness}) contrast(1.05)`,
+                          }}
+                          className="w-full h-full object-cover transition-all duration-300"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = SPLASH_PRESETS[0].url;
+                          }}
+                        />
+                        <div
+                          style={{
+                            background: splashOverlayStyle.overlayGradient,
+                            opacity: splashOverlayStyle.overlayOpacity,
+                          }}
+                          className="absolute inset-0 pointer-events-none transition-all duration-300"
+                        />
+                      </div>
                     ) : bgPreviewBackdrop === 'dark' ? (
                       <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-black" />
                     ) : bgPreviewBackdrop === 'night' ? (
@@ -1441,65 +1785,6 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                 Escolha o design visual exclusivo para todos os jogos da campanha. Você pode variar as cores em tempo real arrastando o controle deslizante abaixo sem precisar escolher cor por cor!
               </p>
 
-              {/* Modo Visual do Totem: Tema Claro vs Tema Escuro */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100/90 border-2 border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
-                <div>
-                  <div className="flex items-center gap-2">
-                    {themeMode === 'light' ? (
-                      <Sun className="w-5 h-5 text-amber-500" />
-                    ) : (
-                      <Moon className="w-5 h-5 text-indigo-500" />
-                    )}
-                    <h4 className="text-sm font-black text-slate-900">
-                      Modo Visual do Totem &amp; Jogos
-                    </h4>
-                    <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${
-                      themeMode === 'light' 
-                        ? 'bg-amber-100 text-amber-800 border border-amber-300' 
-                        : 'bg-indigo-100 text-indigo-800 border border-indigo-300'
-                    }`}>
-                      {themeMode === 'light' ? '☀️ Modo Claro Ativo' : '🌙 Modo Escuro Ativo'}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Alterne entre o tema <strong>Claro Clean</strong> (fundo branco/claro com alto contraste) ou <strong>Escuro Neon</strong> (fundo dark com efeitos luminosos) para as telas e desafios da campanha.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2 bg-slate-200/90 p-1.5 rounded-2xl w-full sm:w-auto flex-shrink-0 shadow-inner">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      sound.playClick();
-                      setThemeMode('light');
-                    }}
-                    className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition-all ${
-                      themeMode === 'light'
-                        ? 'bg-white text-slate-900 shadow-md ring-2 ring-amber-500/30 scale-[1.03]'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/60'
-                    }`}
-                  >
-                    <Sun className="w-4 h-4 text-amber-500 fill-amber-400" />
-                    <span>☀️ Tema Claro</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      sound.playClick();
-                      setThemeMode('dark');
-                    }}
-                    className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition-all ${
-                      themeMode === 'dark'
-                        ? 'bg-slate-950 text-white shadow-md ring-2 ring-indigo-500/30 scale-[1.03]'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/60'
-                    }`}
-                  >
-                    <Moon className="w-4 h-4 text-indigo-400 fill-indigo-400" />
-                    <span>🌙 Tema Escuro</span>
-                  </button>
-                </div>
-              </div>
 
               {/* Grid dos 12 Estilos */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">

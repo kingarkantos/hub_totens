@@ -27,6 +27,10 @@ export function extractCampaignStyle(camp: Campaign): CampaignStylePackage {
     splash_bg_effect: gamesConfig.splash_bg_effect,
     splash_button_style: gamesConfig.splash_button_style,
     splash_button_hue: gamesConfig.splash_button_hue !== undefined ? Number(gamesConfig.splash_button_hue) : undefined,
+    splash_overlay_mode: gamesConfig.splash_overlay_mode,
+    splash_overlay_hue: gamesConfig.splash_overlay_hue !== undefined ? Number(gamesConfig.splash_overlay_hue) : undefined,
+    splash_overlay_opacity: gamesConfig.splash_overlay_opacity !== undefined ? Number(gamesConfig.splash_overlay_opacity) : undefined,
+    splash_overlay_brightness: gamesConfig.splash_overlay_brightness !== undefined ? Number(gamesConfig.splash_overlay_brightness) : undefined,
     custom_colors: gamesConfig.custom_colors,
     game_specific_styles: Object.keys(gameSpecificStyles).length > 0 ? gameSpecificStyles : undefined,
     copiedAt: new Date().toISOString(),
@@ -98,6 +102,18 @@ export function mergeStyleIntoCampaignConfig(
   }
   if (style.splash_button_hue !== undefined) {
     merged.splash_button_hue = style.splash_button_hue;
+  }
+  if (style.splash_overlay_mode !== undefined) {
+    merged.splash_overlay_mode = style.splash_overlay_mode;
+  }
+  if (style.splash_overlay_hue !== undefined) {
+    merged.splash_overlay_hue = style.splash_overlay_hue;
+  }
+  if (style.splash_overlay_opacity !== undefined) {
+    merged.splash_overlay_opacity = style.splash_overlay_opacity;
+  }
+  if (style.splash_overlay_brightness !== undefined) {
+    merged.splash_overlay_brightness = style.splash_overlay_brightness;
   }
   if (style.custom_colors) {
     merged.custom_colors = style.custom_colors;

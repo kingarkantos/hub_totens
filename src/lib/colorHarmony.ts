@@ -134,3 +134,64 @@ export function getDefaultHueForLayout(layoutId?: string): number {
   }
   return 185; // Default Cyan
 }
+
+export interface SplashOverlayStyleResult {
+  overlayGradient: string;
+  overlayOpacity: number;
+  imageBrightness: number;
+  primaryColor: string;
+}
+
+/**
+ * Computes custom color blend overlay and image brightness for totem splash background.
+ */
+export function getSplashOverlayStyle(
+  mode: 'color' | 'original' | 'black' | 'white' = 'color',
+  hue: number = 145,
+  opacity: number = 30, // 0 - 100
+  brightness: number = 100 // 50 - 130
+): SplashOverlayStyleResult {
+  const normBrightness = Math.max(0.5, Math.min(1.5, brightness / 100));
+
+  if (mode === 'original' || opacity <= 0) {
+    return {
+      overlayGradient: 'linear-gradient(to top, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.08) 50%, transparent 100%)',
+      overlayOpacity: 0.25,
+      imageBrightness: normBrightness,
+      primaryColor: '#10B981',
+    };
+  }
+
+  const alpha = Math.max(0, Math.min(1, opacity / 100));
+
+  if (mode === 'black') {
+    return {
+      overlayGradient: `linear-gradient(to top, rgba(2, 6, 23, ${alpha * 0.95}) 0%, rgba(15, 23, 42, ${alpha * 0.7}) 50%, rgba(30, 41, 59, ${alpha * 0.35}) 100%)`,
+      overlayOpacity: 1,
+      imageBrightness: normBrightness,
+      primaryColor: '#0F172A',
+    };
+  }
+
+  if (mode === 'white') {
+    return {
+      overlayGradient: `linear-gradient(to top, rgba(255, 255, 255, ${alpha * 0.92}) 0%, rgba(248, 250, 252, ${alpha * 0.65}) 50%, rgba(241, 245, 249, ${alpha * 0.3}) 100%)`,
+      overlayOpacity: 1,
+      imageBrightness: normBrightness,
+      primaryColor: '#F8FAFC',
+    };
+  }
+
+  // 'color' mode: dynamic hue
+  const safeHue = ((Math.round(hue) % 360) + 360) % 360;
+  const primary = hslToHex(safeHue, 92, 45);
+  const darkShade = hslToHex(safeHue, 95, 14);
+  const midTone = hslToHex(safeHue, 88, 30);
+
+  return {
+    overlayGradient: `linear-gradient(to top, ${hexToRgba(darkShade, alpha * 0.92)} 0%, ${hexToRgba(midTone, alpha * 0.65)} 50%, ${hexToRgba(primary, alpha * 0.25)} 100%)`,
+    overlayOpacity: 1,
+    imageBrightness: normBrightness,
+    primaryColor: primary,
+  };
+}
