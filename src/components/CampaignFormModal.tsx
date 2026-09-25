@@ -1490,7 +1490,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                     <div className="relative flex items-center">
                       <input
                         type="range"
-                        min="50"
+                        min="10"
                         max="130"
                         step="5"
                         value={splashOverlayBrightness}

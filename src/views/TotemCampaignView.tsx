@@ -10,7 +10,7 @@ import { GameCardThumbnail } from '../components/GameCardThumbnail';
 import { GameLayoutProvider } from '../context/GameLayoutContext';
 import { BackgroundEffectOverlay, BackgroundEffectId } from '../components/BackgroundEffectOverlay';
 import { GameLayoutId } from '../types/gameLayouts';
-import { generateLayoutPalette, getSplashOverlayStyle } from '../lib/colorHarmony';
+import { generateLayoutPalette, getSplashOverlayStyle, LayoutColorPalette, getDefaultHueForLayout, hexToRgba } from '../lib/colorHarmony';
 import { getFontFamilyById } from '../lib/fonts';
 import { SplashButtonRenderer } from '../components/SplashButtonRenderer';
 
@@ -44,6 +44,8 @@ interface ScrollableDescriptionProps {
   alignClass: string;
   sizeClass: string;
   layout?: GameLayoutId;
+  palette?: LayoutColorPalette | null;
+  isLight?: boolean;
 }
 
 interface SplashDescriptionStyleConfig {
@@ -52,108 +54,173 @@ interface SplashDescriptionStyleConfig {
   fadeClass: string;
   indicatorClass: string;
   style?: React.CSSProperties;
+  indicatorStyle?: React.CSSProperties;
 }
 
-const getSplashDescriptionStyle = (layout: GameLayoutId = 'modern_glass'): SplashDescriptionStyleConfig => {
+const getSplashDescriptionStyle = (
+  layout: GameLayoutId = 'modern_glass',
+  palette?: LayoutColorPalette | null,
+  isLight = false
+): SplashDescriptionStyleConfig => {
+  const p = palette?.primary || (isLight ? '#0f172a' : '#ffffff');
+  const sec = palette?.secondary || p;
+  const dark = palette?.darkShade || (isLight ? '#334155' : '#020617');
+  const glow = palette?.glowColor || 'rgba(255,255,255,0.2)';
+
   switch (layout) {
     case 'cartoon_comic':
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
-        cardClass: 'rounded-3xl border-4 border-black bg-white/95 text-slate-900 shadow-[8px_8px_0_#000] font-bold p-6 sm:p-7 leading-relaxed backdrop-blur-md',
-        fadeClass: 'from-white via-white/80 to-transparent',
-        indicatorClass: 'bg-yellow-400 text-black border-2 border-black font-black shadow-[2px_2px_0_#000]',
+        cardClass: `rounded-3xl border-4 border-black backdrop-blur-md font-bold p-6 sm:p-7 leading-relaxed ${isLight ? 'bg-white/95 text-slate-900 shadow-[8px_8px_0_#000]' : 'bg-slate-900/95 text-white shadow-[8px_8px_0_#000]'}`,
+        style: { boxShadow: '8px 8px 0 #000' },
+        fadeClass: isLight ? 'from-white via-white/80 to-transparent' : 'from-slate-900 via-slate-900/80 to-transparent',
+        indicatorClass: 'text-black border-2 border-black font-black shadow-[2px_2px_0_#000]',
+        indicatorStyle: { backgroundColor: p, color: '#000' },
       };
 
     case 'cartoon_pop':
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
-        cardClass: 'rounded-3xl border-4 border-amber-400/90 bg-amber-950/85 backdrop-blur-xl text-amber-50 shadow-[0_10px_0_#92400e,0_20px_40px_rgba(0,0,0,0.6)] font-bold p-6 sm:p-7 leading-relaxed',
-        fadeClass: 'from-amber-950 via-amber-950/70 to-transparent',
-        indicatorClass: 'bg-amber-400 text-amber-950 border-2 border-amber-600 font-black shadow-md',
+        cardClass: `rounded-3xl border-4 backdrop-blur-xl font-bold p-6 sm:p-7 leading-relaxed ${isLight ? 'bg-white/95 text-slate-900' : 'bg-slate-950/90 text-white'}`,
+        style: {
+          borderColor: p,
+          boxShadow: `0 10px 0 ${dark}, 0 20px 40px rgba(0,0,0,0.6)`,
+        },
+        fadeClass: isLight ? 'from-white via-white/80 to-transparent' : 'from-slate-950 via-slate-950/80 to-transparent',
+        indicatorClass: 'border-2 font-black shadow-md',
+        indicatorStyle: { backgroundColor: p, color: isLight ? '#fff' : '#020617', borderColor: dark },
       };
 
     case 'neon_arcade':
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
-        cardClass: 'rounded-[32px] border-2 border-cyan-400 bg-slate-950/90 backdrop-blur-2xl text-cyan-100 shadow-[0_0_35px_rgba(6,182,212,0.4),inset_0_0_20px_rgba(6,182,212,0.15)] p-6 sm:p-7 leading-relaxed',
-        fadeClass: 'from-slate-950 via-slate-950/80 to-transparent',
-        indicatorClass: 'bg-slate-900 border border-cyan-400 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.4)] font-mono',
+        cardClass: `rounded-[32px] border-2 backdrop-blur-2xl p-6 sm:p-7 leading-relaxed ${isLight ? 'bg-white/90 text-slate-900' : 'bg-slate-950/90 text-slate-100'}`,
+        style: {
+          borderColor: p,
+          boxShadow: `0 0 35px ${glow}, inset 0 0 20px ${hexToRgba(p, 0.15)}`,
+        },
+        fadeClass: isLight ? 'from-white via-white/80 to-transparent' : 'from-slate-950 via-slate-950/80 to-transparent',
+        indicatorClass: 'border font-mono shadow-md backdrop-blur-md',
+        indicatorStyle: { borderColor: p, color: p, backgroundColor: isLight ? '#fff' : '#020617', boxShadow: `0 0 15px ${glow}` },
       };
 
     case 'bento_tech':
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
-        cardClass: 'border-2 border-emerald-500/80 bg-slate-950/95 backdrop-blur-2xl text-emerald-200 font-mono shadow-[0_0_30px_rgba(16,185,129,0.3)] p-6 sm:p-7 leading-relaxed',
-        fadeClass: 'from-slate-950 via-slate-950/80 to-transparent',
-        indicatorClass: 'bg-slate-950 border border-emerald-400 text-emerald-300 font-mono shadow-[0_0_12px_rgba(16,185,129,0.3)]',
+        cardClass: `border-2 backdrop-blur-2xl font-mono p-6 sm:p-7 leading-relaxed ${isLight ? 'bg-white/95 text-slate-900' : 'bg-slate-950/95 text-slate-100'}`,
         style: {
+          borderColor: p,
+          boxShadow: `0 0 30px ${glow}`,
           clipPath: 'polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px)',
         },
+        fadeClass: isLight ? 'from-white via-white/80 to-transparent' : 'from-slate-950 via-slate-950/80 to-transparent',
+        indicatorClass: 'border font-mono shadow-md',
+        indicatorStyle: { borderColor: p, color: p, backgroundColor: isLight ? '#fff' : '#020617', boxShadow: `0 0 12px ${glow}` },
       };
 
     case 'neumorphic_luxe':
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
-        cardClass: 'rounded-[32px] border-2 border-amber-400/60 bg-gradient-to-b from-slate-900/95 via-amber-950/40 to-slate-950/95 backdrop-blur-2xl text-amber-100 shadow-[0_20px_50px_rgba(245,158,11,0.25)] p-6 sm:p-7 leading-relaxed',
-        fadeClass: 'from-slate-950 via-slate-950/80 to-transparent',
-        indicatorClass: 'bg-slate-900 border border-amber-400 text-amber-300 shadow-md',
+        cardClass: `rounded-[32px] border-2 backdrop-blur-2xl p-6 sm:p-7 leading-relaxed ${isLight ? 'bg-white/95 text-slate-900' : 'bg-slate-950/90 text-slate-100'}`,
+        style: {
+          borderColor: p,
+          boxShadow: `0 20px 50px ${glow}`,
+        },
+        fadeClass: isLight ? 'from-white via-white/80 to-transparent' : 'from-slate-950 via-slate-950/80 to-transparent',
+        indicatorClass: 'border shadow-md font-bold',
+        indicatorStyle: { borderColor: p, color: p, backgroundColor: isLight ? '#fff' : '#020617' },
       };
 
     case 'pixel_retro':
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
-        cardClass: 'rounded-none border-4 border-yellow-400 bg-black/95 text-yellow-300 font-mono shadow-[6px_6px_0_#ca8a04] p-6 sm:p-7 leading-relaxed',
-        fadeClass: 'from-black via-black/80 to-transparent',
-        indicatorClass: 'bg-yellow-400 text-black border-2 border-black font-mono font-bold shadow-[2px_2px_0_#ca8a04]',
+        cardClass: `rounded-none border-4 font-mono p-6 sm:p-7 leading-relaxed ${isLight ? 'bg-white/95 text-slate-900' : 'bg-black/95 text-yellow-300'}`,
+        style: {
+          borderColor: p,
+          boxShadow: `6px 6px 0 ${dark}`,
+        },
+        fadeClass: isLight ? 'from-white via-white/80 to-transparent' : 'from-black via-black/80 to-transparent',
+        indicatorClass: 'border-2 font-mono font-bold',
+        indicatorStyle: { backgroundColor: p, borderColor: dark, color: '#000', boxShadow: `2px 2px 0 ${dark}` },
       };
 
     case 'cyber_matrix':
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
-        cardClass: 'rounded-xl border-2 border-emerald-400/90 bg-black/95 text-emerald-300 font-mono shadow-[0_0_30px_rgba(16,185,129,0.35)] p-6 sm:p-7 leading-relaxed',
-        fadeClass: 'from-black via-black/80 to-transparent',
-        indicatorClass: 'bg-black border border-emerald-400 text-emerald-300 font-mono',
+        cardClass: `rounded-xl border-2 font-mono p-6 sm:p-7 leading-relaxed ${isLight ? 'bg-white/95 text-slate-900' : 'bg-black/95 text-emerald-300'}`,
+        style: {
+          borderColor: p,
+          boxShadow: `0 0 30px ${glow}`,
+        },
+        fadeClass: isLight ? 'from-white via-white/80 to-transparent' : 'from-black via-black/80 to-transparent',
+        indicatorClass: 'border font-mono shadow-md',
+        indicatorStyle: { borderColor: p, color: p, backgroundColor: '#000' },
       };
 
     case 'synthwave_grid':
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
-        cardClass: 'rounded-3xl border-2 border-pink-400/80 bg-purple-950/85 backdrop-blur-2xl text-pink-100 shadow-[0_0_35px_rgba(244,63,94,0.35)] p-6 sm:p-7 leading-relaxed',
-        fadeClass: 'from-purple-950 via-purple-950/80 to-transparent',
-        indicatorClass: 'bg-purple-900 border border-pink-400 text-pink-200 shadow-md',
+        cardClass: `rounded-3xl border-2 backdrop-blur-2xl p-6 sm:p-7 leading-relaxed ${isLight ? 'bg-white/95 text-slate-900' : 'bg-slate-950/90 text-pink-100'}`,
+        style: {
+          borderColor: p,
+          boxShadow: `0 0 35px ${glow}`,
+        },
+        fadeClass: isLight ? 'from-white via-white/80 to-transparent' : 'from-slate-950 via-slate-950/80 to-transparent',
+        indicatorClass: 'border shadow-md',
+        indicatorStyle: { borderColor: p, color: p, backgroundColor: isLight ? '#fff' : '#020617' },
       };
 
     case 'golden_casino':
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
-        cardClass: 'rounded-3xl border-4 border-amber-300 bg-stone-950/95 backdrop-blur-xl text-amber-100 shadow-[0_0_40px_rgba(245,158,11,0.4)] p-6 sm:p-7 leading-relaxed',
-        fadeClass: 'from-stone-950 via-stone-950/80 to-transparent',
-        indicatorClass: 'bg-stone-900 border border-amber-300 text-amber-300 shadow-md font-bold',
+        cardClass: `rounded-3xl border-4 backdrop-blur-xl p-6 sm:p-7 leading-relaxed ${isLight ? 'bg-white/95 text-slate-900' : 'bg-stone-950/95 text-amber-100'}`,
+        style: {
+          borderColor: p,
+          boxShadow: `0 0 40px ${glow}`,
+        },
+        fadeClass: isLight ? 'from-white via-white/80 to-transparent' : 'from-stone-950 via-stone-950/80 to-transparent',
+        indicatorClass: 'border shadow-md font-bold',
+        indicatorStyle: { borderColor: p, color: p, backgroundColor: isLight ? '#fff' : '#0c0a09' },
       };
 
     case 'bubble_toon':
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
-        cardClass: 'rounded-[36px] border-4 border-pink-300/80 bg-pink-950/70 backdrop-blur-2xl text-pink-100 shadow-[0_12px_28px_rgba(244,114,182,0.35)] font-bold p-6 sm:p-7 leading-relaxed',
-        fadeClass: 'from-pink-950 via-pink-950/80 to-transparent',
-        indicatorClass: 'bg-pink-500 text-white border border-pink-300 font-black shadow-md rounded-full',
+        cardClass: `rounded-[36px] border-4 backdrop-blur-2xl font-bold p-6 sm:p-7 leading-relaxed ${isLight ? 'bg-white/95 text-slate-900' : 'bg-slate-950/90 text-pink-100'}`,
+        style: {
+          borderColor: p,
+          boxShadow: `0 12px 28px ${glow}`,
+        },
+        fadeClass: isLight ? 'from-white via-white/80 to-transparent' : 'from-slate-950 via-slate-950/80 to-transparent',
+        indicatorClass: 'border font-black shadow-md rounded-full',
+        indicatorStyle: { backgroundColor: p, borderColor: sec, color: '#fff' },
       };
 
     case 'spatial_3d':
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
-        cardClass: 'rounded-3xl border-2 border-purple-400/60 bg-slate-950/85 backdrop-blur-2xl text-purple-100 shadow-[0_25px_60px_-15px_rgba(147,51,234,0.4)] p-6 sm:p-7 leading-relaxed',
-        fadeClass: 'from-slate-950 via-slate-950/80 to-transparent',
-        indicatorClass: 'bg-purple-950 border border-purple-400 text-purple-200 shadow-md',
+        cardClass: `rounded-3xl border-2 backdrop-blur-2xl p-6 sm:p-7 leading-relaxed ${isLight ? 'bg-white/95 text-slate-900' : 'bg-slate-950/85 text-purple-100'}`,
+        style: {
+          borderColor: p,
+          boxShadow: `0 25px 60px -15px ${glow}`,
+        },
+        fadeClass: isLight ? 'from-white via-white/80 to-transparent' : 'from-slate-950 via-slate-950/80 to-transparent',
+        indicatorClass: 'border shadow-md',
+        indicatorStyle: { borderColor: p, color: p, backgroundColor: isLight ? '#fff' : '#020617' },
       };
 
     case 'modern_glass':
     default:
       return {
         wrapperClass: 'mt-6 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500',
-        cardClass: 'rounded-3xl border-2 border-white/20 bg-black/50 backdrop-blur-2xl text-slate-100 shadow-2xl p-6 sm:p-7 leading-relaxed',
-        fadeClass: 'from-black/85 via-black/40 to-transparent',
-        indicatorClass: 'bg-slate-950/90 text-white border border-white/30 shadow-2xl',
+        cardClass: `rounded-3xl border-2 backdrop-blur-2xl text-slate-100 shadow-2xl p-6 sm:p-7 leading-relaxed ${isLight ? 'bg-white/90 text-slate-900' : 'bg-black/60 text-slate-100'}`,
+        style: {
+          borderColor: hexToRgba(p, 0.4),
+          boxShadow: `0 0 30px ${glow}`,
+        },
+        fadeClass: isLight ? 'from-white via-white/80 to-transparent' : 'from-black/85 via-black/40 to-transparent',
+        indicatorClass: 'border shadow-2xl backdrop-blur-md',
+        indicatorStyle: { borderColor: hexToRgba(p, 0.5), color: isLight ? '#0f172a' : '#ffffff', backgroundColor: isLight ? '#fff' : '#020617' },
       };
   }
 };
@@ -163,11 +230,13 @@ const ScrollableDescription: React.FC<ScrollableDescriptionProps> = ({
   alignClass,
   sizeClass,
   layout = 'modern_glass',
+  palette,
+  isLight = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [canScroll, setCanScroll] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
-  const config = getSplashDescriptionStyle(layout);
+  const config = getSplashDescriptionStyle(layout, palette, isLight);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -242,6 +311,7 @@ const ScrollableDescription: React.FC<ScrollableDescriptionProps> = ({
           <button
             type="button"
             onClick={handleIndicatorClick}
+            style={config.indicatorStyle}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-full backdrop-blur-md text-xs font-semibold tracking-wide cursor-pointer active:scale-95 transition-all select-none group ${config.indicatorClass}`}
           >
             <span>Deslize para ler mais</span>
@@ -673,7 +743,7 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
 
       {/* 1. SPLASH SCREEN VIEW */}
       {inSplash ? (
-        <div className="relative w-full h-full flex flex-col items-center justify-between p-8 text-center animate-in fade-in duration-500 overflow-hidden">
+        <div className="relative w-full h-full flex flex-col items-center justify-between p-8 text-center animate-in fade-in duration-500 overflow-y-auto no-scrollbar">
           {/* Background image with custom color blend overlay */}
           <div className="absolute inset-0 z-0">
             <img
@@ -740,12 +810,22 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
                 ? 'text-base sm:text-lg'
                 : 'text-sm sm:text-base';
 
+              const activeDescHue = layoutColorHue !== undefined
+                ? layoutColorHue
+                : (campaign.games_config?.layout_color_hue !== undefined
+                  ? Number(campaign.games_config.layout_color_hue)
+                  : getDefaultHueForLayout(campaignLayout));
+
+              const activeDescPalette = sliderPalette || generateLayoutPalette(activeDescHue, isLight);
+
               return (
                 <ScrollableDescription
                   description={campaign.description}
                   alignClass={alignClass}
                   sizeClass={sizeClass}
                   layout={campaignLayout}
+                  palette={activeDescPalette}
+                  isLight={isLight}
                 />
               );
             })()}
@@ -755,30 +835,39 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
               const descImg = campaign.description_image_url || campaign.games_config?.description_image_url;
               if (!descImg) return null;
 
+              const activeDescHue = layoutColorHue !== undefined
+                ? layoutColorHue
+                : (campaign.games_config?.layout_color_hue !== undefined
+                  ? Number(campaign.games_config.layout_color_hue)
+                  : getDefaultHueForLayout(campaignLayout));
+
+              const activeDescPalette = sliderPalette || generateLayoutPalette(activeDescHue, isLight);
+
               return (
-                <div className="mt-3.5 sm:mt-5 w-full max-w-md sm:max-w-xl md:max-w-2xl px-2 animate-in fade-in zoom-in-95 duration-500">
+                <div className="mt-4 w-full max-w-2xl sm:max-w-3xl animate-in zoom-in-95 duration-500">
                   <div
-                    style={
-                      campaignLayout === 'golden_casino'
-                        ? { borderColor: 'rgba(251, 191, 36, 0.6)', boxShadow: '0 0 25px rgba(251, 191, 36, 0.25)' }
-                        : campaignLayout === 'neon_arcade'
-                        ? { borderColor: 'rgba(6, 182, 212, 0.6)', boxShadow: '0 0 20px rgba(6, 182, 212, 0.3)' }
-                        : undefined
-                    }
-                    className={`relative w-full aspect-video max-h-[22vh] sm:max-h-[28vh] rounded-2xl sm:rounded-3xl overflow-hidden border-2 shadow-2xl backdrop-blur-md mx-auto flex items-center justify-center ${
-                      campaignLayout === 'cartoon_comic'
-                        ? 'border-black shadow-[6px_6px_0_#000] bg-white/10'
+                    style={{
+                      borderColor: activeDescPalette.primary,
+                      boxShadow: campaignLayout === 'cartoon_comic'
+                        ? '8px 8px 0 #000'
+                        : campaignLayout === 'cartoon_pop'
+                        ? `0 10px 0 ${activeDescPalette.darkShade}, 0 20px 40px rgba(0,0,0,0.6)`
                         : campaignLayout === 'pixel_retro'
-                        ? 'border-2 border-black shadow-[4px_4px_0_#ca8a04] bg-black/40'
-                        : campaignLayout === 'bento_tech'
-                        ? 'border-emerald-400/50 shadow-[0_0_20px_rgba(16,185,129,0.2)] bg-emerald-950/20'
-                        : 'border-white/20 bg-black/30'
-                    }`}
+                        ? `6px 6px 0 ${activeDescPalette.darkShade}`
+                        : `0 0 35px ${activeDescPalette.glowColor}`,
+                    }}
+                    className={`relative w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl backdrop-blur-md mx-auto ${
+                      campaignLayout === 'cartoon_comic'
+                        ? 'border-4 border-black bg-white/10'
+                        : campaignLayout === 'pixel_retro' || campaignLayout === 'cartoon_pop' || campaignLayout === 'golden_casino' || campaignLayout === 'bubble_toon'
+                        ? 'border-4'
+                        : 'border-2'
+                    } ${isLight ? 'bg-white/80' : 'bg-black/40'}`}
                   >
                     <img
                       src={descImg}
                       alt={campaign.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-auto block"
                     />
                   </div>
                 </div>

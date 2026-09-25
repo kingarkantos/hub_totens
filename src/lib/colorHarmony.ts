@@ -149,9 +149,9 @@ export function getSplashOverlayStyle(
   mode: 'color' | 'original' | 'black' | 'white' = 'color',
   hue: number = 145,
   opacity: number = 30, // 0 - 100
-  brightness: number = 100 // 50 - 130
+  brightness: number = 100 // 10 - 130
 ): SplashOverlayStyleResult {
-  const normBrightness = Math.max(0.5, Math.min(1.5, brightness / 100));
+  const normBrightness = Math.max(0.1, Math.min(1.5, brightness / 100));
 
   if (mode === 'original' || opacity <= 0) {
     return {
