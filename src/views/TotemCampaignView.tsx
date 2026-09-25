@@ -338,6 +338,46 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
   const [idleSeconds, setIdleSeconds] = useState(90);
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Splash bottom button floating logic when content overflows viewport
+  const [isSplashOverflowing, setIsSplashOverflowing] = useState(false);
+  const splashContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!inSplash) return;
+    const el = splashContainerRef.current;
+    if (!el) return;
+
+    const checkOverflow = () => {
+      setIsSplashOverflowing(prev => {
+        if (prev) {
+          return (el.scrollHeight - 144) > (el.clientHeight + 20);
+        } else {
+          return el.scrollHeight > (el.clientHeight + 25);
+        }
+      });
+    };
+
+    checkOverflow();
+
+    const ro = new ResizeObserver(() => {
+      checkOverflow();
+    });
+    ro.observe(el);
+
+    const t1 = setTimeout(checkOverflow, 120);
+    const t2 = setTimeout(checkOverflow, 450);
+    const t3 = setTimeout(checkOverflow, 1200);
+    window.addEventListener('resize', checkOverflow);
+
+    return () => {
+      ro.disconnect();
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      window.removeEventListener('resize', checkOverflow);
+    };
+  }, [inSplash, campaign]);
+
   // Fetch campaign by slug
   useEffect(() => {
     const fetchCampaign = async () => {
@@ -743,7 +783,12 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
 
       {/* 1. SPLASH SCREEN VIEW */}
       {inSplash ? (
-        <div className="relative w-full h-full flex flex-col items-center justify-between p-8 text-center animate-in fade-in duration-500 overflow-y-auto no-scrollbar">
+        <div
+          ref={splashContainerRef}
+          className={`relative w-full h-full flex flex-col items-center justify-between p-8 text-center animate-in fade-in duration-500 overflow-y-auto no-scrollbar ${
+            isSplashOverflowing ? 'pb-36' : ''
+          }`}
+        >
           {/* Background image with custom color blend overlay */}
           <div className="absolute inset-0 z-0">
             <img
@@ -867,6 +912,17 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
                     <img
                       src={descImg}
                       alt={campaign.name}
+                      onLoad={() => {
+                        const el = splashContainerRef.current;
+                        if (el) {
+                          setIsSplashOverflowing(prev => {
+                            if (prev) {
+                              return (el.scrollHeight - 144) > (el.clientHeight + 20);
+                            }
+                            return el.scrollHeight > (el.clientHeight + 25);
+                          });
+                        }
+                      }}
                       className="w-full h-auto block"
                     />
                   </div>
@@ -875,15 +931,32 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
             })()}
           </div>
 
-          {/* Central Interactive Touch CTA */}
-          <div className="relative z-10 my-auto flex flex-col items-center">
-            {renderSplashButton()}
-          </div>
+          {/* Central Interactive Touch CTA (in-flow when content fits without scrolling) */}
+          {!isSplashOverflowing && (
+            <div className="relative z-10 my-auto flex flex-col items-center">
+              {renderSplashButton()}
+            </div>
+          )}
 
           {/* Bottom Footer Info */}
-          <div className="relative z-10 pb-6 text-xs text-slate-400 font-bold tracking-widest uppercase">
+          <div className={`relative z-10 text-xs text-slate-400 font-bold tracking-widest uppercase ${
+            isSplashOverflowing ? 'pb-2 pt-4' : 'pb-6'
+          }`}>
             Totem Interativo • Toque na tela para iniciar a sua experiência
           </div>
+
+          {/* Floating Bottom Touch CTA when content overflows viewport */}
+          {isSplashOverflowing && (
+            <div
+              className={`fixed bottom-0 inset-x-0 z-30 pointer-events-none flex flex-col items-center justify-end pb-6 pt-14 bg-gradient-to-t ${
+                isLight ? 'from-white via-white/90 to-transparent' : 'from-slate-950 via-slate-950/90 to-transparent'
+              } backdrop-blur-[2px] animate-in fade-in slide-in-from-bottom-4 duration-300`}
+            >
+              <div className="pointer-events-auto transform hover:scale-105 active:scale-95 transition-all drop-shadow-[0_12px_30px_rgba(0,0,0,0.9)]">
+                {renderSplashButton()}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         /* 2. TOTEM GAMES SELECTION VIEW */
