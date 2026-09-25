@@ -123,9 +123,11 @@ export const SpotErrorGame: React.FC<SpotErrorGameProps> = (props) => {
       title="Encontre o Erro"
       category="Percepção"
       score={score}
+      correctAnswers={foundIds.length}
+      totalQuestions={hazards.length}
       timeRemaining={timeLeft}
       gameOver={gameOver}
-      gameWon={gameWon}
+      gameWon={foundIds.length === hazards.length}
       onRestart={() => {
         setFoundIds([]);
         setActiveHazardInfo(null);

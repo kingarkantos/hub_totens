@@ -210,7 +210,7 @@ export const WheelGame: React.FC<WheelGameProps> = (props) => {
       category="Sorte"
       score={score}
       gameOver={gameOver}
-      gameWon={true}
+      gameWon={score >= Math.max(...PRIZES.map((p) => p.score || 0))}
       onRestart={restart}
       onExit={onExit}
       rankingEnabled={rankingEnabled}

@@ -113,7 +113,7 @@ export const SpeedGame: React.FC<SpeedGameProps> = (props) => {
       category="Ação"
       score={score}
       gameOver={stage === 'finished'}
-      gameWon={true}
+      gameWon={score >= 800}
       onRestart={restart}
       onExit={onExit}
       rankingEnabled={rankingEnabled}

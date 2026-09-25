@@ -172,7 +172,7 @@ export const MathBlitzGame: React.FC<MathBlitzGameProps> = (props) => {
       score={score}
       timeRemaining={timeLeft}
       gameOver={gameOver}
-      gameWon={correctCount > 0}
+      gameWon={answeredCount > 0 && correctCount === answeredCount}
       onRestart={restart}
       onExit={onExit}
       rankingEnabled={rankingEnabled}

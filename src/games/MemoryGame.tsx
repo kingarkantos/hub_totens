@@ -144,6 +144,8 @@ export const MemoryGame: React.FC<MemoryGameProps> = (props) => {
       title="Jogo da Memória"
       category="Raciocínio"
       score={score}
+      correctAnswers={cards.filter((c) => c.matched).length / 2}
+      totalQuestions={cards.length / 2}
       timeRemaining={timeLeft}
       gameOver={gameOver}
       gameWon={won}

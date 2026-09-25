@@ -117,6 +117,7 @@ export const TargetGame: React.FC<TargetGameProps> = (props) => {
       score={score}
       timeRemaining={timeLeft}
       gameOver={gameOver}
+      gameWon={score >= 1000}
       onRestart={restart}
       onExit={onExit}
       rankingEnabled={rankingEnabled}

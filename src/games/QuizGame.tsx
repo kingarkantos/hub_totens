@@ -241,6 +241,7 @@ export const QuizGame: React.FC<QuizGameProps> = ({
       score={score}
       correctAnswers={correctCount}
       totalQuestions={questions.length}
+      gameWon={correctCount === questions.length}
       timeRemaining={activeTimeDisplay}
       gameOver={gameOver}
       onRestart={restart}

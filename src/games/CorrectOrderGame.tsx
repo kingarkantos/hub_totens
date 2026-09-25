@@ -136,6 +136,8 @@ export const CorrectOrderGame: React.FC<CorrectOrderGameProps> = (props) => {
       title="Ordem Correta"
       category="Processos"
       score={score}
+      correctAnswers={gameWon ? correctSteps.length : 0}
+      totalQuestions={correctSteps.length}
       timeRemaining={timeLeft}
       gameOver={gameOver}
       gameWon={gameWon}

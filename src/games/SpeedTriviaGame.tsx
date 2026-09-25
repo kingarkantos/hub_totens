@@ -167,7 +167,7 @@ export const SpeedTriviaGame: React.FC<SpeedTriviaGameProps> = (props) => {
       totalQuestions={questions.length}
       timeRemaining={questionTime}
       gameOver={gameOver}
-      gameWon={gameWon}
+      gameWon={correctCount === questions.length}
       onRestart={() => {
         setQuestions(prepareQuestions());
         setCurrentIdx(0);

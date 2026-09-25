@@ -132,6 +132,7 @@ export const BalloonGame: React.FC<BalloonGameProps> = (props) => {
       score={score}
       timeRemaining={timeLeft}
       gameOver={gameOver}
+      gameWon={score >= 1000}
       onRestart={restart}
       onExit={onExit}
       rankingEnabled={rankingEnabled}

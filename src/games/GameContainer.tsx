@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { 
-  ArrowLeft, Volume2, VolumeX, Trophy, RotateCcw, Keyboard, CheckCircle2
+  ArrowLeft, Volume2, VolumeX, Trophy, RotateCcw, Keyboard, CheckCircle2, Award, Target, Sparkles, AlertCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '../lib/audio';
@@ -10,6 +10,44 @@ import { GameLayoutId, GAME_LAYOUTS, GameLayoutDefinition } from '../types/gameL
 import { GameLayoutProvider, useGameLayout } from '../context/GameLayoutContext';
 import { getFontFamilyById } from '../lib/fonts';
 import { LayoutColorPalette, generateLayoutPalette } from '../lib/colorHarmony';
+
+const FEEDBACK_POOLS = {
+  // 100% de acertos (Acertou tudo - SOMENTE AQUI dá parabéns!)
+  perfect: [
+    { title: 'Parabéns!', subtitle: 'Incrível! Você acertou tudo e completou o desafio com maestria.' },
+    { title: 'Parabéns!', subtitle: 'Desempenho perfeito! Você gabaritou todas as etapas do desafio.' },
+    { title: 'Parabéns!', subtitle: 'Sensacional! 100% de aproveitamento, você deu um verdadeiro show.' },
+    { title: 'Parabéns!', subtitle: 'Espetacular! Você não errou nenhuma questão e conquistou a pontuação máxima.' },
+  ],
+  // 70% a 99% de acertos (Excelente aproveitamento / Quase lá)
+  great: [
+    { title: 'Quem sabe na próxima!', subtitle: 'Faltou pouquinho para gabaritar! Continue assim e você chega aos 100%.' },
+    { title: 'Muito bem!', subtitle: 'Ótimo aproveitamento! Quem sabe na próxima você acerta tudo?' },
+    { title: 'Quase lá!', subtitle: 'Excelente partida! Mais um pouco de atenção e você atinge a pontuação máxima.' },
+    { title: 'Quem sabe na próxima!', subtitle: 'Grande resultado! Você dominou quase todo o desafio.' },
+  ],
+  // 40% a 69% de acertos (Médio / Melhore mais)
+  average: [
+    { title: 'Melhore mais!', subtitle: 'Você foi bem, mas sabemos que pode melhorar mais! Que tal tentar de novo?' },
+    { title: 'Quem sabe na próxima!', subtitle: 'Bom esforço! Com mais uma tentativa você supera essa marca.' },
+    { title: 'Melhore mais!', subtitle: 'Você está no caminho certo! Treine mais um pouco para subir sua pontuação.' },
+    { title: 'Valeu a tentativa!', subtitle: 'Você acertou parte do desafio, mas pode ir bem mais longe. Vamos de novo?' },
+  ],
+  // 1% a 39% de acertos (Baixo / Não foi dessa vez)
+  low: [
+    { title: 'Não foi dessa vez!', subtitle: 'Não foi dessa vez, mas não desanime! Jogue novamente para melhorar seu resultado.' },
+    { title: 'Quem sabe na próxima!', subtitle: 'Quem sabe na próxima você conquista mais pontos? Tente outra vez!' },
+    { title: 'Melhore mais!', subtitle: 'Com um pouco mais de foco você consegue ir além. Não desista!' },
+    { title: 'Não foi dessa vez!', subtitle: 'Essa rodada foi desafiadora, mas praticando você chega no topo!' },
+  ],
+  // 0% de acertos (Errou tudo)
+  zero: [
+    { title: 'Não foi dessa vez!', subtitle: 'Não foi dessa vez! Respire fundo, jogue novamente e mostre seu potencial.' },
+    { title: 'Quem sabe na próxima!', subtitle: 'Zero acertos por enquanto! Quem sabe na próxima você acerta tudo?' },
+    { title: 'Melhore mais!', subtitle: 'Não desanime! Toda grande vitória começa com uma tentativa. Jogue de novo!' },
+    { title: 'Não foi dessa vez!', subtitle: 'Essa foi puxada! Tente novamente com mais calma para pontuar.' },
+  ],
+};
 
 interface GameContainerProps {
   title: string;
@@ -49,7 +87,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   timeRemaining,
   totalTime,
   gameOver,
-  gameWon = true,
+  gameWon,
   onRestart,
   onExit,
   children,
@@ -138,17 +176,73 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   const activeDarkShade = activePalette?.darkShade || '#78350f';
   const activeGlow = activePalette?.glowColor || theme?.glowColor || `${activePrimary}66`;
 
-  useEffect(() => {
-    if (gameOver && gameWon) {
-      sound.playFanfare();
-      confetti({
-        particleCount: 90,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#DC2626', '#F59E0B', '#10B981', '#38BDF8', '#EC4899'],
-      });
+  // Determina se o jogo possui métricas numéricas de perguntas e respostas
+  const hasQuestionMetrics = totalQuestions !== undefined && totalQuestions > 0;
+
+  // Porcentagem calculada de acertos (0 a 100)
+  const accuracyPercent = useMemo(() => {
+    if (hasQuestionMetrics) {
+      const validCorrect = Math.max(0, correctAnswers ?? 0);
+      return Math.min(100, Math.max(0, Math.round((validCorrect / totalQuestions!) * 100)));
     }
-  }, [gameOver, gameWon]);
+    if (typeof gameWon === 'boolean') {
+      return gameWon ? 100 : 0;
+    }
+    return score > 0 ? 100 : 0;
+  }, [hasQuestionMetrics, totalQuestions, correctAnswers, gameWon, score]);
+
+  // É 100% perfeito (acertou tudo)? Somente se acertar tudo dá os parabéns!
+  const isPerfect = useMemo(() => {
+    if (hasQuestionMetrics) {
+      return (correctAnswers ?? 0) >= totalQuestions! && totalQuestions! > 0;
+    }
+    if (typeof gameWon === 'boolean') {
+      return gameWon && score > 0;
+    }
+    return score > 0;
+  }, [hasQuestionMetrics, correctAnswers, totalQuestions, gameWon, score]);
+
+  // Feedback dinâmico selecionado aleatoriamente a cada partida finalizada
+  const [feedback, setFeedback] = useState<{ title: string; subtitle: string } | null>(null);
+
+  useEffect(() => {
+    if (gameOver) {
+      let pool = FEEDBACK_POOLS.zero;
+      if (isPerfect) {
+        pool = FEEDBACK_POOLS.perfect;
+      } else if (accuracyPercent >= 70) {
+        pool = FEEDBACK_POOLS.great;
+      } else if (accuracyPercent >= 40) {
+        pool = FEEDBACK_POOLS.average;
+      } else if (accuracyPercent > 0) {
+        pool = FEEDBACK_POOLS.low;
+      } else {
+        pool = FEEDBACK_POOLS.zero;
+      }
+
+      const randomItem = pool[Math.floor(Math.random() * pool.length)];
+      setFeedback(randomItem);
+
+      // Disparo de efeitos sonoros e visuais conforme o aproveitamento
+      if (isPerfect) {
+        sound.playFanfare();
+        confetti({
+          particleCount: 100,
+          spread: 80,
+          origin: { y: 0.6 },
+          colors: ['#DC2626', '#F59E0B', '#10B981', '#38BDF8', '#EC4899'],
+        });
+      } else if (accuracyPercent >= 70) {
+        sound.playSuccess();
+      } else if (accuracyPercent >= 40) {
+        sound.playClick();
+      } else {
+        sound.playError();
+      }
+    } else {
+      setFeedback(null);
+    }
+  }, [gameOver, accuracyPercent, isPerfect]);
 
   const toggleSound = () => {
     sound.enabled = !sound.enabled;
@@ -653,16 +747,41 @@ export const GameContainer: React.FC<GameContainerProps> = ({
             <div className={`w-full max-w-md sm:max-w-xl my-auto ${
               isLightMode ? 'bg-white border-4 border-slate-200 text-slate-900 shadow-2xl' : 'bg-slate-900 border-4 border-white/20 text-white shadow-2xl'
             } ${currentLayoutDef.containerClass} p-6 sm:p-10 flex flex-col items-center text-center max-h-[94vh] max-h-[94dvh] overflow-y-auto no-scrollbar`}>
-              <div className="w-16 h-16 sm:w-22 sm:h-22 rounded-3xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center mb-3 shadow-xl shadow-amber-500/40 animate-bounce-subtle flex-shrink-0">
-                <Trophy className="w-8 h-8 sm:w-11 sm:h-11 text-slate-950" />
+              {/* Ícone contextual de acordo com a porcentagem de acertos */}
+              <div className={`w-16 h-16 sm:w-22 sm:h-22 rounded-3xl flex items-center justify-center mb-3 shadow-xl flex-shrink-0 animate-bounce-subtle ${
+                isPerfect
+                  ? 'bg-gradient-to-tr from-amber-500 to-yellow-300 shadow-amber-500/40 text-slate-950'
+                  : accuracyPercent >= 70
+                  ? 'bg-gradient-to-tr from-emerald-500 to-teal-400 shadow-emerald-500/30 text-white'
+                  : accuracyPercent >= 40
+                  ? 'bg-gradient-to-tr from-blue-500 to-indigo-400 shadow-blue-500/30 text-white'
+                  : 'bg-gradient-to-tr from-slate-700 to-slate-800 shadow-slate-900/40 text-amber-400 border border-white/10'
+              }`}>
+                {isPerfect ? (
+                  <Trophy className="w-8 h-8 sm:w-11 sm:h-11" />
+                ) : accuracyPercent >= 70 ? (
+                  <Award className="w-8 h-8 sm:w-11 sm:h-11" />
+                ) : accuracyPercent >= 40 ? (
+                  <Target className="w-8 h-8 sm:w-11 sm:h-11" />
+                ) : (
+                  <RotateCcw className="w-8 h-8 sm:w-11 sm:h-11" />
+                )}
               </div>
 
-              <h3 className="text-2xl sm:text-4xl font-black tracking-tight mb-1">
-                {gameWon ? 'Parabéns!' : 'Fim de Jogo!'}
+              {/* Título dinâmico (somente dá parabéns se acertar tudo!) */}
+              <h3 className={`text-2xl sm:text-4xl font-black tracking-tight mb-1.5 ${
+                isPerfect
+                  ? 'text-amber-400 drop-shadow-sm'
+                  : isLightMode
+                  ? 'text-slate-900'
+                  : 'text-white'
+              }`}>
+                {feedback?.title || (isPerfect ? 'Parabéns!' : 'Não foi dessa vez!')}
               </h3>
               
-              <p className={`${isLightMode ? 'text-slate-600' : 'text-slate-300'} text-sm sm:text-lg mb-4 sm:mb-6`}>
-                Você completou o desafio <strong className={isLightMode ? 'text-slate-900' : 'text-white'}>{title}</strong>.
+              {/* Frase contextual de acordo com o aproveitamento */}
+              <p className={`${isLightMode ? 'text-slate-600' : 'text-slate-300'} text-sm sm:text-base mb-4 sm:mb-6 max-w-md leading-relaxed`}>
+                {feedback?.subtitle || `Você concluiu o desafio ${title}.`}
               </p>
 
               <div className={`w-full ${isLightMode ? 'bg-slate-50 border-2 border-slate-200' : 'bg-slate-800/95 border-2 border-white/15'} ${currentLayoutDef.cardClass} p-4 sm:p-6 mb-4 sm:mb-5 flex-shrink-0 shadow-inner`}>
@@ -673,23 +792,53 @@ export const GameContainer: React.FC<GameContainerProps> = ({
               </div>
 
               {/* Accuracy / Correct Answers for Question & Trivia Games */}
-              {correctAnswers !== undefined && totalQuestions !== undefined && totalQuestions > 0 && (
-                <div className={`w-full ${isLightMode ? 'bg-emerald-50 border-2 border-emerald-300 text-emerald-950' : 'bg-emerald-950/50 border-2 border-emerald-500/50 text-white'} ${currentLayoutDef.cardClass} p-4 sm:p-5 mb-4 sm:mb-5 flex items-center justify-between shadow-md flex-shrink-0`}>
+              {hasQuestionMetrics && (
+                <div className={`w-full border-2 ${currentLayoutDef.cardClass} p-4 sm:p-5 mb-4 sm:mb-5 flex items-center justify-between shadow-md flex-shrink-0 ${
+                  isPerfect
+                    ? isLightMode ? 'bg-emerald-50 border-emerald-300 text-emerald-950' : 'bg-emerald-950/50 border-emerald-500/50 text-white'
+                    : accuracyPercent >= 70
+                    ? isLightMode ? 'bg-teal-50 border-teal-300 text-teal-950' : 'bg-teal-950/50 border-teal-500/50 text-white'
+                    : accuracyPercent >= 40
+                    ? isLightMode ? 'bg-amber-50 border-amber-300 text-amber-950' : 'bg-amber-950/40 border-amber-500/40 text-white'
+                    : isLightMode ? 'bg-slate-100 border-slate-300 text-slate-800' : 'bg-slate-800/80 border-slate-700 text-slate-200'
+                }`}>
                   <div className="text-left">
-                    <span className={`text-xs sm:text-sm font-black uppercase tracking-wider ${isLightMode ? 'text-emerald-800' : 'text-emerald-300'} flex items-center gap-1.5`}>
-                      <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
+                    <span className={`text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-1.5 ${
+                      isPerfect || accuracyPercent >= 70
+                        ? isLightMode ? 'text-emerald-800' : 'text-emerald-300'
+                        : accuracyPercent >= 40
+                        ? isLightMode ? 'text-amber-800' : 'text-amber-300'
+                        : isLightMode ? 'text-slate-700' : 'text-slate-300'
+                    }`}>
+                      {isPerfect ? (
+                        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
+                      ) : accuracyPercent >= 70 ? (
+                        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-teal-400" />
+                      ) : accuracyPercent >= 40 ? (
+                        <Target className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
+                      ) : (
+                        <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
+                      )}
                       <span>Respostas Corretas</span>
                     </span>
-                    <p className={`text-[11px] sm:text-xs ${isLightMode ? 'text-emerald-700/80' : 'text-slate-300'} mt-0.5`}>
-                      Aproveitamento total no desafio
+                    <p className={`text-[11px] sm:text-xs mt-0.5 ${isLightMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                      {isPerfect ? 'Gabaritou 100% do desafio!' : accuracyPercent >= 70 ? 'Excelente aproveitamento' : accuracyPercent >= 40 ? 'Aproveitamento mediano' : 'Tente de novo para pontuar'}
                     </p>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl sm:text-4xl font-black font-mono text-emerald-500 tracking-tight">
-                      {correctAnswers} <span className={`text-sm sm:text-xl ${isLightMode ? 'text-slate-600' : 'text-slate-400'} font-normal`}>de {totalQuestions}</span>
+                    <div className="text-2xl sm:text-4xl font-black font-mono tracking-tight text-inherit">
+                      {Math.max(0, correctAnswers ?? 0)} <span className={`text-sm sm:text-xl ${isLightMode ? 'text-slate-600' : 'text-slate-400'} font-normal`}>de {totalQuestions}</span>
                     </div>
-                    <span className="text-[11px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 font-mono">
-                      {Math.round((correctAnswers / totalQuestions) * 100)}% de acertos
+                    <span className={`text-[11px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full font-mono inline-block mt-0.5 ${
+                      isPerfect
+                        ? 'bg-emerald-500/20 text-emerald-500'
+                        : accuracyPercent >= 70
+                        ? 'bg-teal-500/20 text-teal-400'
+                        : accuracyPercent >= 40
+                        ? 'bg-amber-500/20 text-amber-400'
+                        : 'bg-slate-500/20 text-slate-400'
+                    }`}>
+                      {accuracyPercent}% de acertos
                     </span>
                   </div>
                 </div>

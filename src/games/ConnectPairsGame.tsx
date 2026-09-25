@@ -142,9 +142,11 @@ export const ConnectPairsGame: React.FC<ConnectPairsGameProps> = (props) => {
       title="Conecte os Pares"
       category="Associação"
       score={score}
+      correctAnswers={matchedPairs.length}
+      totalQuestions={basePairs.length}
       timeRemaining={timeLeft}
       gameOver={gameOver}
-      gameWon={gameWon}
+      gameWon={matchedPairs.length === basePairs.length}
       onRestart={() => {
         const rights = basePairs.map((p) => p.right).sort(() => Math.random() - 0.5);
         setShuffledRights(rights);

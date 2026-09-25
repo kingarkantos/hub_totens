@@ -183,9 +183,11 @@ export const WordSearchGame: React.FC<WordSearchGameProps> = (props) => {
       title="Caça-Palavras"
       category="Atenção"
       score={score}
+      correctAnswers={foundWords.length}
+      totalQuestions={targetWords.length}
       timeRemaining={timeLeft}
       gameOver={gameOver}
-      gameWon={gameWon}
+      gameWon={foundWords.length === targetWords.length}
       onRestart={() => {
         setFoundWords([]);
         setSelectedCells([]);

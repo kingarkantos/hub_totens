@@ -158,7 +158,7 @@ export const BullseyeGame: React.FC<BullseyeGameProps> = (props) => {
       category="Precisão & Coordenação"
       score={score}
       gameOver={gameOver}
-      gameWon={score >= 600}
+      gameWon={shots.filter((s) => s.points >= 300).length === totalShots}
       onRestart={restart}
       onExit={onExit}
       rankingEnabled={rankingEnabled}

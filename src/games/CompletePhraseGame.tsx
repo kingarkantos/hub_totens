@@ -155,7 +155,7 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = (props) => 
       totalQuestions={phrases.length}
       timeRemaining={timeLeft}
       gameOver={gameOver}
-      gameWon={gameWon}
+      gameWon={correctCount === phrases.length}
       onRestart={() => {
         setPhrases(preparePhrases());
         setCurrentIdx(0);

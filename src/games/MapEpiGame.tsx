@@ -119,9 +119,11 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = (props) => {
       title="Mapa + EPI"
       category="EPIs"
       score={score}
+      correctAnswers={matchedIds.length}
+      totalQuestions={SECTORS.length}
       timeRemaining={timeLeft}
       gameOver={gameOver}
-      gameWon={gameWon}
+      gameWon={matchedIds.length === SECTORS.length}
       onRestart={() => {
         setShuffledEpis([...SECTORS].sort(() => Math.random() - 0.5));
         setMatchedIds([]);

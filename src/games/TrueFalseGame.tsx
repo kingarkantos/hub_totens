@@ -206,7 +206,7 @@ export const TrueFalseGame: React.FC<TrueFalseGameProps> = (props) => {
       totalQuestions={statements.length}
       timeRemaining={activeTimeDisplay}
       gameOver={gameOver}
-      gameWon={gameWon}
+      gameWon={correctCount === statements.length}
       onRestart={restart}
       onExit={onExit}
       rankingEnabled={rankingEnabled}
