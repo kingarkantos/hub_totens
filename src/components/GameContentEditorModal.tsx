@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw, Image as ImageIcon, Loader2, Wand2, Eye, ZoomIn, ExternalLink, Shuffle, Type } from 'lucide-react';
+import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw, Image as ImageIcon, Loader2, Wand2, Eye, ZoomIn, ExternalLink, Shuffle, Type, Palette, FileSpreadsheet } from 'lucide-react';
 import { supabase, BUCKETS } from '../lib/supabase';
 import { GameDefinition } from '../types';
 import { GameLayoutId, GAME_LAYOUTS } from '../types/gameLayouts';
@@ -340,7 +340,10 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
   const currentCount = getContentCount(content);
   const hasExistingContent = currentCount > 0;
 
-  // Always start directly on the manual form so the user sees the existing records immediately!
+  // Main tabs: 1. Conteúdo do Jogo, 2. Tempo & Sorteio, 3. Visual & Tipografia
+  const [mainGameTab, setMainGameTab] = useState<'content' | 'rules' | 'appearance'>('content');
+
+  // Content sub-tabs: manual form, CSV upload, AI generator
   const [activeTab, setActiveTab] = useState<'csv' | 'form' | 'ai'>('form');
 
   const [errorMsg, setErrorMsg] = useState('');
@@ -2891,16 +2894,16 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-4xl bg-white border border-slate-200 rounded-3xl overflow-hidden flex flex-col max-h-[92vh] shadow-2xl text-slate-800">
+    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-5 animate-in fade-in duration-200">
+      <div className="w-full max-w-[1550px] w-[96vw] bg-white border border-slate-200 rounded-3xl overflow-hidden flex flex-col h-[94vh] max-h-[94vh] shadow-2xl text-slate-800">
         {/* Top Header */}
-        <div className="flex items-center justify-between p-6 bg-slate-50 border-b border-slate-200">
+        <div className="flex items-center justify-between p-5 sm:p-6 bg-slate-50 border-b border-slate-200">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs uppercase font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200">
                 Alimentar Conteúdo
               </span>
-              <h3 className="text-xl font-black text-slate-900">{game.name}</h3>
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900">{game.name}</h3>
               {currentCount > 0 && (
                 <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
                   {currentCount} {currentCount === 1 ? 'registro' : 'registros'}
@@ -2917,53 +2920,121 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
           </button>
         </div>
 
-        {/* 3 Modality Tabs */}
-        <div className="flex border-b border-slate-200 bg-slate-50/80 px-6 pt-3 gap-2 flex-wrap">
+        {/* Top-Level Main Tabs Navigation */}
+        <div className="flex border-b border-slate-200 bg-slate-100/80 px-6 pt-2.5 gap-2 flex-wrap items-center">
           <button
+            type="button"
             onClick={() => {
               sound.playClick();
-              setActiveTab('form');
+              setMainGameTab('content');
             }}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-xs font-bold transition-all border-b-2 ${
-              activeTab === 'form'
-                ? 'border-red-600 text-red-600 bg-white'
-                : 'border-transparent text-slate-500 hover:text-slate-900'
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-t-2xl text-xs sm:text-sm font-black transition-all border-b-2 ${
+              mainGameTab === 'content'
+                ? 'border-red-600 text-red-600 bg-white shadow-xs'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
-            <Sliders className="w-4 h-4" />
-            <span>2. Formulário Manual {currentCount > 0 ? `(${currentCount})` : ''}</span>
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            <span>1. Perguntas &amp; Conteúdo</span>
+            {currentCount > 0 && (
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                {currentCount}
+              </span>
+            )}
           </button>
 
           <button
+            type="button"
             onClick={() => {
               sound.playClick();
-              setActiveTab('csv');
+              setMainGameTab('rules');
             }}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-xs font-bold transition-all border-b-2 ${
-              activeTab === 'csv'
-                ? 'border-red-600 text-red-600 bg-white'
-                : 'border-transparent text-slate-500 hover:text-slate-900'
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-t-2xl text-xs sm:text-sm font-black transition-all border-b-2 ${
+              mainGameTab === 'rules'
+                ? 'border-red-600 text-red-600 bg-white shadow-xs'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
-            <Upload className="w-4 h-4" />
-            <span>1. Upload de CSV</span>
+            <Clock className="w-4 h-4 text-indigo-600" />
+            <span>2. Tempo &amp; Regras</span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">
+              {timeLimit === 0 ? 'Sem Tempo' : `${timeLimit}s`}
+            </span>
           </button>
 
           <button
+            type="button"
             onClick={() => {
               sound.playClick();
-              setActiveTab('ai');
+              setMainGameTab('appearance');
             }}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-xs font-bold transition-all border-b-2 ${
-              activeTab === 'ai'
-                ? 'border-red-600 text-red-600 bg-white'
-                : 'border-transparent text-slate-500 hover:text-slate-900'
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-t-2xl text-xs sm:text-sm font-black transition-all border-b-2 ${
+              mainGameTab === 'appearance'
+                ? 'border-red-600 text-red-600 bg-white shadow-xs'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
-            <Bot className="w-4 h-4 text-pink-600" />
-            <span>3. Gerar com IA (Gemini)</span>
+            <Palette className="w-4 h-4 text-amber-500" />
+            <span>3. Visual &amp; Tipografia</span>
           </button>
         </div>
+
+        {/* 3 Modality Sub-tabs for Content */}
+        {mainGameTab === 'content' && (
+          <div className="flex border-b border-slate-200 bg-slate-50 px-6 py-2.5 gap-2 flex-wrap items-center">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">
+              Método de Inserção:
+            </span>
+
+            <button
+              type="button"
+              onClick={() => {
+                sound.playClick();
+                setActiveTab('form');
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                activeTab === 'form'
+                  ? 'border-red-600 text-red-700 bg-red-50/80 font-black shadow-xs ring-1 ring-red-400/30'
+                  : 'border-slate-200 text-slate-600 hover:text-slate-900 bg-white'
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5 text-red-600" />
+              <span>1. Formulário Manual {currentCount > 0 ? `(${currentCount})` : ''}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                sound.playClick();
+                setActiveTab('csv');
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                activeTab === 'csv'
+                  ? 'border-red-600 text-red-700 bg-red-50/80 font-black shadow-xs ring-1 ring-red-400/30'
+                  : 'border-slate-200 text-slate-600 hover:text-slate-900 bg-white'
+              }`}
+            >
+              <Upload className="w-3.5 h-3.5 text-blue-600" />
+              <span>2. Upload de CSV</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                sound.playClick();
+                setActiveTab('ai');
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                activeTab === 'ai'
+                  ? 'border-red-600 text-red-700 bg-red-50/80 font-black shadow-xs ring-1 ring-red-400/30'
+                  : 'border-slate-200 text-slate-600 hover:text-slate-900 bg-white'
+              }`}
+            >
+              <Bot className="w-3.5 h-3.5 text-pink-600" />
+              <span>3. Gerar com IA (Gemini)</span>
+            </button>
+          </div>
+        )}
 
         {/* Alerts */}
         {errorMsg && (
@@ -2982,8 +3053,10 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
 
         {/* Tab Contents */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* SEÇÃO DE TEMPO CONFIGURÁVEL (DOIS CAMPOS INDEPENDENTES: RESPOSTA E DESAFIO INTEIRO) */}
-          <div className="space-y-3">
+          {mainGameTab === 'rules' && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              {/* SEÇÃO DE TEMPO CONFIGURÁVEL (DOIS CAMPOS INDEPENDENTES: RESPOSTA E DESAFIO INTEIRO) */}
+              <div className="space-y-3">
             {/* 1. TEMPO PARA RESPONDER (POR PERGUNTA / RODADA) */}
             <div className="rounded-3xl border-2 border-amber-300/90 bg-amber-50/60 p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-xs">
               <div className="space-y-1">
@@ -3305,10 +3378,14 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                 </div>
               </div>
             </div>
+            )}
+            </div>
           )}
 
-          {/* SEÇÃO: SELETOR DE LAYOUT VISUAL DO JOGO */}
-          <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5 shadow-xs">
+          {mainGameTab === 'appearance' && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              {/* SEÇÃO: SELETOR DE LAYOUT VISUAL DO JOGO */}
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5 shadow-xs">
             <div className="mb-3">
               <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wide">
                 Layout Visual do Jogo
@@ -3453,10 +3530,14 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                 );
               })}
             </div>
-          </div>
+            </div>
+            </div>
+          )}
 
-          {/* TAB 1: CSV */}
-          {activeTab === 'csv' && (
+          {mainGameTab === 'content' && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              {/* TAB 1: CSV */}
+              {activeTab === 'csv' && (
             <div className="space-y-5">
               {currentCount > 0 && (
                 <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-900">
@@ -3715,6 +3796,8 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
             </div>
           )}
         </div>
+      )}
+    </div>
 
         {/* Footer */}
         <div className="p-6 bg-slate-50 border-t border-slate-200 flex items-center justify-between">

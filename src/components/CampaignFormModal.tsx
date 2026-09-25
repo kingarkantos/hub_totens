@@ -42,6 +42,8 @@ const COLOR_PRESETS = [
   { name: 'Ciano High-Tech', primary: '#0891B2', secondary: '#0E7490', glow: '#22D3EE' },
 ];
 
+type CampaignTab = 'info' | 'splash' | 'design' | 'games' | 'rules';
+
 export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
   campaignToEdit,
   onClose,
@@ -156,6 +158,9 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
       splashOverlayBrightness
     );
   }, [splashOverlayMode, splashOverlayHue, splashOverlayOpacity, splashOverlayBrightness]);
+
+  // Top navigation tab: 'info' | 'splash' | 'design' | 'games' | 'rules'
+  const [activeCampaignTab, setActiveCampaignTab] = useState<'info' | 'splash' | 'design' | 'games' | 'rules'>('info');
   const [resellers, setResellers] = useState<Reseller[]>([]);
   const [selectedResellerId, setSelectedResellerId] = useState<string>(
     campaignToEdit?.reseller_id || campaignToEdit?.games_config?.reseller_id || ''
@@ -511,10 +516,10 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-        <div className="w-full max-w-5xl bg-white border border-slate-200 rounded-3xl overflow-hidden flex flex-col max-h-[92vh] shadow-2xl text-slate-800">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-5 animate-in fade-in duration-200">
+        <div className="w-full max-w-[1550px] w-[96vw] bg-white border border-slate-200 rounded-3xl overflow-hidden flex flex-col h-[94vh] max-h-[94vh] shadow-2xl text-slate-800">
           {/* Top Header */}
-          <div className="flex items-center justify-between p-6 bg-slate-50 border-b border-slate-200">
+          <div className="flex items-center justify-between p-5 sm:p-6 bg-slate-50 border-b border-slate-200">
             <div>
               <h2 className="text-xl md:text-2xl font-black text-slate-900">
                 {campaignToEdit ? 'Editar Campanha de Totem' : 'Criar Nova Campanha de Totem'}
@@ -553,10 +558,109 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
             </div>
           </div>
 
+          {/* Top Navigation Tabs Bar */}
+          <div className="flex border-b border-slate-200 bg-slate-100/80 px-6 pt-2.5 gap-2 flex-wrap items-center">
+            <button
+              type="button"
+              onClick={() => {
+                sound.playClick();
+                setActiveCampaignTab('info');
+              }}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-t-2xl text-xs sm:text-sm font-black transition-all border-b-2 ${
+                activeCampaignTab === 'info'
+                  ? 'border-red-600 text-red-600 bg-white shadow-xs'
+                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              <span>1. Dados da Campanha</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                sound.playClick();
+                setActiveCampaignTab('splash');
+              }}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-t-2xl text-xs sm:text-sm font-black transition-all border-b-2 ${
+                activeCampaignTab === 'splash'
+                  ? 'border-red-600 text-red-600 bg-white shadow-xs'
+                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <ImageIcon className="w-4 h-4 text-emerald-600" />
+              <span>2. Splash Screen</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                sound.playClick();
+                setActiveCampaignTab('design');
+              }}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-t-2xl text-xs sm:text-sm font-black transition-all border-b-2 ${
+                activeCampaignTab === 'design'
+                  ? 'border-red-600 text-red-600 bg-white shadow-xs'
+                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <Palette className="w-4 h-4 text-indigo-600" />
+              <span>3. Design dos Jogos</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                sound.playClick();
+                setActiveCampaignTab('games');
+              }}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-t-2xl text-xs sm:text-sm font-black transition-all border-b-2 ${
+                activeCampaignTab === 'games'
+                  ? 'border-red-600 text-red-600 bg-white shadow-xs'
+                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <Gamepad2 className="w-4 h-4 text-red-600" />
+              <span>4. Catálogo de Jogos</span>
+              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                selectedGames.length > 0
+                  ? 'bg-red-100 text-red-700 border border-red-300'
+                  : 'bg-slate-200 text-slate-600'
+              }`}>
+                {selectedGames.length} {selectedGames.length === 1 ? 'jogo' : 'jogos'}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                sound.playClick();
+                setActiveCampaignTab('rules');
+              }}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-t-2xl text-xs sm:text-sm font-black transition-all border-b-2 ${
+                activeCampaignTab === 'rules'
+                  ? 'border-red-600 text-red-600 bg-white shadow-xs'
+                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <Trophy className="w-4 h-4 text-amber-500" />
+              <span>5. Ranking &amp; Regras</span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                rankingEnabled
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                  : 'bg-slate-200 text-slate-600'
+              }`}>
+                {rankingEnabled ? 'Ativo' : 'Desativado'}
+              </span>
+            </button>
+          </div>
+
           {/* Form Body Scrollable */}
-          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-8">
-            {/* Basic Info Section */}
-            <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 flex flex-col justify-between">
+            <div className="space-y-8">
+              {/* Basic Info Section (Tab 1) */}
+              {activeCampaignTab === 'info' && (
+                <div className="space-y-5 animate-in fade-in duration-200">
               <div className="flex items-center gap-2 text-sm font-bold text-red-600 uppercase tracking-wider">
                 <Sparkles className="w-4 h-4" />
                 <span>1. Dados da Campanha</span>
@@ -950,14 +1054,17 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                 </div>
               </div>
             </div>
+            )}
 
-            {/* Splash Image Section with Cloud Storage Upload */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm font-bold text-red-600 uppercase tracking-wider">
-                  <ImageIcon className="w-4 h-4" />
-                  <span>2. Imagem de Splash Screen do Totem</span>
-                </div>
+            {/* Splash Image Section with Cloud Storage Upload (Tab 2) */}
+            {activeCampaignTab === 'splash' && (
+              <div className="space-y-6 animate-in fade-in duration-200">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm font-bold text-red-600 uppercase tracking-wider">
+                      <ImageIcon className="w-4 h-4" />
+                      <span>2. Imagem de Splash Screen do Totem</span>
+                    </div>
                 {splashUrl.includes('supabase.co') && (
                   <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-bold shadow-xs animate-in fade-in">
                     <Database className="w-3.5 h-3.5 text-emerald-600" />
@@ -1767,14 +1874,18 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                 </div>
               </div>
             </div>
+            </div>
+            )}
 
-            {/* 3. Design & Layout dos Jogos com Variação de Cores em Tempo Real */}
-            <div className="space-y-5 p-5 sm:p-6 rounded-3xl bg-white border-2 border-slate-200/90 shadow-sm">
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <div className="flex items-center gap-2.5 text-sm sm:text-base font-black text-red-600 uppercase tracking-wider">
-                  <Palette className="w-5 h-5" />
-                  <span>3. Design &amp; Layout dos Jogos (12 Estilos Exclusivos)</span>
-                </div>
+            {/* 3. Design dos Jogos (Tab 3) */}
+            {activeCampaignTab === 'design' && (
+              <div className="space-y-6 animate-in fade-in duration-200">
+                <div className="space-y-5 p-5 sm:p-6 rounded-3xl bg-white border-2 border-slate-200/90 shadow-sm">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <div className="flex items-center gap-2.5 text-sm sm:text-base font-black text-red-600 uppercase tracking-wider">
+                      <Palette className="w-5 h-5" />
+                      <span>3. Design &amp; Layout dos Jogos (12 Estilos Exclusivos)</span>
+                    </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
                     Estilo Selecionado: <strong className="text-red-600">{GAME_LAYOUTS.find((l) => l.id === gameLayout)?.name}</strong>
@@ -2067,14 +2178,17 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                 })}
               </div>
             </div>
+            </div>
+            )}
 
-            {/* Interactive Games Catalog Section (Grid with Previews & Content) */}
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-sm font-bold text-red-600 uppercase tracking-wider">
-                  <Play className="w-4 h-4" />
-                  <span>5. Lista de Jogos do Totem (Selecione &amp; Alimente Conteúdo)</span>
-                </div>
+            {/* Interactive Games Catalog Section (Tab 4) */}
+            {activeCampaignTab === 'games' && (
+              <div className="space-y-5 animate-in fade-in duration-200">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-sm font-bold text-red-600 uppercase tracking-wider">
+                    <Play className="w-4 h-4" />
+                    <span>4. Catálogo de Jogos do Totem (Selecione &amp; Alimente Conteúdo)</span>
+                  </div>
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <button
                     type="button"
@@ -2308,53 +2422,92 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                 })}
               </div>
             </div>
+            )}
 
+            {/* Ranking Toggle Section (Tab 5) */}
+            {activeCampaignTab === 'rules' && (
+              <div className="space-y-6 animate-in fade-in duration-200">
+                <div className="p-6 rounded-3xl bg-slate-50 border-2 border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-2xl bg-amber-100 text-amber-600 shadow-xs">
+                      <Trophy className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-bold text-slate-900">Ativar Ranking Geral dos Jogos</h4>
+                      <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                        Permite registrar os melhores tempos, pontuações e nomes dos jogadores no totem após as partidas.
+                      </p>
+                    </div>
+                  </div>
 
-            {/* Ranking Toggle Section */}
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-amber-100 text-amber-600">
-                  <Trophy className="w-6 h-6" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900">Ativar Ranking dos Jogos</h4>
-                  <p className="text-xs text-slate-500">
-                    Os jogos não terão ranking a menos que ativado aqui. Permite registrar pontuações no totem.
-                  </p>
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={rankingEnabled}
+                      onChange={(e) => {
+                        sound.playClick();
+                        setRankingEnabled(e.target.checked);
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className="w-14 h-7 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[4px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5.5 after:w-5.5 after:transition-all peer-checked:bg-red-600 shadow-inner" />
+                  </label>
                 </div>
               </div>
-
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={rankingEnabled}
-                  onChange={(e) => {
-                    sound.playClick();
-                    setRankingEnabled(e.target.checked);
-                  }}
-                  className="sr-only peer"
-                />
-                <div className="w-12 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600" />
-              </label>
+            )}
             </div>
 
             {/* Bottom Actions */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 font-bold text-sm text-slate-700 active:scale-95 transition-all border border-slate-200"
-              >
-                Cancelar
-              </button>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-5 border-t border-slate-200">
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 font-bold text-xs sm:text-sm text-slate-700 active:scale-95 transition-all border border-slate-200"
+                >
+                  Cancelar
+                </button>
 
-              <button
-                type="submit"
-                disabled={saving || isNameDuplicate}
-                className="px-8 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 font-black text-sm text-white shadow-md active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {saving ? 'Salvando...' : campaignToEdit ? 'Salvar Alterações' : 'Criar Campanha'}
-              </button>
+                {activeCampaignTab !== 'info' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      const tabs: CampaignTab[] = ['info', 'splash', 'design', 'games', 'rules'];
+                      const curIdx = tabs.indexOf(activeCampaignTab);
+                      if (curIdx > 0) setActiveCampaignTab(tabs[curIdx - 1]);
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 font-bold text-xs sm:text-sm text-slate-700 active:scale-95 transition-all border border-slate-300 shadow-xs"
+                  >
+                    ← Voltar Aba
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                {activeCampaignTab !== 'rules' ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      const tabs: CampaignTab[] = ['info', 'splash', 'design', 'games', 'rules'];
+                      const curIdx = tabs.indexOf(activeCampaignTab);
+                      if (curIdx < tabs.length - 1) setActiveCampaignTab(tabs[curIdx + 1]);
+                    }}
+                    className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 font-bold text-xs sm:text-sm text-white active:scale-95 transition-all shadow-sm"
+                  >
+                    Próxima Aba →
+                  </button>
+                ) : null}
+
+                <button
+                  type="submit"
+                  disabled={saving || isNameDuplicate}
+                  className="px-8 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 font-black text-xs sm:text-sm text-white shadow-md active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? 'Salvando...' : campaignToEdit ? 'Salvar Alterações' : 'Criar Campanha'}
+                </button>
+              </div>
             </div>
           </form>
         </div>
