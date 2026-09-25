@@ -162,8 +162,8 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({
   };
 
   const handleSaveCampaign = async (data: Partial<Campaign>) => {
-    // Strip unknown root table columns (reseller_id, reseller_name, theme_mode) so PostgreSQL doesn't reject with 400
-    const { reseller_id, reseller_name, theme_mode, ...tablePayload } = data;
+    // Strip unknown root table columns (reseller_id, reseller_name, theme_mode, description_image_url) so PostgreSQL doesn't reject with 400
+    const { reseller_id, reseller_name, theme_mode, description_image_url, ...tablePayload } = data;
     const finalPayload = {
       ...tablePayload,
       games_config: {
@@ -171,6 +171,7 @@ export const AdminHubView: React.FC<AdminHubViewProps> = ({
         ...(theme_mode ? { theme_mode } : {}),
         ...(reseller_id ? { reseller_id } : {}),
         ...(reseller_name ? { reseller_name } : {}),
+        ...(description_image_url !== undefined ? { description_image_url } : {}),
       },
     };
 

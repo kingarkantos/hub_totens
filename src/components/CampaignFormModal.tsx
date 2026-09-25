@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw, Shuffle, Clock, Gamepad2, LayoutGrid, Gem, Box, AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, List, AlertTriangle, Store, Type, Sliders, Eye, ClipboardPaste } from 'lucide-react';
+import { X, Play, Image as ImageIcon, Sparkles, Trophy, Check, Layers, FileSpreadsheet, UploadCloud, Loader2, Database, CheckCircle2, Palette, Sun, Moon, RotateCcw, Shuffle, Clock, Gamepad2, LayoutGrid, Gem, Box, AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, List, AlertTriangle, Store, Type, Sliders, Eye, ClipboardPaste, Trash2 } from 'lucide-react';
 import { Campaign, GameDefinition, ThemeId, CustomColorsConfig, GameLayoutId, GAME_LAYOUTS, Reseller, SplashButtonStyleId, SPLASH_BUTTON_STYLES, CampaignStylePackage } from '../types';
 import { BackgroundEffectId, BACKGROUND_EFFECTS, BackgroundEffectOverlay } from './BackgroundEffectOverlay';
 import { SplashButtonRenderer } from './SplashButtonRenderer';
@@ -53,6 +53,9 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
   const [slug, setSlug] = useState(campaignToEdit?.slug || '');
   const [clientName, setClientName] = useState(campaignToEdit?.client_name || '');
   const [description, setDescription] = useState(campaignToEdit?.description || '');
+  const [descriptionImageUrl, setDescriptionImageUrl] = useState<string>(
+    campaignToEdit?.description_image_url || campaignToEdit?.games_config?.description_image_url || ''
+  );
   const [splashUrl, setSplashUrl] = useState(
     campaignToEdit?.splash_image_url || SPLASH_PRESETS[0].url
   );
@@ -156,6 +159,8 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadingDescImage, setUploadingDescImage] = useState(false);
+  const [uploadDescSuccess, setUploadDescSuccess] = useState(false);
 
   // Copied style from other campaign
   const [copiedStyle, setCopiedStyle] = useState<CampaignStylePackage | null>(() => getCopiedStyle());
@@ -282,6 +287,97 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
     }
   };
 
+  // Upload description banner image directly to Supabase Storage
+  const handleDescImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert('O arquivo deve ter no máximo 10MB.');
+      return;
+    }
+
+    setUploadingDescImage(true);
+    setUploadDescSuccess(false);
+    sound.playClick();
+    try {
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const safeName = slug ? slug.trim().toLowerCase() : 'campanha';
+      const fileName = `${safeName}_desc_${Date.now()}.${fileExt}`;
+      const filePath = `descriptions/${fileName}`;
+
+      const { error } = await supabase.storage
+        .from(BUCKETS.SPLASHES)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+        });
+
+      if (error) throw error;
+
+      const { data: publicUrlData } = supabase.storage
+        .from(BUCKETS.SPLASHES)
+        .getPublicUrl(filePath);
+
+      if (publicUrlData?.publicUrl) {
+        setDescriptionImageUrl(publicUrlData.publicUrl);
+        setUploadDescSuccess(true);
+        sound.playSuccess();
+      }
+    } catch (err: any) {
+      console.error('Error uploading description image to Supabase:', err);
+      sound.playError();
+      alert('Erro ao enviar imagem: ' + (err.message || 'Tente novamente.'));
+    } finally {
+      setUploadingDescImage(false);
+    }
+  };
+
+  // Mirror external URL to Supabase Storage for description image
+  const handleMirrorDescImageToSupabase = async () => {
+    if (!descriptionImageUrl || descriptionImageUrl.includes('supabase.co')) return;
+    setUploadingDescImage(true);
+    sound.playClick();
+    try {
+      const res = await fetch(descriptionImageUrl);
+      const blob = await res.blob();
+      const safeName = slug ? slug.trim().toLowerCase() : 'campanha';
+      const fileName = `${safeName}_desc_preset_${Date.now()}.jpg`;
+      const filePath = `descriptions/${fileName}`;
+
+      const { error } = await supabase.storage
+        .from(BUCKETS.SPLASHES)
+        .upload(filePath, blob, {
+          contentType: blob.type || 'image/jpeg',
+          upsert: true,
+        });
+
+      if (error) throw error;
+
+      const { data: publicUrlData } = supabase.storage
+        .from(BUCKETS.SPLASHES)
+        .getPublicUrl(filePath);
+
+      if (publicUrlData?.publicUrl) {
+        setDescriptionImageUrl(publicUrlData.publicUrl);
+        setUploadDescSuccess(true);
+        sound.playSuccess();
+      }
+    } catch (err: any) {
+      console.error('Error mirroring description image to Supabase:', err);
+      sound.playError();
+      alert('Não foi possível transferir imagem externa (bloqueio CORS da origem). Faça o upload do arquivo local diretamente!');
+    } finally {
+      setUploadingDescImage(false);
+    }
+  };
+
+  const handleRemoveDescImage = () => {
+    sound.playClick();
+    setDescriptionImageUrl('');
+    setUploadDescSuccess(false);
+  };
+
   // Auto-generate slug from name if new
   const handleNameChange = (val: string) => {
     setName(val);
@@ -324,11 +420,13 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
         slug: slug.trim().toLowerCase(),
         client_name: clientName.trim(),
         description: description.trim(),
+        description_image_url: descriptionImageUrl.trim() || undefined,
         splash_image_url: splashUrl.trim(),
         theme_id: campaignToEdit?.theme_id || 'honda-red',
         selected_games: selectedGames,
         games_config: {
           ...gamesConfig,
+          description_image_url: descriptionImageUrl.trim() || undefined,
           reseller_id: selectedResellerId || undefined,
           reseller_name: chosenReseller?.company_name || undefined,
           theme_mode: themeMode,
@@ -663,6 +761,147 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                   <p className="text-[11px] text-slate-500">
                     Dica: Quebras de linha e tópicos iniciados com hífen (<code className="bg-slate-200 px-1 py-0.5 rounded text-slate-800">- item</code>) serão preservados exatamente como formatado na tela de início do totem.
                   </p>
+                </div>
+
+                {/* Opção de subir imagem descritiva (abaixo da descrição da campanha na tela do totem) */}
+                <div className="md:col-span-2 pt-4 border-t border-slate-200/80 space-y-3">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <label className="block text-xs font-bold text-slate-800 uppercase tracking-wide">
+                          Imagem da Campanha / Abaixo da Descrição (Opcional)
+                        </label>
+                        {descriptionImageUrl && (
+                          <span className="px-2 py-0.5 rounded-md bg-red-100 text-red-700 text-[10px] font-black uppercase tracking-wider">
+                            Formato Lado a Lado (16:9)
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Esta imagem será exibida em proporção lado a lado (horizontal / panorâmica) logo abaixo da descrição na tela da campanha.
+                      </p>
+                    </div>
+
+                    {descriptionImageUrl && descriptionImageUrl.includes('supabase.co') && (
+                      <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-bold shadow-xs animate-in fade-in">
+                        <Database className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Hospedada na Nuvem</span>
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start bg-slate-50/80 p-4 rounded-2xl border border-slate-200">
+                    {/* Upload Box / Input */}
+                    <div className="md:col-span-7 flex flex-col gap-3">
+                      <label className="relative flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 hover:border-red-500 hover:bg-red-50/30 rounded-2xl cursor-pointer transition-all bg-white group">
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg,image/webp"
+                          onChange={handleDescImageUpload}
+                          disabled={uploadingDescImage}
+                          className="hidden"
+                        />
+                        {uploadingDescImage ? (
+                          <div className="flex flex-col items-center py-2 text-red-600">
+                            <Loader2 className="w-7 h-7 animate-spin mb-1.5" />
+                            <span className="text-xs font-bold">Enviando imagem descritiva...</span>
+                            <span className="text-[10px] text-slate-400 mt-0.5">Aguarde a geração da URL na nuvem</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center text-center">
+                            <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center text-red-600 group-hover:scale-110 transition-transform mb-1.5 shadow-2xs">
+                              <UploadCloud className="w-5 h-5" />
+                            </div>
+                            <span className="text-xs font-bold text-slate-900">
+                              Clique ou Arraste uma Imagem Lado a Lado
+                            </span>
+                            <span className="text-[10px] text-slate-500 mt-0.5">
+                              Formatos: PNG, JPG, WebP (Máx: 10MB) • Proporção Horizontal / Banner
+                            </span>
+                          </div>
+                        )}
+                      </label>
+
+                      {uploadDescSuccess && (
+                        <div className="flex items-center gap-2 p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold animate-in fade-in">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                          <span>Imagem enviada com sucesso!</span>
+                        </div>
+                      )}
+
+                      {/* URL input manual */}
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
+                          Ou insira a URL direta da imagem:
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="url"
+                            placeholder="https://exemplo.com/imagem-horizontal.jpg"
+                            value={descriptionImageUrl}
+                            onChange={(e) => setDescriptionImageUrl(e.target.value)}
+                            className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500 text-xs font-mono"
+                          />
+                          {!descriptionImageUrl.includes('supabase.co') && descriptionImageUrl && (
+                            <button
+                              type="button"
+                              onClick={handleMirrorDescImageToSupabase}
+                              disabled={uploadingDescImage}
+                              className="px-2.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-xs flex-shrink-0"
+                              title="Salvar na nuvem Supabase"
+                            >
+                              <Database className="w-3.5 h-3.5 text-amber-400" />
+                              <span>Salvar Nuvem</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Preview da Imagem Lado a Lado (Aspect Video / 16:9) */}
+                    <div className="md:col-span-5 flex flex-col items-center">
+                      <div className="w-full aspect-video rounded-xl border-2 border-slate-200 overflow-hidden bg-slate-900 relative shadow-sm group flex items-center justify-center">
+                        {descriptionImageUrl ? (
+                          <>
+                            <img
+                              src={descriptionImageUrl}
+                              alt="Preview Imagem Descrição"
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-[2px]">
+                              <button
+                                type="button"
+                                onClick={handleRemoveDescImage}
+                                className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-md active:scale-95 transition-all"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Remover</span>
+                              </button>
+                            </div>
+                            <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/70 text-white text-[10px] font-mono select-none">
+                              16:9 • Lado a Lado
+                            </span>
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center text-center p-3 text-slate-400">
+                            <ImageIcon className="w-8 h-8 mb-1 text-slate-500 opacity-60" />
+                            <span className="text-xs font-bold text-slate-300">Sem imagem descritiva</span>
+                            <span className="text-[10px] text-slate-500 mt-0.5">Pré-visualização 16:9 lado a lado</span>
+                          </div>
+                        )}
+                      </div>
+                      {descriptionImageUrl && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveDescImage}
+                          className="mt-2 text-xs font-bold text-red-600 hover:text-red-700 flex items-center gap-1 active:scale-95 transition-all"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Remover imagem</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

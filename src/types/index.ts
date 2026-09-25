@@ -63,6 +63,7 @@ export interface Campaign {
   name: string;
   client_name: string;
   description?: string;
+  description_image_url?: string;
   splash_image_url?: string;
   theme_id: ThemeId;
   theme_mode?: 'light' | 'dark';

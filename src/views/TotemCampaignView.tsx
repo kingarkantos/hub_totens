@@ -712,6 +712,41 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
                 />
               );
             })()}
+
+            {/* Imagem descritiva da campanha em formato horizontal (lado a lado) logo abaixo da descrição */}
+            {(() => {
+              const descImg = campaign.description_image_url || campaign.games_config?.description_image_url;
+              if (!descImg) return null;
+
+              return (
+                <div className="mt-3.5 sm:mt-5 w-full max-w-md sm:max-w-xl md:max-w-2xl px-2 animate-in fade-in zoom-in-95 duration-500">
+                  <div
+                    style={
+                      campaignLayout === 'golden_casino'
+                        ? { borderColor: 'rgba(251, 191, 36, 0.6)', boxShadow: '0 0 25px rgba(251, 191, 36, 0.25)' }
+                        : campaignLayout === 'neon_arcade'
+                        ? { borderColor: 'rgba(6, 182, 212, 0.6)', boxShadow: '0 0 20px rgba(6, 182, 212, 0.3)' }
+                        : undefined
+                    }
+                    className={`relative w-full aspect-video max-h-[22vh] sm:max-h-[28vh] rounded-2xl sm:rounded-3xl overflow-hidden border-2 shadow-2xl backdrop-blur-md mx-auto flex items-center justify-center ${
+                      campaignLayout === 'cartoon_comic'
+                        ? 'border-black shadow-[6px_6px_0_#000] bg-white/10'
+                        : campaignLayout === 'pixel_retro'
+                        ? 'border-2 border-black shadow-[4px_4px_0_#ca8a04] bg-black/40'
+                        : campaignLayout === 'bento_tech'
+                        ? 'border-emerald-400/50 shadow-[0_0_20px_rgba(16,185,129,0.2)] bg-emerald-950/20'
+                        : 'border-white/20 bg-black/30'
+                    }`}
+                  >
+                    <img
+                      src={descImg}
+                      alt={campaign.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Central Interactive Touch CTA */}
