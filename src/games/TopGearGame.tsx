@@ -733,23 +733,46 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
       // Player X position calculated from interpolated state.playerX
       const playerX = curRoadCenterX + curRoadW * (state.playerX / 3);
 
-      // A) AUTOMATIC HEADLIGHTS ILLUMINATION CONE ON ASPHALT
-      const headlightBeamH = height * 0.38;
-      const beamGrad = ctx.createRadialGradient(
-        playerX, playerY - 10, 20,
-        playerX, playerY - headlightBeamH, curRoadW * 0.45
-      );
+      // A) AUTOMATIC HEADLIGHTS ILLUMINATION CONE ON ASPHALT (Smooth progressive fade to transparent)
+      const headlightBeamH = height * 0.45;
+      const beamTopY = playerY - headlightBeamH;
+
+      // Vertical linear gradient fading gradually to 0% opacity with no hard cut
+      const beamGrad = ctx.createLinearGradient(0, playerY - 10, 0, beamTopY);
       beamGrad.addColorStop(0, 'rgba(254, 240, 138, 0.45)');
-      beamGrad.addColorStop(0.4, 'rgba(254, 240, 138, 0.2)');
+      beamGrad.addColorStop(0.20, 'rgba(254, 240, 138, 0.28)');
+      beamGrad.addColorStop(0.45, 'rgba(254, 240, 138, 0.14)');
+      beamGrad.addColorStop(0.70, 'rgba(254, 240, 138, 0.05)');
+      beamGrad.addColorStop(0.88, 'rgba(254, 240, 138, 0.01)');
       beamGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
 
       ctx.fillStyle = beamGrad;
       ctx.beginPath();
-      ctx.moveTo(playerX - 25, playerY - 10);
-      ctx.lineTo(playerX + 25, playerY - 10);
-      ctx.lineTo(playerX + curRoadW * 0.35, playerY - headlightBeamH);
-      ctx.lineTo(playerX - curRoadW * 0.35, playerY - headlightBeamH);
+      ctx.moveTo(playerX - 26, playerY - 10);
+      ctx.lineTo(playerX + 26, playerY - 10);
+      ctx.lineTo(playerX + curRoadW * 0.42, beamTopY + 24);
+      // Soft parabolic top apex so light dissipates naturally without any flat line
+      ctx.quadraticCurveTo(playerX, beamTopY - 20, playerX - curRoadW * 0.42, beamTopY + 24);
       ctx.closePath();
+      ctx.fill();
+
+      // Front Headlight bulbs glow on car bumper
+      const bulbGlowL = ctx.createRadialGradient(playerX - 22, playerY - 10, 1, playerX - 22, playerY - 10, 12);
+      bulbGlowL.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+      bulbGlowL.addColorStop(0.5, 'rgba(254, 240, 138, 0.45)');
+      bulbGlowL.addColorStop(1, 'rgba(254, 240, 138, 0)');
+      ctx.fillStyle = bulbGlowL;
+      ctx.beginPath();
+      ctx.arc(playerX - 22, playerY - 10, 12, 0, Math.PI * 2);
+      ctx.fill();
+
+      const bulbGlowR = ctx.createRadialGradient(playerX + 22, playerY - 10, 1, playerX + 22, playerY - 10, 12);
+      bulbGlowR.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+      bulbGlowR.addColorStop(0.5, 'rgba(254, 240, 138, 0.45)');
+      bulbGlowR.addColorStop(1, 'rgba(254, 240, 138, 0)');
+      ctx.fillStyle = bulbGlowR;
+      ctx.beginPath();
+      ctx.arc(playerX + 22, playerY - 10, 12, 0, Math.PI * 2);
       ctx.fill();
 
       // B) PLAYER CAR BODY (Retro Sports Car with Spoiler & Details)
