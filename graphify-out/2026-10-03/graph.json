@@ -1198,8 +1198,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_catchergame",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 7,
+      "community_name": "TargetGame.tsx",
       "norm_label": "catchergame.tsx"
     },
     {
@@ -1209,8 +1209,8 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_games_catchergame_catchergameprops",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 7,
+      "community_name": "TargetGame.tsx",
       "norm_label": "catchergameprops"
     },
     {
@@ -1220,8 +1220,8 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_games_catchergame_fallingitem",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 7,
+      "community_name": "TargetGame.tsx",
       "norm_label": "fallingitem"
     },
     {
@@ -1231,8 +1231,8 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_games_catchergame_default_catcher_items",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 7,
+      "community_name": "TargetGame.tsx",
       "norm_label": "default_catcher_items"
     },
     {
@@ -1242,8 +1242,8 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_games_catchergame_isimageurl",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 7,
+      "community_name": "TargetGame.tsx",
       "norm_label": "isimageurl()"
     },
     {
@@ -1253,8 +1253,8 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "src_games_catchergame_catchergame",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 7,
+      "community_name": "TargetGame.tsx",
       "norm_label": "catchergame()"
     },
     {
@@ -1308,8 +1308,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_connectpairsgame",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 4,
+      "community_name": "useActiveGamePalette",
       "norm_label": "connectpairsgame.tsx"
     },
     {
@@ -1319,8 +1319,8 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_games_connectpairsgame_connectpairsgameprops",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 4,
+      "community_name": "useActiveGamePalette",
       "norm_label": "connectpairsgameprops"
     },
     {
@@ -1330,8 +1330,8 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_games_connectpairsgame_default_pairs",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 4,
+      "community_name": "useActiveGamePalette",
       "norm_label": "default_pairs"
     },
     {
@@ -1891,8 +1891,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_puzzlegame",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 4,
+      "community_name": "useActiveGamePalette",
       "norm_label": "puzzlegame.tsx"
     },
     {
@@ -1913,8 +1913,8 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_games_puzzlegame_puzzlegame",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 4,
+      "community_name": "useActiveGamePalette",
       "norm_label": "puzzlegame()"
     },
     {
@@ -1935,8 +1935,8 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_games_quizgame_quizgameprops",
-      "community": 6,
-      "community_name": "TotemCampaignView.tsx",
+      "community": 13,
+      "community_name": "GameContentEditorModal.tsx",
       "norm_label": "quizgameprops"
     },
     {
@@ -2210,8 +2210,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_targetgame",
-      "community": 7,
-      "community_name": "TargetGame.tsx",
+      "community": 13,
+      "community_name": "GameContentEditorModal.tsx",
       "norm_label": "targetgame.tsx"
     },
     {
@@ -2221,8 +2221,8 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_games_targetgame_targetgameprops",
-      "community": 7,
-      "community_name": "TargetGame.tsx",
+      "community": 13,
+      "community_name": "GameContentEditorModal.tsx",
       "norm_label": "targetgameprops"
     },
     {
@@ -2232,8 +2232,8 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_games_targetgame_targetitem",
-      "community": 7,
-      "community_name": "TargetGame.tsx",
+      "community": 13,
+      "community_name": "GameContentEditorModal.tsx",
       "norm_label": "targetitem"
     },
     {
@@ -2243,8 +2243,8 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_games_targetgame_default_targets",
-      "community": 7,
-      "community_name": "TargetGame.tsx",
+      "community": 13,
+      "community_name": "GameContentEditorModal.tsx",
       "norm_label": "default_targets"
     },
     {
@@ -2254,8 +2254,8 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_games_targetgame_isimageurl",
-      "community": 7,
-      "community_name": "TargetGame.tsx",
+      "community": 13,
+      "community_name": "GameContentEditorModal.tsx",
       "norm_label": "isimageurl()"
     },
     {
@@ -2265,8 +2265,8 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "src_games_targetgame_targetgame",
-      "community": 7,
-      "community_name": "TargetGame.tsx",
+      "community": 13,
+      "community_name": "GameContentEditorModal.tsx",
       "norm_label": "targetgame()"
     },
     {
@@ -2694,8 +2694,8 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "src_lib_colorharmony_quick_hue_presets",
-      "community": 6,
-      "community_name": "TotemCampaignView.tsx",
+      "community": 0,
+      "community_name": "CampaignFormModal.tsx",
       "norm_label": "quick_hue_presets"
     },
     {
@@ -2985,10 +2985,21 @@
       "norm_label": "default_sample_resellers"
     },
     {
-      "label": "getLocalResellers()",
+      "label": "normalizeReseller()",
       "file_type": "code",
       "source_file": "src/lib/resellersService.ts",
       "source_location": "L30",
+      "_origin": "ast",
+      "id": "src_lib_resellersservice_normalizereseller",
+      "community": 0,
+      "community_name": "CampaignFormModal.tsx",
+      "norm_label": "normalizereseller()"
+    },
+    {
+      "label": "getLocalResellers()",
+      "file_type": "code",
+      "source_file": "src/lib/resellersService.ts",
+      "source_location": "L54",
       "_origin": "ast",
       "id": "src_lib_resellersservice_getlocalresellers",
       "community": 0,
@@ -2999,7 +3010,7 @@
       "label": "setLocalResellers()",
       "file_type": "code",
       "source_file": "src/lib/resellersService.ts",
-      "source_location": "L43",
+      "source_location": "L71",
       "_origin": "ast",
       "id": "src_lib_resellersservice_setlocalresellers",
       "community": 0,
@@ -3010,7 +3021,7 @@
       "label": "resellersService",
       "file_type": "code",
       "source_file": "src/lib/resellersService.ts",
-      "source_location": "L51",
+      "source_location": "L80",
       "_origin": "ast",
       "id": "src_lib_resellersservice_resellersservice",
       "community": 0,
@@ -3134,8 +3145,8 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_types_gamecontent_quizquestionitem",
-      "community": 6,
-      "community_name": "TotemCampaignView.tsx",
+      "community": 13,
+      "community_name": "GameContentEditorModal.tsx",
       "norm_label": "quizquestionitem"
     },
     {
@@ -3145,8 +3156,8 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_types_gamecontent_targetcustomitem",
-      "community": 7,
-      "community_name": "TargetGame.tsx",
+      "community": 13,
+      "community_name": "GameContentEditorModal.tsx",
       "norm_label": "targetcustomitem"
     },
     {
@@ -3167,8 +3178,8 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_types_gamecontent_catchercustomitem",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 7,
+      "community_name": "TargetGame.tsx",
       "norm_label": "catchercustomitem"
     },
     {
@@ -3244,8 +3255,8 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "src_types_gamecontent_puzzlecustomconfig",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 4,
+      "community_name": "useActiveGamePalette",
       "norm_label": "puzzlecustomconfig"
     },
     {
@@ -3321,8 +3332,8 @@
       "source_location": "L126",
       "_origin": "ast",
       "id": "src_types_gamecontent_connectpaircustomitem",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 4,
+      "community_name": "useActiveGamePalette",
       "norm_label": "connectpaircustomitem"
     },
     {
@@ -4568,6 +4579,18 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_games_wordsearchgame_wordsearchgame",
+      "target": "package_dependencies_react"
+    },
+    {
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/views/ResellerPortfolioView.tsx",
+      "source_location": "L93",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "src_views_resellerportfolioview_resellerportfolioview",
       "target": "package_dependencies_react"
     },
     {
@@ -15799,7 +15822,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/resellersService.ts",
-      "source_location": "L30",
+      "source_location": "L54",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_lib_resellersservice",
@@ -15810,7 +15833,18 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/resellersService.ts",
-      "source_location": "L51",
+      "source_location": "L30",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "src_lib_resellersservice",
+      "target": "src_lib_resellersservice_normalizereseller",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/resellersService.ts",
+      "source_location": "L80",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_lib_resellersservice",
@@ -15821,7 +15855,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/resellersService.ts",
-      "source_location": "L43",
+      "source_location": "L71",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_lib_resellersservice",
@@ -15911,6 +15945,30 @@
       "source": "src_views_resellerportfolioview",
       "target": "src_lib_resellersservice",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "source_file": "src/lib/resellersService.ts",
+      "source_location": "L58",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "src_lib_resellersservice_getlocalresellers",
+      "target": "src_lib_resellersservice_normalizereseller",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "source_file": "src/lib/resellersService.ts",
+      "source_location": "L73",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "src_lib_resellersservice_setlocalresellers",
+      "target": "src_lib_resellersservice_normalizereseller",
+      "confidence_score": 0.5
     },
     {
       "relation": "imports",
@@ -17373,5 +17431,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "3e71411a4c502d9ad7a66561220164663c06190e"
+  "built_at_commit": "27c3f706ffb16f7cb2cfdbcf749d145c5deb73c0"
 }
