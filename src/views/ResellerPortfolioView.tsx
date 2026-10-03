@@ -89,10 +89,18 @@ export const ResellerPortfolioView: React.FC<ResellerPortfolioViewProps> = ({
   const secondaryColor = reseller.secondary_color || '#1D4ED8';
   const isDark = reseller.theme_mode !== 'light';
 
-  // Games offered by this reseller
-  const availableGames = GAMES_CATALOG.filter(
-    (g) => !reseller.enabled_games || reseller.enabled_games.includes(g.id)
-  );
+  // Games offered by this reseller (automatically includes new catalog additions for comprehensive portfolios)
+  const availableGames = React.useMemo(() => {
+    if (!reseller.enabled_games || reseller.enabled_games.length === 0) {
+      return GAMES_CATALOG;
+    }
+    return GAMES_CATALOG.filter((g) => {
+      if (reseller.enabled_games!.includes(g.id)) return true;
+      // Resellers with broad/standard catalog (10+ games) showcase new platform games automatically
+      if (reseller.enabled_games!.length >= 10) return true;
+      return false;
+    });
+  }, [reseller.enabled_games]);
 
   const filteredGames =
     selectedCategory === 'all'

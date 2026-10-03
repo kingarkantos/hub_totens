@@ -8343,7 +8343,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/games/PlinkoGame.tsx",
-      "source_location": "L59",
+      "source_location": "L68",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_games_plinkogame_plinkogame",
@@ -17373,5 +17373,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "eb40f2536802b6e6451c2e20a0bb6852ee15ac04"
+  "built_at_commit": "3e71411a4c502d9ad7a66561220164663c06190e"
 }

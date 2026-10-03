@@ -270,6 +270,55 @@ export const GameCardThumbnail: React.FC<GameCardThumbnailProps> = ({
           </div>
         );
 
+      case 'top_gear':
+        return (
+          <div className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden">
+            {/* Perspective Road */}
+            <div className="relative w-20 h-16 bg-slate-900 border-x-2 border-amber-400/60 rounded-md overflow-hidden flex flex-col justify-end items-center shadow-md">
+              <div className="absolute top-1 w-1 h-3 bg-white/60 animate-pulse" />
+              <div className="absolute top-6 w-1 h-4 bg-white/70" />
+              {/* Sports car */}
+              <div className="relative z-10 w-9 h-6 bg-gradient-to-t from-red-700 to-red-500 rounded-t-lg border border-red-300 shadow-md flex items-center justify-between px-1 mb-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-yellow-300 shadow-[0_0_8px_#fde047]" />
+                <Flame className="w-3 h-3 text-amber-300 animate-pulse" />
+                <div className="w-1.5 h-1.5 rounded-full bg-yellow-300 shadow-[0_0_8px_#fde047]" />
+              </div>
+            </div>
+            <span className="text-[9px] font-black text-red-400 font-mono mt-1 flex items-center gap-1">
+              <Gauge className="w-3 h-3" /> TOP GEAR
+            </span>
+          </div>
+        );
+
+      case 'plinko':
+        return (
+          <div className="relative w-full h-full flex flex-col items-center justify-center p-1 overflow-hidden">
+            <div className="relative w-20 h-18 bg-blue-950/80 border border-blue-400/40 rounded-xl p-1.5 flex flex-col justify-between shadow-inner">
+              {/* Dropper */}
+              <div className="w-full flex justify-center">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444] animate-bounce" />
+              </div>
+              {/* Pin Lattice */}
+              <div className="grid grid-cols-4 gap-2 justify-items-center py-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-white shadow-xs" />
+                <div className="w-1.5 h-1.5 rounded-full bg-white shadow-xs" />
+                <div className="w-1.5 h-1.5 rounded-full bg-white shadow-xs" />
+                <div className="w-1.5 h-1.5 rounded-full bg-white shadow-xs" />
+              </div>
+              {/* Bottom Slots */}
+              <div className="grid grid-cols-4 gap-0.5 w-full h-3 border-t border-white/20 pt-0.5">
+                <div className="bg-blue-600 rounded-xs flex items-center justify-center text-[6px] font-black text-white">100</div>
+                <div className="bg-amber-500 rounded-xs flex items-center justify-center text-[6px] font-black text-white">500</div>
+                <div className="bg-emerald-500 rounded-xs flex items-center justify-center text-[6px] font-black text-white">250</div>
+                <div className="bg-blue-600 rounded-xs flex items-center justify-center text-[6px] font-black text-white">100</div>
+              </div>
+            </div>
+            <span className="text-[8px] font-black text-cyan-300 font-mono mt-0.5">
+              PLINKO TOUCH
+            </span>
+          </div>
+        );
+
       default:
         return (
           <div className="relative w-full h-full flex flex-col items-center justify-center">

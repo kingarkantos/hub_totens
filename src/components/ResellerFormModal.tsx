@@ -49,9 +49,16 @@ export const ResellerFormModal: React.FC<ResellerFormModalProps> = ({
   const [primaryColor, setPrimaryColor] = useState(resellerToEdit?.primary_color || '#2563EB');
   const [secondaryColor, setSecondaryColor] = useState(resellerToEdit?.secondary_color || '#1D4ED8');
   const [themeMode, setThemeMode] = useState<'dark' | 'light'>(resellerToEdit?.theme_mode || 'dark');
-  const [enabledGames, setEnabledGames] = useState<string[]>(
-    resellerToEdit?.enabled_games || GAMES_CATALOG.map((g) => g.id)
-  );
+  const [enabledGames, setEnabledGames] = useState<string[]>(() => {
+    if (!resellerToEdit?.enabled_games || resellerToEdit.enabled_games.length === 0) {
+      return GAMES_CATALOG.map((g) => g.id);
+    }
+    // If reseller previously had standard/broad catalog (10+ games), include new catalog additions by default
+    if (resellerToEdit.enabled_games.length >= 10) {
+      return Array.from(new Set([...resellerToEdit.enabled_games, ...GAMES_CATALOG.map((g) => g.id)]));
+    }
+    return resellerToEdit.enabled_games;
+  });
   const [saving, setSaving] = useState(false);
 
   // Auto-slug from name

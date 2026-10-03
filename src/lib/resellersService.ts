@@ -27,22 +27,51 @@ const DEFAULT_SAMPLE_RESELLERS: Reseller[] = [
   },
 ];
 
+function normalizeReseller(r: Reseller): Reseller {
+  const catalogIds = GAMES_CATALOG.map((g) => g.id);
+
+  // If enabled_games is missing, undefined, or empty, activate all catalog games
+  if (!r.enabled_games || !Array.isArray(r.enabled_games) || r.enabled_games.length === 0) {
+    return {
+      ...r,
+      enabled_games: catalogIds,
+    };
+  }
+
+  // If the reseller had a broad/standard portfolio (10 or more games enabled),
+  // automatically include newly released catalog games (like plinko, top_gear, etc.)
+  if (r.enabled_games.length >= 10) {
+    const merged = Array.from(new Set([...r.enabled_games, ...catalogIds]));
+    return {
+      ...r,
+      enabled_games: merged,
+    };
+  }
+
+  return r;
+}
+
 function getLocalResellers(): Reseller[] {
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!raw) {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_SAMPLE_RESELLERS));
-      return DEFAULT_SAMPLE_RESELLERS;
+      const initial = DEFAULT_SAMPLE_RESELLERS.map(normalizeReseller);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(initial));
+      return initial;
     }
-    return JSON.parse(raw);
+    const parsed: Reseller[] = JSON.parse(raw);
+    const updated = parsed.map(normalizeReseller);
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+    return updated;
   } catch {
-    return DEFAULT_SAMPLE_RESELLERS;
+    return DEFAULT_SAMPLE_RESELLERS.map(normalizeReseller);
   }
 }
 
 function setLocalResellers(resellers: Reseller[]) {
   try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(resellers));
+    const normalized = resellers.map(normalizeReseller);
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(normalized));
   } catch (err) {
     console.error('Error saving resellers to localStorage:', err);
   }
@@ -57,8 +86,9 @@ export const resellersService = {
         .order('created_at', { ascending: false });
 
       if (!error && data && data.length > 0) {
-        setLocalResellers(data as Reseller[]);
-        return data as Reseller[];
+        const normalized = (data as Reseller[]).map(normalizeReseller);
+        setLocalResellers(normalized);
+        return normalized;
       }
     } catch {
       // Supabase table may not exist yet; use local cache
@@ -76,14 +106,15 @@ export const resellersService = {
         .maybeSingle();
 
       if (!error && data) {
-        return data as Reseller;
+        return normalizeReseller(data as Reseller);
       }
     } catch {
       // fallback
     }
 
     const local = getLocalResellers();
-    return local.find((r) => r.slug.toLowerCase() === cleanSlug) || null;
+    const found = local.find((r) => r.slug.toLowerCase() === cleanSlug) || null;
+    return found ? normalizeReseller(found) : null;
   },
 
   async getResellerById(id: string): Promise<Reseller | null> {
@@ -95,14 +126,15 @@ export const resellersService = {
         .maybeSingle();
 
       if (!error && data) {
-        return data as Reseller;
+        return normalizeReseller(data as Reseller);
       }
     } catch {
       // fallback
     }
 
     const local = getLocalResellers();
-    return local.find((r) => r.id === id) || null;
+    const found = local.find((r) => r.id === id) || null;
+    return found ? normalizeReseller(found) : null;
   },
 
   async saveReseller(reseller: Partial<Reseller>): Promise<Reseller> {
