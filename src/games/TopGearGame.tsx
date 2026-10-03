@@ -473,140 +473,256 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
         const curX = curRoadCenterX + curRoadWidth * laneOffsetNormalized;
         const scale = 0.12 + 0.88 * persp;
 
-        return { x: curX, y: curY, scale, width: curRoadWidth, persp };
+        return { x: curX, y: curY, scale, width: curRoadWidth, centerX: curRoadCenterX, persp };
       };
 
-      // 5. DRAW ROADSIDE OBJECTS (Trees, Signs, Viaducts)
+      // Scene rendering items with unified Z-sorting (back-to-front depth order)
+      const sceneItems: { z: number; draw: () => void }[] = [];
+
+      // 5. PREPARE ROADSIDE OBJECTS (Trees, Signs, Viaducts)
       state.roadside.forEach((obj) => {
         if (obj.z < 0 || obj.z > 1000) return;
-        const { x: roadSideX, y, scale, width: rWidth } = projectRoad(obj.side === -1 ? 0 : 2, obj.z);
-        const objX = roadSideX + (obj.side * rWidth * 0.32);
 
-        if (obj.type === 'viaduct') {
-          // Concrete overhead bridge spanning all 3 lanes
-          const viaductH = 35 * scale;
-          const viaductY = y - 70 * scale;
-          ctx.fillStyle = '#475569';
-          ctx.fillRect(roadSideX - rWidth * 0.65, viaductY, rWidth * 1.3, viaductH);
-          ctx.fillStyle = '#94A3B8';
-          ctx.fillRect(roadSideX - rWidth * 0.65, viaductY, rWidth * 1.3, 4 * scale);
+        sceneItems.push({
+          z: obj.z,
+          draw: () => {
+            const { y, scale, width: rWidth, centerX } = projectRoad(1, obj.z);
 
-          // Pillars
-          ctx.fillStyle = '#334155';
-          ctx.fillRect(roadSideX - rWidth * 0.65, viaductY + viaductH, 12 * scale, y - (viaductY + viaductH));
-          ctx.fillRect(roadSideX + rWidth * 0.65 - 12 * scale, viaductY + viaductH, 12 * scale, y - (viaductY + viaductH));
-        } else if (obj.type === 'tree') {
-          // Retro Palm / Pine Tree
-          const trunkW = 6 * scale;
-          const trunkH = 50 * scale;
-          ctx.fillStyle = '#78350F';
-          ctx.fillRect(objX - trunkW / 2, y - trunkH, trunkW, trunkH);
+            if (obj.type === 'viaduct') {
+              // TALL, SYMMETRICAL OVERHEAD HIGHWAY GANTRY / VIADUCT
+              const clearanceH = 140 * scale; // plenty of headroom for cars to pass under
+              const beamH = 42 * scale;
+              const beamY = y - clearanceH - beamH;
+              const totalSpan = rWidth * 1.32; // spans across all 3 lanes and both shoulders
+              const beamLeft = centerX - totalSpan / 2;
+              const pillarW = Math.max(5, 14 * scale);
 
-          // Foliage
-          ctx.fillStyle = '#059669';
-          ctx.beginPath();
-          ctx.arc(objX, y - trunkH - 12 * scale, 24 * scale, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = '#10B981';
-          ctx.beginPath();
-          ctx.arc(objX, y - trunkH - 18 * scale, 18 * scale, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (obj.type === 'sign') {
-          // Highway Speed / Direction Sign
-          const signW = 38 * scale;
-          const signH = 26 * scale;
-          const signPoleH = 45 * scale;
+              // Pillars symmetrically anchored on left and right grass shoulders
+              const leftPillarX = centerX - rWidth * 0.58 - pillarW / 2;
+              const rightPillarX = centerX + rWidth * 0.58 - pillarW / 2;
+              const pillarHeight = y - beamY;
 
-          ctx.fillStyle = '#64748B';
-          ctx.fillRect(objX - 2 * scale, y - signPoleH, 4 * scale, signPoleH);
+              // Pillar soft ground shadows
+              ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+              ctx.beginPath();
+              ctx.ellipse(leftPillarX + pillarW / 2, y, pillarW * 1.2, 4 * scale, 0, 0, Math.PI * 2);
+              ctx.ellipse(rightPillarX + pillarW / 2, y, pillarW * 1.2, 4 * scale, 0, 0, Math.PI * 2);
+              ctx.fill();
 
-          ctx.fillStyle = '#2563EB';
-          ctx.strokeStyle = '#FFFFFF';
-          ctx.lineWidth = 1.5 * scale;
-          ctx.fillRect(objX - signW / 2, y - signPoleH - signH, signW, signH);
-          ctx.strokeRect(objX - signW / 2, y - signPoleH - signH, signW, signH);
+              // Steel Support Pillars
+              ctx.fillStyle = '#334155';
+              ctx.fillRect(leftPillarX, beamY, pillarW, pillarHeight);
+              ctx.fillRect(rightPillarX, beamY, pillarW, pillarHeight);
 
-          ctx.fillStyle = '#FFFFFF';
-          ctx.font = `bold ${Math.max(6, Math.floor(9 * scale))}px Outfit, sans-serif`;
-          ctx.textAlign = 'center';
-          ctx.fillText(obj.text || 'SPEED', objX, y - signPoleH - signH * 0.4);
-        }
+              // Metallic pillar highlights
+              ctx.fillStyle = '#64748B';
+              ctx.fillRect(leftPillarX + 2 * scale, beamY, pillarW * 0.35, pillarHeight);
+              ctx.fillRect(rightPillarX + 2 * scale, beamY, pillarW * 0.35, pillarHeight);
+
+              // Pillar concrete foundations
+              ctx.fillStyle = '#1E293B';
+              ctx.fillRect(leftPillarX - 2 * scale, y - 8 * scale, pillarW + 4 * scale, 8 * scale);
+              ctx.fillRect(rightPillarX - 2 * scale, y - 8 * scale, pillarW + 4 * scale, 8 * scale);
+
+              // Main Overhead Beam Structure (Gantry)
+              ctx.fillStyle = '#1E293B';
+              ctx.fillRect(beamLeft, beamY, totalSpan, beamH);
+
+              // Top and bottom metallic edge trims
+              ctx.fillStyle = '#94A3B8';
+              ctx.fillRect(beamLeft, beamY, totalSpan, Math.max(2, 4 * scale));
+              ctx.fillRect(beamLeft, beamY + beamH - Math.max(2, 4 * scale), totalSpan, Math.max(2, 4 * scale));
+
+              // Treliça metálica (Truss diagonal struts)
+              ctx.strokeStyle = '#475569';
+              ctx.lineWidth = Math.max(1, 2 * scale);
+              const trussStep = Math.max(16, 40 * scale);
+              ctx.beginPath();
+              for (let tx = beamLeft; tx < beamLeft + totalSpan; tx += trussStep) {
+                ctx.moveTo(tx, beamY);
+                ctx.lineTo(tx + trussStep, beamY + beamH);
+                ctx.moveTo(tx + trussStep, beamY);
+                ctx.lineTo(tx, beamY + beamH);
+              }
+              ctx.stroke();
+
+              // Highway Signboard mounted on the Gantry (Placa Rodoviária)
+              const signW = rWidth * 0.72;
+              const signH = beamH * 0.82;
+              const signX = centerX - signW / 2;
+              const signY = beamY + (beamH - signH) / 2;
+
+              // Sign green background
+              ctx.fillStyle = '#047857';
+              ctx.fillRect(signX, signY, signW, signH);
+
+              // White reflective border
+              ctx.strokeStyle = '#FFFFFF';
+              ctx.lineWidth = Math.max(1.5, 2.5 * scale);
+              ctx.strokeRect(signX, signY, signW, signH);
+
+              // Sign text
+              ctx.fillStyle = '#FFFFFF';
+              ctx.font = `black ${Math.max(7, Math.floor(13 * scale))}px Outfit, sans-serif`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              const gantryText = obj.text || (scale > 0.4 ? 'AUTÓDROMO ➔' : 'TOP GEAR BR');
+              ctx.fillText(gantryText, centerX - 18 * scale, signY + signH / 2);
+
+              // Speed limit circular plate (120 km/h)
+              if (scale > 0.3) {
+                const badgeR = Math.max(6, 11 * scale);
+                const badgeX = signX + signW - badgeR - 6 * scale;
+                const badgeY = signY + signH / 2;
+
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.arc(badgeX, badgeY, badgeR, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.strokeStyle = '#DC2626';
+                ctx.lineWidth = Math.max(1.5, 3 * scale);
+                ctx.beginPath();
+                ctx.arc(badgeX, badgeY, badgeR, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.fillStyle = '#000000';
+                ctx.font = `bold ${Math.max(5, Math.floor(8 * scale))}px sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('120', badgeX, badgeY);
+              }
+            } else if (obj.type === 'tree') {
+              // Tree on grass shoulder
+              const objX = centerX + obj.side * (rWidth * 0.58 + 32 * scale);
+              const trunkW = Math.max(3, 8 * scale);
+              const trunkH = 65 * scale;
+              ctx.fillStyle = '#78350F';
+              ctx.fillRect(objX - trunkW / 2, y - trunkH, trunkW, trunkH);
+
+              // Foliage
+              ctx.fillStyle = '#059669';
+              ctx.beginPath();
+              ctx.arc(objX, y - trunkH - 14 * scale, 28 * scale, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#10B981';
+              ctx.beginPath();
+              ctx.arc(objX, y - trunkH - 22 * scale, 20 * scale, 0, Math.PI * 2);
+              ctx.fill();
+            } else if (obj.type === 'sign') {
+              // Ground-mounted roadside sign
+              const objX = centerX + obj.side * (rWidth * 0.58 + 22 * scale);
+              const signW = 46 * scale;
+              const signH = 32 * scale;
+              const signPoleH = 55 * scale;
+
+              ctx.fillStyle = '#64748B';
+              ctx.fillRect(objX - 2.5 * scale, y - signPoleH, 5 * scale, signPoleH);
+
+              ctx.fillStyle = '#1D4ED8';
+              ctx.strokeStyle = '#FFFFFF';
+              ctx.lineWidth = Math.max(1, 2 * scale);
+              ctx.fillRect(objX - signW / 2, y - signPoleH - signH, signW, signH);
+              ctx.strokeRect(objX - signW / 2, y - signPoleH - signH, signW, signH);
+
+              ctx.fillStyle = '#FFFFFF';
+              ctx.font = `black ${Math.max(6, Math.floor(10 * scale))}px Outfit, sans-serif`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(obj.text || 'SPEED', objX, y - signPoleH - signH / 2);
+            }
+          },
+        });
       });
 
-      // 6. DRAW FINISH LINE (Linha de Chegada Sincronizada)
+      // 6. PREPARE FINISH LINE (Linha de Chegada Sincronizada)
       if (state.finishZ <= 1000 && state.finishZ >= 0) {
-        const factor = Math.max(0, Math.min(1, 1 - state.finishZ / 1000));
-        const persp = Math.pow(factor, 2.4);
-        const fY = horizonY + (height - horizonY) * persp;
-        const fWidth = roadTopWidth + (roadBottomWidth - roadTopWidth) * persp;
-        const fCenterX = horizonX + (width / 2 - horizonX) * persp;
+        sceneItems.push({
+          z: state.finishZ,
+          draw: () => {
+            const factor = Math.max(0, Math.min(1, 1 - state.finishZ / 1000));
+            const persp = Math.pow(factor, 2.4);
+            const fY = horizonY + (height - horizonY) * persp;
+            const fWidth = roadTopWidth + (roadBottomWidth - roadTopWidth) * persp;
+            const fCenterX = horizonX + (width / 2 - horizonX) * persp;
 
-        // Checkered line on the ground
-        const checkCount = 14;
-        const checkW = fWidth / checkCount;
-        const checkH = Math.max(4, 16 * persp);
-        for (let c = 0; c < checkCount; c++) {
-          ctx.fillStyle = c % 2 === 0 ? '#FFFFFF' : '#000000';
-          ctx.fillRect(fCenterX - fWidth / 2 + c * checkW, fY - checkH / 2, checkW, checkH);
-        }
+            // Checkered line on the ground
+            const checkCount = 14;
+            const checkW = fWidth / checkCount;
+            const checkH = Math.max(4, 16 * persp);
+            for (let c = 0; c < checkCount; c++) {
+              ctx.fillStyle = c % 2 === 0 ? '#FFFFFF' : '#000000';
+              ctx.fillRect(fCenterX - fWidth / 2 + c * checkW, fY - checkH / 2, checkW, checkH);
+            }
 
-        // Finish Overhead Gantry Banner
-        const gantryH = 45 * persp;
-        const gantryY = fY - 80 * persp;
-        ctx.fillStyle = '#1E293B';
-        ctx.fillRect(fCenterX - fWidth * 0.55, gantryY, fWidth * 1.1, gantryH);
-        ctx.fillStyle = '#F59E0B';
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 2 * persp;
-        ctx.strokeRect(fCenterX - fWidth * 0.55, gantryY, fWidth * 1.1, gantryH);
+            // Finish Overhead Gantry Banner
+            const gantryH = 45 * persp;
+            const gantryY = fY - 80 * persp;
+            ctx.fillStyle = '#1E293B';
+            ctx.fillRect(fCenterX - fWidth * 0.55, gantryY, fWidth * 1.1, gantryH);
+            ctx.fillStyle = '#F59E0B';
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2 * persp;
+            ctx.strokeRect(fCenterX - fWidth * 0.55, gantryY, fWidth * 1.1, gantryH);
 
-        // Banner Text
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = `black ${Math.max(8, Math.floor(18 * persp))}px Outfit, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.fillText('🏁 CHEGADA / FINISH 🏁', fCenterX, gantryY + gantryH * 0.65);
+            // Banner Text
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = `black ${Math.max(8, Math.floor(18 * persp))}px Outfit, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillText('🏁 CHEGADA / FINISH 🏁', fCenterX, gantryY + gantryH * 0.65);
+          },
+        });
       }
 
-      // 7. DRAW TRAFFIC CARS (Top Gear style)
+      // 7. PREPARE TRAFFIC CARS (Top Gear style)
       state.traffic.forEach((car) => {
         if (car.z < 0 || car.z > 1000) return;
-        const { x, y, scale } = projectRoad(car.lane, car.z);
+        sceneItems.push({
+          z: car.z,
+          draw: () => {
+            const { x, y, scale } = projectRoad(car.lane, car.z);
 
-        const carW = 68 * scale;
-        const carH = 38 * scale;
+            const carW = 68 * scale;
+            const carH = 38 * scale;
 
-        // Shadow under traffic car
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-        ctx.beginPath();
-        ctx.ellipse(x, y + carH * 0.38, carW * 0.55, carH * 0.22, 0, 0, Math.PI * 2);
-        ctx.fill();
+            // Shadow under traffic car
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+            ctx.beginPath();
+            ctx.ellipse(x, y + carH * 0.38, carW * 0.55, carH * 0.22, 0, 0, Math.PI * 2);
+            ctx.fill();
 
-        // Car Body
-        ctx.fillStyle = car.color;
-        ctx.beginPath();
-        ctx.roundRect(x - carW / 2, y - carH / 2, carW, carH, 6 * scale);
-        ctx.fill();
+            // Car Body
+            ctx.fillStyle = car.color;
+            ctx.beginPath();
+            ctx.roundRect(x - carW / 2, y - carH / 2, carW, carH, 6 * scale);
+            ctx.fill();
 
-        // Rear Windshield
-        ctx.fillStyle = '#0F172A';
-        ctx.fillRect(x - carW * 0.35, y - carH * 0.35, carW * 0.7, carH * 0.35);
+            // Rear Windshield
+            ctx.fillStyle = '#0F172A';
+            ctx.fillRect(x - carW * 0.35, y - carH * 0.35, carW * 0.7, carH * 0.35);
 
-        // Roof
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.fillRect(x - carW * 0.3, y - carH * 0.45, carW * 0.6, carH * 0.15);
+            // Roof
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.fillRect(x - carW * 0.3, y - carH * 0.45, carW * 0.6, carH * 0.15);
 
-        // Taillights
-        ctx.fillStyle = '#EF4444';
-        ctx.shadowColor = '#EF4444';
-        ctx.shadowBlur = 8 * scale;
-        ctx.fillRect(x - carW * 0.44, y + carH * 0.05, 10 * scale, 8 * scale);
-        ctx.fillRect(x + carW * 0.44 - 10 * scale, y + carH * 0.05, 10 * scale, 8 * scale);
-        ctx.shadowBlur = 0;
+            // Taillights
+            ctx.fillStyle = '#EF4444';
+            ctx.shadowColor = '#EF4444';
+            ctx.shadowBlur = 8 * scale;
+            ctx.fillRect(x - carW * 0.44, y + carH * 0.05, 10 * scale, 8 * scale);
+            ctx.fillRect(x + carW * 0.44 - 10 * scale, y + carH * 0.05, 10 * scale, 8 * scale);
+            ctx.shadowBlur = 0;
 
-        // License Plate
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(x - 8 * scale, y + carH * 0.1, 16 * scale, 6 * scale);
+            // License Plate
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(x - 8 * scale, y + carH * 0.1, 16 * scale, 6 * scale);
+          },
+        });
       });
+
+      // RENDER ALL 3D SCENE OBJECTS IN PROPER DEPTH ORDER (Furthest to Nearest)
+      sceneItems.sort((a, b) => b.z - a.z);
+      sceneItems.forEach((item) => item.draw());
 
       // 8. PLAYER'S CAR & AUTOMATIC HEADLIGHTS
       const playerPersp = 0.94;
