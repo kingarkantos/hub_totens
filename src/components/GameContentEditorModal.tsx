@@ -3746,6 +3746,121 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
               </div>
             </div>
 
+            {/* SELETOR DE MODELO DO CARRO */}
+            <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-3">
+              <label className="block text-xs font-black uppercase text-slate-800 tracking-wider">
+                Modelo / Design do Carro
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                {[
+                  { id: 'auto', label: 'Automático (pelo Tema)', desc: 'Adapta o modelo ao estilo do layout ativo', icon: '🎨' },
+                  { id: 'retro_coupe', label: 'Clássico Retrô (Top Gear 90s)', desc: 'Aerofólio duplo, linhas retas e nitro nostálgico', icon: '🏎️' },
+                  { id: 'supercar_gt', label: 'Supercarro GT Italiano', desc: 'Barra LED contínua, difusor em carbono e aerodinâmica', icon: '⚡' },
+                  { id: 'muscle_car', label: 'Muscle Car Americano', desc: 'Faixas de corrida brancas, lanternas triplas e ronco V8', icon: '🏁' },
+                  { id: 'cyber_hover', label: 'Nave Cyberpunk (Hovercraft)', desc: 'Levitação anti-gravidade com propulsores a plasma', icon: '🛸' },
+                ].map((m) => {
+                  const isSelected = (config.carModel || 'auto') === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        updateCfg({ carModel: m.id as any });
+                      }}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        isSelected
+                          ? 'border-red-500 bg-red-50/50 ring-2 ring-red-500 shadow-xs'
+                          : 'border-slate-200 bg-white hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">{m.icon}</span>
+                        <strong className="text-xs font-black text-slate-900">{m.label}</strong>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">{m.desc}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* SELETOR DE CENÁRIO / PLANO DE FUNDO */}
+            <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-3">
+              <label className="block text-xs font-black uppercase text-slate-800 tracking-wider">
+                Plano de Fundo / Cenário da Pista
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                {[
+                  { id: 'auto', label: 'Automático (pelo Tema)', desc: 'Cidade, montanhas, floresta ou espaço pelo tema', icon: '✨' },
+                  { id: 'city', label: 'Metrópole Urbana (Cidade)', desc: 'Skyline com arranha-céus, néon e antenas', icon: '🏙️' },
+                  { id: 'mountains', label: 'Montanhas & Alpes', desc: 'Picos rochosos e cumes com relevo natural', icon: '🏔️' },
+                  { id: 'forest', label: 'Floresta & Coníferas', desc: 'Camadas de pinheiros e copas arborizadas', icon: '🌲' },
+                  { id: 'space', label: 'Espaço Cósmico', desc: 'Nebulosas, planetas com anéis, estrelas e neon', icon: '🌌' },
+                ].map((env) => {
+                  const isSelected = (config.environment || 'auto') === env.id;
+                  return (
+                    <button
+                      key={env.id}
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        updateCfg({ environment: env.id as any });
+                      }}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        isSelected
+                          ? 'border-blue-500 bg-blue-50/50 ring-2 ring-blue-500 shadow-xs'
+                          : 'border-slate-200 bg-white hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">{env.icon}</span>
+                        <strong className="text-xs font-black text-slate-900">{env.label}</strong>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">{env.desc}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* SELETOR DE PERÍODO / ILUMINAÇÃO (DIA OU NOITE) */}
+            <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-3">
+              <label className="block text-xs font-black uppercase text-slate-800 tracking-wider">
+                Iluminação da Pista (Dia ou Noite)
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                {[
+                  { id: 'auto', label: 'Automático (pelo Tema)', desc: 'Acompanha o modo Claro/Escuro do totem', icon: '🌗' },
+                  { id: 'day', label: 'Pista Diurna (Dia)', desc: 'Céu aberto, sol radiante e asfalto iluminado', icon: '☀️' },
+                  { id: 'night', label: 'Pista Noturna (Noite)', desc: 'Céu estrelado e feixe suave de faróis na pista', icon: '🌙' },
+                ].map((tod) => {
+                  const isSelected = (config.timeOfDay || 'auto') === tod.id;
+                  return (
+                    <button
+                      key={tod.id}
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        updateCfg({ timeOfDay: tod.id as any });
+                      }}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        isSelected
+                          ? 'border-amber-500 bg-amber-50/50 ring-2 ring-amber-500 shadow-xs'
+                          : 'border-slate-200 bg-white hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">{tod.icon}</span>
+                        <strong className="text-xs font-black text-slate-900">{tod.label}</strong>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-1">{tod.desc}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* SELETOR DE COR DO CARRO */}
             <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-3">
               <label className="block text-xs font-black uppercase text-slate-800 tracking-wider">

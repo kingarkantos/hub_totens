@@ -560,8 +560,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_backgroundeffectoverlay",
-      "community": 0,
-      "community_name": "CampaignFormModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "backgroundeffectoverlay.tsx"
     },
     {
@@ -571,8 +571,8 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_components_backgroundeffectoverlay_backgroundeffectid",
-      "community": 0,
-      "community_name": "CampaignFormModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "backgroundeffectid"
     },
     {
@@ -582,8 +582,8 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_components_backgroundeffectoverlay_backgroundeffectdefinition",
-      "community": 0,
-      "community_name": "CampaignFormModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "backgroundeffectdefinition"
     },
     {
@@ -593,8 +593,8 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_components_backgroundeffectoverlay_background_effects",
-      "community": 0,
-      "community_name": "CampaignFormModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "background_effects"
     },
     {
@@ -604,8 +604,8 @@
       "source_location": "L160",
       "_origin": "ast",
       "id": "src_components_backgroundeffectoverlay_backgroundeffectoverlayprops",
-      "community": 0,
-      "community_name": "CampaignFormModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "backgroundeffectoverlayprops"
     },
     {
@@ -615,8 +615,8 @@
       "source_location": "L165",
       "_origin": "ast",
       "id": "src_components_backgroundeffectoverlay_backgroundeffectoverlay",
-      "community": 0,
-      "community_name": "CampaignFormModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "backgroundeffectoverlay()"
     },
     {
@@ -681,8 +681,8 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "src_components_campaignformmodal_campaignformmodal",
-      "community": 0,
-      "community_name": "CampaignFormModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "campaignformmodal()"
     },
     {
@@ -945,8 +945,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_splashbuttonrenderer",
-      "community": 0,
-      "community_name": "CampaignFormModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "splashbuttonrenderer.tsx"
     },
     {
@@ -956,8 +956,8 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_splashbuttonrenderer_splashbuttonrendererprops",
-      "community": 0,
-      "community_name": "CampaignFormModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "splashbuttonrendererprops"
     },
     {
@@ -967,8 +967,8 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_components_splashbuttonrenderer_splashbuttonrenderer",
-      "community": 0,
-      "community_name": "CampaignFormModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "splashbuttonrenderer()"
     },
     {
@@ -978,8 +978,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_touchvirtualkeyboard",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 23,
+      "community_name": "audio.ts",
       "norm_label": "touchvirtualkeyboard.tsx"
     },
     {
@@ -989,8 +989,8 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_touchvirtualkeyboard_touchvirtualkeyboardprops",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 23,
+      "community_name": "audio.ts",
       "norm_label": "touchvirtualkeyboardprops"
     },
     {
@@ -1000,8 +1000,8 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_components_touchvirtualkeyboard_touchvirtualkeyboard",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 6,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "touchvirtualkeyboard()"
     },
     {
@@ -1011,8 +1011,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_context_gamelayoutcontext",
-      "community": 6,
-      "community_name": "TotemCampaignView.tsx",
+      "community": 24,
+      "community_name": "GameLayoutContext.tsx",
       "norm_label": "gamelayoutcontext.tsx"
     },
     {
@@ -1033,8 +1033,8 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_context_gamelayoutcontext_defaultpalette",
-      "community": 6,
-      "community_name": "TotemCampaignView.tsx",
+      "community": 24,
+      "community_name": "GameLayoutContext.tsx",
       "norm_label": "defaultpalette"
     },
     {
@@ -1044,8 +1044,8 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_context_gamelayoutcontext_gamelayoutcontext",
-      "community": 6,
-      "community_name": "TotemCampaignView.tsx",
+      "community": 24,
+      "community_name": "GameLayoutContext.tsx",
       "norm_label": "gamelayoutcontext"
     },
     {
@@ -1055,8 +1055,8 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_context_gamelayoutcontext_usegamelayout",
-      "community": 6,
-      "community_name": "TotemCampaignView.tsx",
+      "community": 25,
+      "community_name": "GameContainer",
       "norm_label": "usegamelayout()"
     },
     {
@@ -1077,7 +1077,7 @@
       "source_location": "L95",
       "_origin": "ast",
       "id": "src_context_gamelayoutcontext_gamelayoutprovider",
-      "community": 6,
+      "community": 21,
       "community_name": "TotemCampaignView.tsx",
       "norm_label": "gamelayoutprovider()"
     },
@@ -1275,8 +1275,8 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_games_completephrasegame_completephrasegameprops",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 6,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "completephrasegameprops"
     },
     {
@@ -1308,8 +1308,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_connectpairsgame",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 24,
+      "community_name": "GameLayoutContext.tsx",
       "norm_label": "connectpairsgame.tsx"
     },
     {
@@ -1319,8 +1319,8 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_games_connectpairsgame_connectpairsgameprops",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 24,
+      "community_name": "GameLayoutContext.tsx",
       "norm_label": "connectpairsgameprops"
     },
     {
@@ -1330,8 +1330,8 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_games_connectpairsgame_default_pairs",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 24,
+      "community_name": "GameLayoutContext.tsx",
       "norm_label": "default_pairs"
     },
     {
@@ -1429,8 +1429,8 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "src_games_gamecontainer_gamecontainer",
-      "community": 6,
-      "community_name": "TotemCampaignView.tsx",
+      "community": 25,
+      "community_name": "GameContainer",
       "norm_label": "gamecontainer()"
     },
     {
@@ -1440,8 +1440,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_gamepreviewmodal",
-      "community": 6,
-      "community_name": "TotemCampaignView.tsx",
+      "community": 4,
+      "community_name": "useActiveGamePalette",
       "norm_label": "gamepreviewmodal.tsx"
     },
     {
@@ -1451,8 +1451,8 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "src_games_gamepreviewmodal_gamepreviewmodalprops",
-      "community": 6,
-      "community_name": "TotemCampaignView.tsx",
+      "community": 0,
+      "community_name": "CampaignFormModal.tsx",
       "norm_label": "gamepreviewmodalprops"
     },
     {
@@ -1462,7 +1462,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "src_games_gamepreviewmodal_gamepreviewmodal",
-      "community": 6,
+      "community": 21,
       "community_name": "TotemCampaignView.tsx",
       "norm_label": "gamepreviewmodal()"
     },
@@ -1484,8 +1484,8 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_games_geniusgame_geniusgameprops",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 22,
+      "community_name": "BaseGameProps",
       "norm_label": "geniusgameprops"
     },
     {
@@ -1517,8 +1517,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_hangmangame",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 30,
+      "community_name": "HangmanGame.tsx",
       "norm_label": "hangmangame.tsx"
     },
     {
@@ -1528,8 +1528,8 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_games_hangmangame_hangmangameprops",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 30,
+      "community_name": "HangmanGame.tsx",
       "norm_label": "hangmangameprops"
     },
     {
@@ -1539,8 +1539,8 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_games_hangmangame_default_words",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 30,
+      "community_name": "HangmanGame.tsx",
       "norm_label": "default_words"
     },
     {
@@ -1550,8 +1550,8 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "src_games_hangmangame_alphabet",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 30,
+      "community_name": "HangmanGame.tsx",
       "norm_label": "alphabet"
     },
     {
@@ -1572,8 +1572,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_higherlowergame",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 28,
+      "community_name": "HigherLowerGame.tsx",
       "norm_label": "higherlowergame.tsx"
     },
     {
@@ -1583,8 +1583,8 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_games_higherlowergame_higherlowergameprops",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 28,
+      "community_name": "HigherLowerGame.tsx",
       "norm_label": "higherlowergameprops"
     },
     {
@@ -1594,8 +1594,8 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_games_higherlowergame_numbertile",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 28,
+      "community_name": "HigherLowerGame.tsx",
       "norm_label": "numbertile"
     },
     {
@@ -1605,8 +1605,8 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_games_higherlowergame_shufflearray",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 28,
+      "community_name": "HigherLowerGame.tsx",
       "norm_label": "shufflearray()"
     },
     {
@@ -1616,8 +1616,8 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_games_higherlowergame_createtiles",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 28,
+      "community_name": "HigherLowerGame.tsx",
       "norm_label": "createtiles()"
     },
     {
@@ -1627,8 +1627,8 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "src_games_higherlowergame_higherlowergame",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 28,
+      "community_name": "HigherLowerGame.tsx",
       "norm_label": "higherlowergame()"
     },
     {
@@ -1638,8 +1638,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_mapepigame",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 29,
+      "community_name": "MapEpiGame.tsx",
       "norm_label": "mapepigame.tsx"
     },
     {
@@ -1649,8 +1649,8 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_games_mapepigame_mapepigameprops",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 29,
+      "community_name": "MapEpiGame.tsx",
       "norm_label": "mapepigameprops"
     },
     {
@@ -1660,8 +1660,8 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_games_mapepigame_sectormatch",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 29,
+      "community_name": "MapEpiGame.tsx",
       "norm_label": "sectormatch"
     },
     {
@@ -1671,8 +1671,8 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_games_mapepigame_isimageurl",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 29,
+      "community_name": "MapEpiGame.tsx",
       "norm_label": "isimageurl()"
     },
     {
@@ -1682,8 +1682,8 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_games_mapepigame_default_sectors",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 29,
+      "community_name": "MapEpiGame.tsx",
       "norm_label": "default_sectors"
     },
     {
@@ -1693,8 +1693,8 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "src_games_mapepigame_mapepigame",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 29,
+      "community_name": "MapEpiGame.tsx",
       "norm_label": "mapepigame()"
     },
     {
@@ -1704,8 +1704,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_mathblitzgame",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 31,
+      "community_name": "MathBlitzGame.tsx",
       "norm_label": "mathblitzgame.tsx"
     },
     {
@@ -1715,8 +1715,8 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_games_mathblitzgame_mathblitzgameprops",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 31,
+      "community_name": "MathBlitzGame.tsx",
       "norm_label": "mathblitzgameprops"
     },
     {
@@ -1726,8 +1726,8 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_games_mathblitzgame_question",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 31,
+      "community_name": "MathBlitzGame.tsx",
       "norm_label": "question"
     },
     {
@@ -1737,8 +1737,8 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_games_mathblitzgame_generatequestion",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 31,
+      "community_name": "MathBlitzGame.tsx",
       "norm_label": "generatequestion()"
     },
     {
@@ -1748,8 +1748,8 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "src_games_mathblitzgame_mathblitzgame",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 31,
+      "community_name": "MathBlitzGame.tsx",
       "norm_label": "mathblitzgame()"
     },
     {
@@ -1759,8 +1759,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_memorygame",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 26,
+      "community_name": "MemoryGame.tsx",
       "norm_label": "memorygame.tsx"
     },
     {
@@ -1770,8 +1770,8 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_games_memorygame_memorygameprops",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 26,
+      "community_name": "MemoryGame.tsx",
       "norm_label": "memorygameprops"
     },
     {
@@ -1781,8 +1781,8 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_games_memorygame_card",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 26,
+      "community_name": "MemoryGame.tsx",
       "norm_label": "card"
     },
     {
@@ -1792,8 +1792,8 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_games_memorygame_default_icons",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 26,
+      "community_name": "MemoryGame.tsx",
       "norm_label": "default_icons"
     },
     {
@@ -1803,8 +1803,8 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "src_games_memorygame_isimageurl",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 26,
+      "community_name": "MemoryGame.tsx",
       "norm_label": "isimageurl()"
     },
     {
@@ -1814,8 +1814,8 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "src_games_memorygame_memorygame",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 26,
+      "community_name": "MemoryGame.tsx",
       "norm_label": "memorygame()"
     },
     {
@@ -1825,8 +1825,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_plinkogame",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
       "norm_label": "plinkogame.tsx"
     },
     {
@@ -1836,8 +1836,8 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_games_plinkogame_plinkogameprops",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
       "norm_label": "plinkogameprops"
     },
     {
@@ -1847,8 +1847,8 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_games_plinkogame_pin",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
       "norm_label": "pin"
     },
     {
@@ -1858,8 +1858,8 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_games_plinkogame_ball",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
       "norm_label": "ball"
     },
     {
@@ -1869,8 +1869,8 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_games_plinkogame_default_slots",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
       "norm_label": "default_slots"
     },
     {
@@ -1880,8 +1880,8 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "src_games_plinkogame_plinkogame",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
       "norm_label": "plinkogame()"
     },
     {
@@ -1891,8 +1891,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_puzzlegame",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 22,
+      "community_name": "BaseGameProps",
       "norm_label": "puzzlegame.tsx"
     },
     {
@@ -1902,8 +1902,8 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_games_puzzlegame_puzzlegameprops",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 22,
+      "community_name": "BaseGameProps",
       "norm_label": "puzzlegameprops"
     },
     {
@@ -1913,8 +1913,8 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_games_puzzlegame_puzzlegame",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 22,
+      "community_name": "BaseGameProps",
       "norm_label": "puzzlegame()"
     },
     {
@@ -1924,7 +1924,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_quizgame",
-      "community": 6,
+      "community": 21,
       "community_name": "TotemCampaignView.tsx",
       "norm_label": "quizgame.tsx"
     },
@@ -1935,8 +1935,8 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_games_quizgame_quizgameprops",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "quizgameprops"
     },
     {
@@ -1946,7 +1946,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_games_quizgame_default_questions",
-      "community": 6,
+      "community": 21,
       "community_name": "TotemCampaignView.tsx",
       "norm_label": "default_questions"
     },
@@ -1957,7 +1957,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_games_quizgame_shuffledoption",
-      "community": 6,
+      "community": 21,
       "community_name": "TotemCampaignView.tsx",
       "norm_label": "shuffledoption"
     },
@@ -1968,7 +1968,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "src_games_quizgame_quizgame",
-      "community": 6,
+      "community": 21,
       "community_name": "TotemCampaignView.tsx",
       "norm_label": "quizgame()"
     },
@@ -2067,8 +2067,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_speedgame",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 22,
+      "community_name": "BaseGameProps",
       "norm_label": "speedgame.tsx"
     },
     {
@@ -2078,8 +2078,8 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_games_speedgame_speedgameprops",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 22,
+      "community_name": "BaseGameProps",
       "norm_label": "speedgameprops"
     },
     {
@@ -2089,8 +2089,8 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_games_speedgame_speedgame",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 22,
+      "community_name": "BaseGameProps",
       "norm_label": "speedgame()"
     },
     {
@@ -2144,8 +2144,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_spoterrorgame",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
       "norm_label": "spoterrorgame.tsx"
     },
     {
@@ -2155,8 +2155,8 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_games_spoterrorgame_spoterrorgameprops",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
       "norm_label": "spoterrorgameprops"
     },
     {
@@ -2166,8 +2166,8 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_games_spoterrorgame_inspectioncard",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
       "norm_label": "inspectioncard"
     },
     {
@@ -2177,8 +2177,8 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_games_spoterrorgame_default_scenario",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
       "norm_label": "default_scenario"
     },
     {
@@ -2188,8 +2188,8 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "src_games_spoterrorgame_fallback_safe_items",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
       "norm_label": "fallback_safe_items"
     },
     {
@@ -2199,8 +2199,8 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_games_spoterrorgame_spoterrorgame",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 4,
+      "community_name": "useActiveGamePalette",
       "norm_label": "spoterrorgame()"
     },
     {
@@ -2210,8 +2210,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_targetgame",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 27,
+      "community_name": "TargetGame.tsx",
       "norm_label": "targetgame.tsx"
     },
     {
@@ -2221,8 +2221,8 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_games_targetgame_targetgameprops",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 27,
+      "community_name": "TargetGame.tsx",
       "norm_label": "targetgameprops"
     },
     {
@@ -2232,8 +2232,8 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_games_targetgame_targetitem",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 27,
+      "community_name": "TargetGame.tsx",
       "norm_label": "targetitem"
     },
     {
@@ -2243,8 +2243,8 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_games_targetgame_default_targets",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 27,
+      "community_name": "TargetGame.tsx",
       "norm_label": "default_targets"
     },
     {
@@ -2254,8 +2254,8 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_games_targetgame_isimageurl",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 27,
+      "community_name": "TargetGame.tsx",
       "norm_label": "isimageurl()"
     },
     {
@@ -2265,8 +2265,8 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "src_games_targetgame_targetgame",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 27,
+      "community_name": "TargetGame.tsx",
       "norm_label": "targetgame()"
     },
     {
@@ -2342,8 +2342,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_truefalsegame",
-      "community": 6,
-      "community_name": "TotemCampaignView.tsx",
+      "community": 25,
+      "community_name": "GameContainer",
       "norm_label": "truefalsegame.tsx"
     },
     {
@@ -2353,8 +2353,8 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_games_truefalsegame_truefalsegameprops",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 25,
+      "community_name": "GameContainer",
       "norm_label": "truefalsegameprops"
     },
     {
@@ -2364,8 +2364,8 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_games_truefalsegame_default_statements",
-      "community": 6,
-      "community_name": "TotemCampaignView.tsx",
+      "community": 25,
+      "community_name": "GameContainer",
       "norm_label": "default_statements"
     },
     {
@@ -2375,8 +2375,8 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "src_games_truefalsegame_truefalsegame",
-      "community": 6,
-      "community_name": "TotemCampaignView.tsx",
+      "community": 25,
+      "community_name": "GameContainer",
       "norm_label": "truefalsegame()"
     },
     {
@@ -2386,8 +2386,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_wheelgame",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 32,
+      "community_name": "WheelGame.tsx",
       "norm_label": "wheelgame.tsx"
     },
     {
@@ -2397,8 +2397,8 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_games_wheelgame_wheelgameprops",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 32,
+      "community_name": "WheelGame.tsx",
       "norm_label": "wheelgameprops"
     },
     {
@@ -2408,8 +2408,8 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_games_wheelgame_default_prizes",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 32,
+      "community_name": "WheelGame.tsx",
       "norm_label": "default_prizes"
     },
     {
@@ -2419,8 +2419,8 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_games_wheelgame_wheelgame",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 32,
+      "community_name": "WheelGame.tsx",
       "norm_label": "wheelgame()"
     },
     {
@@ -2430,8 +2430,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_games_wordsearchgame",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 23,
+      "community_name": "audio.ts",
       "norm_label": "wordsearchgame.tsx"
     },
     {
@@ -2441,8 +2441,8 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_games_wordsearchgame_wordsearchgameprops",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 23,
+      "community_name": "audio.ts",
       "norm_label": "wordsearchgameprops"
     },
     {
@@ -2452,8 +2452,8 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_games_wordsearchgame_default_words",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 23,
+      "community_name": "audio.ts",
       "norm_label": "default_words"
     },
     {
@@ -2474,8 +2474,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_audio",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 23,
+      "community_name": "audio.ts",
       "norm_label": "audio.ts"
     },
     {
@@ -2584,8 +2584,8 @@
       "source_location": "L130",
       "_origin": "ast",
       "id": "src_lib_audio_sound",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 23,
+      "community_name": "audio.ts",
       "norm_label": "sound"
     },
     {
@@ -2661,7 +2661,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_colorharmony",
-      "community": 6,
+      "community": 21,
       "community_name": "TotemCampaignView.tsx",
       "norm_label": "colorharmony.ts"
     },
@@ -2672,7 +2672,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_colorharmony_layoutcolorpalette",
-      "community": 6,
+      "community": 21,
       "community_name": "TotemCampaignView.tsx",
       "norm_label": "layoutcolorpalette"
     },
@@ -2683,7 +2683,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_lib_colorharmony_quickhuepreset",
-      "community": 6,
+      "community": 21,
       "community_name": "TotemCampaignView.tsx",
       "norm_label": "quickhuepreset"
     },
@@ -2705,7 +2705,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "src_lib_colorharmony_default_layout_hues",
-      "community": 6,
+      "community": 21,
       "community_name": "TotemCampaignView.tsx",
       "norm_label": "default_layout_hues"
     },
@@ -2716,7 +2716,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "src_lib_colorharmony_hsltohex",
-      "community": 6,
+      "community": 21,
       "community_name": "TotemCampaignView.tsx",
       "norm_label": "hsltohex()"
     },
@@ -2727,7 +2727,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "src_lib_colorharmony_hextorgba",
-      "community": 6,
+      "community": 21,
       "community_name": "TotemCampaignView.tsx",
       "norm_label": "hextorgba()"
     },
@@ -2738,7 +2738,7 @@
       "source_location": "L98",
       "_origin": "ast",
       "id": "src_lib_colorharmony_generatelayoutpalette",
-      "community": 6,
+      "community": 21,
       "community_name": "TotemCampaignView.tsx",
       "norm_label": "generatelayoutpalette()"
     },
@@ -2749,7 +2749,7 @@
       "source_location": "L131",
       "_origin": "ast",
       "id": "src_lib_colorharmony_getdefaulthueforlayout",
-      "community": 6,
+      "community": 21,
       "community_name": "TotemCampaignView.tsx",
       "norm_label": "getdefaulthueforlayout()"
     },
@@ -2760,7 +2760,7 @@
       "source_location": "L138",
       "_origin": "ast",
       "id": "src_lib_colorharmony_splashoverlaystyleresult",
-      "community": 6,
+      "community": 21,
       "community_name": "TotemCampaignView.tsx",
       "norm_label": "splashoverlaystyleresult"
     },
@@ -2771,7 +2771,7 @@
       "source_location": "L148",
       "_origin": "ast",
       "id": "src_lib_colorharmony_getsplashoverlaystyle",
-      "community": 6,
+      "community": 21,
       "community_name": "TotemCampaignView.tsx",
       "norm_label": "getsplashoverlaystyle()"
     },
@@ -2826,8 +2826,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_fonts",
-      "community": 6,
-      "community_name": "TotemCampaignView.tsx",
+      "community": 13,
+      "community_name": "GameContentEditorModal.tsx",
       "norm_label": "fonts.ts"
     },
     {
@@ -2837,8 +2837,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_fonts_fontdefinition",
-      "community": 6,
-      "community_name": "TotemCampaignView.tsx",
+      "community": 13,
+      "community_name": "GameContentEditorModal.tsx",
       "norm_label": "fontdefinition"
     },
     {
@@ -2859,8 +2859,8 @@
       "source_location": "L125",
       "_origin": "ast",
       "id": "src_lib_fonts_getfontfamilybyid",
-      "community": 6,
-      "community_name": "TotemCampaignView.tsx",
+      "community": 13,
+      "community_name": "GameContentEditorModal.tsx",
       "norm_label": "getfontfamilybyid()"
     },
     {
@@ -3123,8 +3123,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_types_gamecontent",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
       "norm_label": "gamecontent.ts"
     },
     {
@@ -3134,8 +3134,8 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_types_gamecontent_wheelitem",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 32,
+      "community_name": "WheelGame.tsx",
       "norm_label": "wheelitem"
     },
     {
@@ -3145,8 +3145,8 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_types_gamecontent_quizquestionitem",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "quizquestionitem"
     },
     {
@@ -3156,8 +3156,8 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_types_gamecontent_targetcustomitem",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 27,
+      "community_name": "TargetGame.tsx",
       "norm_label": "targetcustomitem"
     },
     {
@@ -3167,8 +3167,8 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_types_gamecontent_memorycustompair",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 26,
+      "community_name": "MemoryGame.tsx",
       "norm_label": "memorycustompair"
     },
     {
@@ -3183,10 +3183,43 @@
       "norm_label": "catchercustomitem"
     },
     {
-      "label": "TopGearCustomConfig",
+      "label": "TopGearEnvironment",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
       "source_location": "L40",
+      "_origin": "ast",
+      "id": "src_types_gamecontent_topgearenvironment",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
+      "norm_label": "topgearenvironment"
+    },
+    {
+      "label": "TopGearTimeOfDay",
+      "file_type": "code",
+      "source_file": "src/types/gameContent.ts",
+      "source_location": "L41",
+      "_origin": "ast",
+      "id": "src_types_gamecontent_topgeartimeofday",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
+      "norm_label": "topgeartimeofday"
+    },
+    {
+      "label": "TopGearCarModel",
+      "file_type": "code",
+      "source_file": "src/types/gameContent.ts",
+      "source_location": "L42",
+      "_origin": "ast",
+      "id": "src_types_gamecontent_topgearcarmodel",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
+      "norm_label": "topgearcarmodel"
+    },
+    {
+      "label": "TopGearCustomConfig",
+      "file_type": "code",
+      "source_file": "src/types/gameContent.ts",
+      "source_location": "L44",
       "_origin": "ast",
       "id": "src_types_gamecontent_topgearcustomconfig",
       "community": 8,
@@ -3197,29 +3230,29 @@
       "label": "PlinkoSlotItem",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L49",
+      "source_location": "L56",
       "_origin": "ast",
       "id": "src_types_gamecontent_plinkoslotitem",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
       "norm_label": "plinkoslotitem"
     },
     {
       "label": "PlinkoCustomConfig",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L56",
+      "source_location": "L63",
       "_origin": "ast",
       "id": "src_types_gamecontent_plinkocustomconfig",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
       "norm_label": "plinkocustomconfig"
     },
     {
       "label": "SpeedCustomConfig",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L62",
+      "source_location": "L69",
       "_origin": "ast",
       "id": "src_types_gamecontent_speedcustomconfig",
       "community": 13,
@@ -3230,7 +3263,7 @@
       "label": "SafeCustomConfig",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L69",
+      "source_location": "L76",
       "_origin": "ast",
       "id": "src_types_gamecontent_safecustomconfig",
       "community": 20,
@@ -3241,7 +3274,7 @@
       "label": "GeniusPadCustom",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L75",
+      "source_location": "L82",
       "_origin": "ast",
       "id": "src_types_gamecontent_geniuspadcustom",
       "community": 13,
@@ -3252,18 +3285,18 @@
       "label": "PuzzleCustomConfig",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L82",
+      "source_location": "L89",
       "_origin": "ast",
       "id": "src_types_gamecontent_puzzlecustomconfig",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 22,
+      "community_name": "BaseGameProps",
       "norm_label": "puzzlecustomconfig"
     },
     {
       "label": "BalloonCustomItem",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L89",
+      "source_location": "L96",
       "_origin": "ast",
       "id": "src_types_gamecontent_ballooncustomitem",
       "community": 14,
@@ -3274,51 +3307,51 @@
       "label": "WordSearchCustomConfig",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L98",
+      "source_location": "L105",
       "_origin": "ast",
       "id": "src_types_gamecontent_wordsearchcustomconfig",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 23,
+      "community_name": "audio.ts",
       "norm_label": "wordsearchcustomconfig"
     },
     {
       "label": "HangmanCustomItem",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L103",
+      "source_location": "L110",
       "_origin": "ast",
       "id": "src_types_gamecontent_hangmancustomitem",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 30,
+      "community_name": "HangmanGame.tsx",
       "norm_label": "hangmancustomitem"
     },
     {
       "label": "TrueFalseCustomItem",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L109",
+      "source_location": "L116",
       "_origin": "ast",
       "id": "src_types_gamecontent_truefalsecustomitem",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 25,
+      "community_name": "GameContainer",
       "norm_label": "truefalsecustomitem"
     },
     {
       "label": "CompletePhraseCustomItem",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L115",
+      "source_location": "L122",
       "_origin": "ast",
       "id": "src_types_gamecontent_completephrasecustomitem",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 6,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "completephrasecustomitem"
     },
     {
       "label": "CorrectOrderCustomItem",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L121",
+      "source_location": "L128",
       "_origin": "ast",
       "id": "src_types_gamecontent_correctordercustomitem",
       "community": 15,
@@ -3329,18 +3362,18 @@
       "label": "ConnectPairCustomItem",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L126",
+      "source_location": "L133",
       "_origin": "ast",
       "id": "src_types_gamecontent_connectpaircustomitem",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 24,
+      "community_name": "GameLayoutContext.tsx",
       "norm_label": "connectpaircustomitem"
     },
     {
       "label": "SpeedTriviaCustomItem",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L131",
+      "source_location": "L138",
       "_origin": "ast",
       "id": "src_types_gamecontent_speedtriviacustomitem",
       "community": 6,
@@ -3351,62 +3384,62 @@
       "label": "SpotHazardItem",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L137",
+      "source_location": "L144",
       "_origin": "ast",
       "id": "src_types_gamecontent_spothazarditem",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
       "norm_label": "spothazarditem"
     },
     {
       "label": "SpotErrorCustomItem",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L145",
+      "source_location": "L152",
       "_origin": "ast",
       "id": "src_types_gamecontent_spoterrorcustomitem",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
       "norm_label": "spoterrorcustomitem"
     },
     {
       "label": "GamesConfigMap",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L152",
+      "source_location": "L159",
       "_origin": "ast",
       "id": "src_types_gamecontent_gamesconfigmap",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
       "norm_label": "gamesconfigmap"
     },
     {
       "label": "CsvColumnSpec",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L168",
+      "source_location": "L175",
       "_origin": "ast",
       "id": "src_types_gamecontent_csvcolumnspec",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
       "norm_label": "csvcolumnspec"
     },
     {
       "label": "GameContentMeta",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L174",
+      "source_location": "L181",
       "_origin": "ast",
       "id": "src_types_gamecontent_gamecontentmeta",
-      "community": 13,
-      "community_name": "GameContentEditorModal.tsx",
+      "community": 14,
+      "community_name": "TargetGame.tsx",
       "norm_label": "gamecontentmeta"
     },
     {
       "label": "GAME_CONTENT_SCHEMAS",
       "file_type": "code",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L182",
+      "source_location": "L189",
       "_origin": "ast",
       "id": "src_types_gamecontent_game_content_schemas",
       "community": 13,
@@ -3552,8 +3585,8 @@
       "source_location": "L95",
       "_origin": "ast",
       "id": "src_types_index_basegameprops",
-      "community": 4,
-      "community_name": "useActiveGamePalette",
+      "community": 22,
+      "community_name": "BaseGameProps",
       "norm_label": "basegameprops"
     },
     {
@@ -3596,8 +3629,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_types_splashcustomization",
-      "community": 0,
-      "community_name": "CampaignFormModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "splashcustomization.ts"
     },
     {
@@ -3607,8 +3640,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_types_splashcustomization_splashbuttonstyleid",
-      "community": 0,
-      "community_name": "CampaignFormModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "splashbuttonstyleid"
     },
     {
@@ -3618,8 +3651,8 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_types_splashcustomization_splashbuttonstyledefinition",
-      "community": 0,
-      "community_name": "CampaignFormModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "splashbuttonstyledefinition"
     },
     {
@@ -3629,8 +3662,8 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_types_splashcustomization_splash_button_styles",
-      "community": 0,
-      "community_name": "CampaignFormModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "splash_button_styles"
     },
     {
@@ -3706,8 +3739,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_views_totemcampaignview",
-      "community": 0,
-      "community_name": "CampaignFormModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "totemcampaignview.tsx"
     },
     {
@@ -3728,8 +3761,8 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "src_views_totemcampaignview_splashdescriptionstyleconfig",
-      "community": 0,
-      "community_name": "CampaignFormModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "splashdescriptionstyleconfig"
     },
     {
@@ -3739,8 +3772,8 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "src_views_totemcampaignview_getsplashdescriptionstyle",
-      "community": 0,
-      "community_name": "CampaignFormModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "getsplashdescriptionstyle()"
     },
     {
@@ -3750,8 +3783,8 @@
       "source_location": "L230",
       "_origin": "ast",
       "id": "src_views_totemcampaignview_scrollabledescription",
-      "community": 0,
-      "community_name": "CampaignFormModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "scrollabledescription()"
     },
     {
@@ -3761,8 +3794,8 @@
       "source_location": "L328",
       "_origin": "ast",
       "id": "src_views_totemcampaignview_totemcampaignviewprops",
-      "community": 0,
-      "community_name": "CampaignFormModal.tsx",
+      "community": 21,
+      "community_name": "TotemCampaignView.tsx",
       "norm_label": "totemcampaignviewprops"
     },
     {
@@ -3772,7 +3805,7 @@
       "source_location": "L332",
       "_origin": "ast",
       "id": "src_views_totemcampaignview_totemcampaignview",
-      "community": 6,
+      "community": 21,
       "community_name": "TotemCampaignView.tsx",
       "norm_label": "totemcampaignview()"
     },
@@ -6586,7 +6619,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/GameContentEditorModal.tsx",
-      "source_location": "L4868",
+      "source_location": "L4983",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_components_gamecontenteditormodal_gamecontenteditormodal",
@@ -6610,7 +6643,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/GameContentEditorModal.tsx",
-      "source_location": "L4748",
+      "source_location": "L4863",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_components_gamecontenteditormodal_gamecontenteditormodal",
@@ -6622,7 +6655,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/GameContentEditorModal.tsx",
-      "source_location": "L4783",
+      "source_location": "L4898",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_components_gamecontenteditormodal_gamecontenteditormodal",
@@ -16209,7 +16242,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L89",
+      "source_location": "L96",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16231,7 +16264,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L115",
+      "source_location": "L122",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16242,7 +16275,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L126",
+      "source_location": "L133",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16253,7 +16286,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L121",
+      "source_location": "L128",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16264,7 +16297,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L168",
+      "source_location": "L175",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16275,7 +16308,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L182",
+      "source_location": "L189",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16286,7 +16319,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L174",
+      "source_location": "L181",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16297,7 +16330,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L152",
+      "source_location": "L159",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16308,7 +16341,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L75",
+      "source_location": "L82",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16319,7 +16352,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L103",
+      "source_location": "L110",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16341,7 +16374,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L56",
+      "source_location": "L63",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16352,7 +16385,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L49",
+      "source_location": "L56",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16363,7 +16396,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L82",
+      "source_location": "L89",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16385,7 +16418,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L69",
+      "source_location": "L76",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16396,7 +16429,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L62",
+      "source_location": "L69",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16407,7 +16440,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L131",
+      "source_location": "L138",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16418,7 +16451,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L145",
+      "source_location": "L152",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16429,7 +16462,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L137",
+      "source_location": "L144",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16451,7 +16484,18 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L40",
+      "source_location": "L42",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "src_types_gamecontent",
+      "target": "src_types_gamecontent_topgearcarmodel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/types/gameContent.ts",
+      "source_location": "L44",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16462,7 +16506,29 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L109",
+      "source_location": "L40",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "src_types_gamecontent",
+      "target": "src_types_gamecontent_topgearenvironment",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/types/gameContent.ts",
+      "source_location": "L41",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "src_types_gamecontent",
+      "target": "src_types_gamecontent_topgeartimeofday",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/types/gameContent.ts",
+      "source_location": "L116",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -16484,7 +16550,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/types/gameContent.ts",
-      "source_location": "L98",
+      "source_location": "L105",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_types_gamecontent",
@@ -17431,5 +17497,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "d36f6c4756e6f9a54f0731a04d877d73d7f3457b"
+  "built_at_commit": "6819cdf65118135d71621fdc2ec358eebfde0fa1"
 }

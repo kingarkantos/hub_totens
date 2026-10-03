@@ -4587,7 +4587,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/views/ResellerPortfolioView.tsx",
-      "source_location": "L93",
+      "source_location": "L57",
       "weight": 1.0,
       "_origin": "ast",
       "source": "src_views_resellerportfolioview_resellerportfolioview",
@@ -17431,5 +17431,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "27c3f706ffb16f7cb2cfdbcf749d145c5deb73c0"
+  "built_at_commit": "d36f6c4756e6f9a54f0731a04d877d73d7f3457b"
 }

@@ -19,5 +19,17 @@
   "17": "postcss.config.js",
   "18": "tailwind.config.js",
   "19": "vite.config.ts",
-  "20": "SafeGame.tsx"
+  "20": "SafeGame.tsx",
+  "21": "TotemCampaignView.tsx",
+  "22": "BaseGameProps",
+  "23": "audio.ts",
+  "24": "GameLayoutContext.tsx",
+  "25": "GameContainer",
+  "26": "MemoryGame.tsx",
+  "27": "TargetGame.tsx",
+  "28": "HigherLowerGame.tsx",
+  "29": "MapEpiGame.tsx",
+  "30": "HangmanGame.tsx",
+  "31": "MathBlitzGame.tsx",
+  "32": "WheelGame.tsx"
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 import { BaseGameProps } from '../types';
@@ -75,6 +75,59 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
   const playerCarColor = customContent?.carColor || '#DC2626';
   const trackName = customContent?.trackName || 'Autódromo Top Gear';
 
+  // Environment & Scenery resolution (auto-adapts to theme or customContent)
+  const effectiveEnv: 'city' | 'mountains' | 'forest' | 'space' = useMemo(() => {
+    if (customContent?.environment && customContent.environment !== 'auto') {
+      return customContent.environment;
+    }
+    if (activeLayout === 'spatial_3d' || activeLayout === 'cyber_matrix') {
+      return 'space';
+    }
+    if (activeLayout === 'cartoon_pop' || activeLayout === 'bubble_toon') {
+      return 'mountains';
+    }
+    if (activeLayout === 'cartoon_comic' || activeLayout === 'neumorphic_luxe') {
+      return 'forest';
+    }
+    return 'city';
+  }, [customContent?.environment, activeLayout]);
+
+  // Day vs Night lighting resolution
+  const effectiveTimeOfDay: 'day' | 'night' = useMemo(() => {
+    if (customContent?.timeOfDay && customContent.timeOfDay !== 'auto') {
+      return customContent.timeOfDay;
+    }
+    if (effectiveEnv === 'space') return 'night';
+    return isLightMode ? 'day' : 'night';
+  }, [customContent?.timeOfDay, isLightMode, effectiveEnv]);
+
+  // Car model design resolution
+  const effectiveCarModel: 'retro_coupe' | 'supercar_gt' | 'muscle_car' | 'cyber_hover' = useMemo(() => {
+    if (customContent?.carModel && customContent.carModel !== 'auto') {
+      return customContent.carModel;
+    }
+    if (effectiveEnv === 'space' || activeLayout === 'spatial_3d' || activeLayout === 'cyber_matrix') {
+      return 'cyber_hover';
+    }
+    if (activeLayout === 'neon_arcade' || activeLayout === 'synthwave_grid') {
+      return 'supercar_gt';
+    }
+    if (activeLayout === 'cartoon_comic' || activeLayout === 'cartoon_pop') {
+      return 'muscle_car';
+    }
+    return 'retro_coupe';
+  }, [customContent?.carModel, effectiveEnv, activeLayout]);
+
+  // Stable pre-computed stars for night and space scenery
+  const stars = useMemo(() => {
+    return Array.from({ length: 90 }, (_, i) => ({
+      x: ((i * 47 + 19) % 100) / 100,
+      y: ((i * 61 + 31) % 100) / 100,
+      size: (i % 3) + 1,
+      speed: 1.2 + (i % 4) * 0.7,
+    }));
+  }, []);
+
   const [timeLeft, setTimeLeft] = useState(duration);
   const [lane, setLane] = useState<number>(1); // 0: Left, 1: Center, 2: Right
   const [speed, setSpeed] = useState<number>(initialSpeed);
@@ -112,7 +165,19 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
     finishZ: 9999, // When <= 1000, finish line is approaching
     crossingFinish: false,
     gameOver: false,
+    effectiveEnv,
+    effectiveTimeOfDay,
+    effectiveCarModel,
+    stars,
   });
+
+  // Keep stateRef synced with latest options
+  useEffect(() => {
+    stateRef.current.effectiveEnv = effectiveEnv;
+    stateRef.current.effectiveTimeOfDay = effectiveTimeOfDay;
+    stateRef.current.effectiveCarModel = effectiveCarModel;
+    stateRef.current.stars = stars;
+  }, [effectiveEnv, effectiveTimeOfDay, effectiveCarModel, stars]);
 
   // Sync stateRef lane with component lane
   useEffect(() => {
@@ -329,52 +394,290 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
       const horizonY = height * 0.44;
       const horizonX = width / 2 + state.curve;
 
-      // 1. SKY GRADIENT (Retro Twilight / Cyberpunk Sunset)
+      // Environment & Scenery settings from state
+      const env = state.effectiveEnv || 'city';
+      const isNight = (state.effectiveTimeOfDay || 'night') === 'night';
+      const carModel = state.effectiveCarModel || 'retro_coupe';
+
+      // 1. SKY GRADIENT & HORIZON
       const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
-      skyGrad.addColorStop(0, '#090A15');
-      skyGrad.addColorStop(0.5, '#1E1B4B');
-      skyGrad.addColorStop(0.85, '#4C1D95');
-      skyGrad.addColorStop(1, '#831843');
+      if (env === 'space') {
+        // Deep Cosmic Void
+        skyGrad.addColorStop(0, '#02040A');
+        skyGrad.addColorStop(0.5, '#0B0F2A');
+        skyGrad.addColorStop(1, '#1E0836');
+      } else if (env === 'mountains') {
+        if (!isNight) {
+          // Sunny Alpine Daylight
+          skyGrad.addColorStop(0, '#0284C7');
+          skyGrad.addColorStop(0.45, '#38BDF8');
+          skyGrad.addColorStop(0.85, '#BAE6FD');
+          skyGrad.addColorStop(1, '#FEF08A');
+        } else {
+          // Alpine Night Twilight
+          skyGrad.addColorStop(0, '#020617');
+          skyGrad.addColorStop(0.5, '#1E1B4B');
+          skyGrad.addColorStop(0.85, '#3B0764');
+          skyGrad.addColorStop(1, '#701A75');
+        }
+      } else if (env === 'forest') {
+        if (!isNight) {
+          // Forest Daylight Canopy
+          skyGrad.addColorStop(0, '#0369A1');
+          skyGrad.addColorStop(0.5, '#38BDF8');
+          skyGrad.addColorStop(0.85, '#7DD3FC');
+          skyGrad.addColorStop(1, '#D9F99D');
+        } else {
+          // Forest Midnight Emerald
+          skyGrad.addColorStop(0, '#020617');
+          skyGrad.addColorStop(0.45, '#022C22');
+          skyGrad.addColorStop(0.85, '#064E3B');
+          skyGrad.addColorStop(1, '#065F46');
+        }
+      } else {
+        // City
+        if (!isNight) {
+          // City Daylight
+          skyGrad.addColorStop(0, '#0284C7');
+          skyGrad.addColorStop(0.5, '#60A5FA');
+          skyGrad.addColorStop(0.85, '#BAE6FD');
+          skyGrad.addColorStop(1, '#E0F2FE');
+        } else {
+          // Retro Twilight City (Synthwave Sunset)
+          skyGrad.addColorStop(0, '#090A15');
+          skyGrad.addColorStop(0.5, '#1E1B4B');
+          skyGrad.addColorStop(0.85, '#4C1D95');
+          skyGrad.addColorStop(1, '#831843');
+        }
+      }
       ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, width, horizonY);
 
-      // Retro Distant Sun / Horizon Glow
-      const sunGrad = ctx.createRadialGradient(horizonX, horizonY, 5, horizonX, horizonY, 140);
-      sunGrad.addColorStop(0, 'rgba(251, 146, 60, 0.7)');
-      sunGrad.addColorStop(0.4, 'rgba(236, 72, 153, 0.4)');
-      sunGrad.addColorStop(1, 'rgba(236, 72, 153, 0)');
-      ctx.fillStyle = sunGrad;
-      ctx.beginPath();
-      ctx.arc(horizonX, horizonY, 140, 0, Math.PI * 2);
-      ctx.fill();
-
-      // 2. PARALLAX CITY SKYLINE
-      const cityParallaxX = -state.curve * 0.25;
-      const bldgWidth = 32;
-      const bldgCount = Math.ceil(width / bldgWidth) + 4;
-      ctx.fillStyle = '#0F0E26';
-      for (let i = 0; i < bldgCount; i++) {
-        const bx = i * bldgWidth + (cityParallaxX % bldgWidth) - bldgWidth;
-        const bHeight = 40 + ((i * 37) % 55);
-        ctx.fillRect(bx, horizonY - bHeight, bldgWidth - 2, bHeight);
-
-        // Lit windows
-        ctx.fillStyle = i % 3 === 0 ? '#FDE047' : i % 2 === 0 ? '#38BDF8' : '#F472B6';
-        for (let wy = horizonY - bHeight + 8; wy < horizonY - 6; wy += 10) {
-          if ((i + wy) % 5 !== 0) {
-            ctx.fillRect(bx + 6, wy, 4, 4);
-            ctx.fillRect(bx + 16, wy, 4, 4);
-          }
-        }
-        ctx.fillStyle = '#0F0E26';
+      // Starfield (twinkling in space and night tracks)
+      if (isNight || env === 'space') {
+        ctx.fillStyle = '#FFFFFF';
+        state.stars.forEach((s: { x: number; y: number; size: number; speed: number }) => {
+          const sx = (s.x * width + state.curve * 0.1) % width;
+          const sy = s.y * horizonY * 0.9;
+          const alpha = 0.4 + 0.6 * Math.sin(now * 0.003 * s.speed + s.x * 10);
+          ctx.globalAlpha = Math.max(0.1, alpha);
+          ctx.beginPath();
+          ctx.arc(sx, sy, s.size * (env === 'space' ? 1.2 : 0.9), 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
       }
 
-      // 3. TERRAIN / GRASS
+      // Sun or Moon / Celestial Body
+      if (env === 'space') {
+        // Space: Giant Saturn-like Ringed Planet + Cosmic Nebula
+        const nebulaGrad = ctx.createRadialGradient(
+          width * 0.7, horizonY * 0.4, 10,
+          width * 0.7, horizonY * 0.4, 120
+        );
+        nebulaGrad.addColorStop(0, 'rgba(217, 70, 239, 0.45)');
+        nebulaGrad.addColorStop(0.5, 'rgba(99, 102, 241, 0.25)');
+        nebulaGrad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+        ctx.fillStyle = nebulaGrad;
+        ctx.beginPath();
+        ctx.arc(width * 0.7, horizonY * 0.4, 120, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Planet with rings
+        const planetX = width * 0.28;
+        const planetY = horizonY * 0.42;
+        const planetR = 24;
+
+        const planetGrad = ctx.createRadialGradient(planetX - 6, planetY - 6, 4, planetX, planetY, planetR);
+        planetGrad.addColorStop(0, '#FDE047');
+        planetGrad.addColorStop(0.5, '#EA580C');
+        planetGrad.addColorStop(1, '#431407');
+        ctx.fillStyle = planetGrad;
+        ctx.beginPath();
+        ctx.arc(planetX, planetY, planetR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Planetary Rings
+        ctx.strokeStyle = 'rgba(253, 224, 71, 0.65)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.ellipse(planetX, planetY, planetR * 2.2, planetR * 0.6, -Math.PI / 7, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (!isNight) {
+        // Daylight Sun
+        const sunX = horizonX;
+        const sunY = horizonY * 0.45;
+        const sunGlow = ctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, 90);
+        sunGlow.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+        sunGlow.addColorStop(0.3, 'rgba(254, 240, 138, 0.6)');
+        sunGlow.addColorStop(1, 'rgba(254, 240, 138, 0)');
+        ctx.fillStyle = sunGlow;
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, 90, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, 18, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        // Night Moon
+        const moonX = width * 0.78;
+        const moonY = horizonY * 0.35;
+        const moonGlow = ctx.createRadialGradient(moonX, moonY, 10, moonX, moonY, 60);
+        moonGlow.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+        moonGlow.addColorStop(0.4, 'rgba(224, 231, 255, 0.3)');
+        moonGlow.addColorStop(1, 'rgba(224, 231, 255, 0)');
+        ctx.fillStyle = moonGlow;
+        ctx.beginPath();
+        ctx.arc(moonX, moonY, 60, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#F8FAFC';
+        ctx.beginPath();
+        ctx.arc(moonX, moonY, 16, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 2. PARALLAX SCENERY SILHOUETTES
+      const parallaxOffset = -state.curve * 0.25;
+
+      if (env === 'mountains') {
+        // 3-Layer Mountain Ranges
+        // Layer 1: Distant snowy peaks
+        ctx.fillStyle = !isNight ? '#64748B' : '#1E1B4B';
+        ctx.beginPath();
+        ctx.moveTo(0, horizonY);
+        for (let mx = -40; mx <= width + 60; mx += 60) {
+          const px = mx + (parallaxOffset % 60);
+          const peakH = 48 + ((mx * 3 + 17) % 45);
+          ctx.lineTo(px - 30, horizonY - peakH);
+          ctx.lineTo(px, horizonY);
+        }
+        ctx.closePath();
+        ctx.fill();
+
+        // Snowy summits (if day)
+        if (!isNight) {
+          ctx.fillStyle = '#F8FAFC';
+          for (let mx = -40; mx <= width + 60; mx += 60) {
+            const px = mx + (parallaxOffset % 60);
+            const peakH = 48 + ((mx * 3 + 17) % 45);
+            ctx.beginPath();
+            ctx.moveTo(px - 30, horizonY - peakH);
+            ctx.lineTo(px - 22, horizonY - peakH + 16);
+            ctx.lineTo(px - 38, horizonY - peakH + 16);
+            ctx.closePath();
+            ctx.fill();
+          }
+        }
+
+        // Layer 2: Rocky Foothills
+        ctx.fillStyle = !isNight ? '#334155' : '#0F172A';
+        ctx.beginPath();
+        ctx.moveTo(0, horizonY);
+        for (let mx = -30; mx <= width + 50; mx += 45) {
+          const px = mx + ((parallaxOffset * 1.3) % 45);
+          const peakH = 26 + ((mx * 7 + 23) % 30);
+          ctx.lineTo(px - 22, horizonY - peakH);
+          ctx.lineTo(px, horizonY);
+        }
+        ctx.closePath();
+        ctx.fill();
+      } else if (env === 'forest') {
+        // Dense Multi-layer Pine Forest Horizon
+        ctx.fillStyle = !isNight ? '#065F46' : '#064E3B';
+        for (let tx = -20; tx <= width + 20; tx += 18) {
+          const px = tx + (parallaxOffset % 18);
+          const tHeight = 32 + ((tx * 13) % 28);
+          ctx.beginPath();
+          ctx.moveTo(px - 10, horizonY);
+          ctx.lineTo(px, horizonY - tHeight);
+          ctx.lineTo(px + 10, horizonY);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        ctx.fillStyle = !isNight ? '#047857' : '#022C22';
+        for (let tx = -10; tx <= width + 20; tx += 24) {
+          const px = tx + ((parallaxOffset * 1.4) % 24);
+          const tHeight = 22 + ((tx * 7) % 20);
+          ctx.beginPath();
+          ctx.moveTo(px - 8, horizonY);
+          ctx.lineTo(px, horizonY - tHeight);
+          ctx.lineTo(px + 8, horizonY);
+          ctx.closePath();
+          ctx.fill();
+        }
+      } else if (env === 'city') {
+        // City Skyline with Windows & Antennas
+        const bldgWidth = 32;
+        const bldgCount = Math.ceil(width / bldgWidth) + 4;
+        ctx.fillStyle = !isNight ? '#475569' : '#0F0E26';
+
+        for (let i = 0; i < bldgCount; i++) {
+          const bx = i * bldgWidth + (parallaxOffset % bldgWidth) - bldgWidth;
+          const bHeight = 40 + ((i * 37) % 55);
+          ctx.fillRect(bx, horizonY - bHeight, bldgWidth - 2, bHeight);
+
+          // Roof antennas
+          if (i % 3 === 0) {
+            ctx.fillStyle = '#94A3B8';
+            ctx.fillRect(bx + bldgWidth / 2 - 1, horizonY - bHeight - 12, 2, 12);
+            if (isNight) {
+              ctx.fillStyle = '#EF4444';
+              ctx.beginPath();
+              ctx.arc(bx + bldgWidth / 2, horizonY - bHeight - 12, 2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+
+          // Windows
+          ctx.fillStyle = !isNight
+            ? 'rgba(255, 255, 255, 0.45)'
+            : (i % 3 === 0 ? '#FDE047' : i % 2 === 0 ? '#38BDF8' : '#F472B6');
+
+          for (let wy = horizonY - bHeight + 8; wy < horizonY - 6; wy += 10) {
+            if ((i + wy) % 5 !== 0) {
+              ctx.fillRect(bx + 6, wy, 4, 4);
+              ctx.fillRect(bx + 16, wy, 4, 4);
+            }
+          }
+          ctx.fillStyle = !isNight ? '#475569' : '#0F0E26';
+        }
+      }
+
+      // 3. TERRAIN / GROUND (Day, Night or Space)
       const grassGrad = ctx.createLinearGradient(0, horizonY, 0, height);
-      grassGrad.addColorStop(0, '#064E3B');
-      grassGrad.addColorStop(1, '#022C22');
+      if (env === 'space') {
+        // Dark Cosmic Floor with purple tint
+        grassGrad.addColorStop(0, '#0A0618');
+        grassGrad.addColorStop(1, '#1A0B2E');
+      } else if (env === 'forest') {
+        grassGrad.addColorStop(0, !isNight ? '#166534' : '#022C22');
+        grassGrad.addColorStop(1, !isNight ? '#14532D' : '#052E16');
+      } else if (env === 'mountains') {
+        grassGrad.addColorStop(0, !isNight ? '#15803D' : '#064E3B');
+        grassGrad.addColorStop(1, !isNight ? '#166534' : '#022C22');
+      } else {
+        // City
+        grassGrad.addColorStop(0, !isNight ? '#15803D' : '#064E3B');
+        grassGrad.addColorStop(1, !isNight ? '#166534' : '#022C22');
+      }
       ctx.fillStyle = grassGrad;
       ctx.fillRect(0, horizonY, width, height - horizonY);
+
+      // Space Grid Lines on terrain (if space)
+      if (env === 'space') {
+        ctx.strokeStyle = 'rgba(168, 85, 247, 0.15)';
+        ctx.lineWidth = 1;
+        for (let gx = -width; gx <= width * 2; gx += 80) {
+          ctx.beginPath();
+          ctx.moveTo(horizonX, horizonY);
+          ctx.lineTo(gx, height);
+          ctx.stroke();
+        }
+      }
 
       // 4. ROAD PERSPECTIVE POLYGON
       const roadTopWidth = width * 0.12;
@@ -385,7 +688,7 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
       const roadBottomRight = width / 2 + roadBottomWidth / 2;
 
       // Asphalt base
-      ctx.fillStyle = '#18181B';
+      ctx.fillStyle = env === 'space' ? '#0B0F19' : (!isNight ? '#334155' : '#18181B');
       ctx.beginPath();
       ctx.moveTo(roadTopLeft, horizonY);
       ctx.lineTo(roadTopRight, horizonY);
@@ -394,7 +697,7 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
       ctx.closePath();
       ctx.fill();
 
-      // Road Stripes & Rumble Curbs (Zebras vermelhas e brancas)
+      // Road Stripes & Rumble Curbs
       const stripeOffset = (state.distance * 1.5) % 40;
       const segments = 24;
       for (let i = 0; i < segments; i++) {
@@ -410,8 +713,14 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
         const x1 = horizonX + (width / 2 - horizonX) * segProgress1;
         const x2 = horizonX + (width / 2 - horizonX) * segProgress2;
 
-        const isRed = (i + Math.floor(stripeOffset / 8)) % 2 === 0;
-        ctx.fillStyle = isRed ? '#DC2626' : '#FAFAFA';
+        const isAlt = (i + Math.floor(stripeOffset / 8)) % 2 === 0;
+
+        // Curb Colors (Neon in space, red/white in normal)
+        if (env === 'space') {
+          ctx.fillStyle = isAlt ? '#06B6D4' : '#EC4899';
+        } else {
+          ctx.fillStyle = isAlt ? '#DC2626' : (!isNight ? '#FFFFFF' : '#E4E4E7');
+        }
 
         // Left rumble strip
         const curbWidth1 = 6 + 18 * segProgress1;
@@ -431,9 +740,9 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
         ctx.lineTo(x2 + w2 / 2 - curbWidth2, y2);
         ctx.fill();
 
-        // 3 Lane Dividers (Dashed lines between lanes 0-1 and 1-2)
+        // 3 Lane Dividers
         if (i % 2 === (Math.floor(stripeOffset / 10) % 2)) {
-          ctx.fillStyle = '#FFFFFF';
+          ctx.fillStyle = env === 'space' ? '#38BDF8' : '#FFFFFF';
           const lw1 = 1 + 5 * segProgress1;
           const lw2 = 1 + 5 * segProgress2;
 
@@ -490,14 +799,13 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
 
             if (obj.type === 'viaduct') {
               // TALL, SYMMETRICAL OVERHEAD HIGHWAY GANTRY / VIADUCT
-              const clearanceH = 140 * scale; // plenty of headroom for cars to pass under
+              const clearanceH = 140 * scale;
               const beamH = 42 * scale;
               const beamY = y - clearanceH - beamH;
-              const totalSpan = rWidth * 1.32; // spans across all 3 lanes and both shoulders
+              const totalSpan = rWidth * 1.32;
               const beamLeft = centerX - totalSpan / 2;
               const pillarW = Math.max(5, 14 * scale);
 
-              // Pillars symmetrically anchored on left and right grass shoulders
               const leftPillarX = centerX - rWidth * 0.58 - pillarW / 2;
               const rightPillarX = centerX + rWidth * 0.58 - pillarW / 2;
               const pillarHeight = y - beamY;
@@ -510,12 +818,12 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
               ctx.fill();
 
               // Steel Support Pillars
-              ctx.fillStyle = '#334155';
+              ctx.fillStyle = env === 'space' ? '#3B0764' : '#334155';
               ctx.fillRect(leftPillarX, beamY, pillarW, pillarHeight);
               ctx.fillRect(rightPillarX, beamY, pillarW, pillarHeight);
 
               // Metallic pillar highlights
-              ctx.fillStyle = '#64748B';
+              ctx.fillStyle = env === 'space' ? '#A855F7' : '#64748B';
               ctx.fillRect(leftPillarX + 2 * scale, beamY, pillarW * 0.35, pillarHeight);
               ctx.fillRect(rightPillarX + 2 * scale, beamY, pillarW * 0.35, pillarHeight);
 
@@ -529,12 +837,12 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
               ctx.fillRect(beamLeft, beamY, totalSpan, beamH);
 
               // Top and bottom metallic edge trims
-              ctx.fillStyle = '#94A3B8';
+              ctx.fillStyle = env === 'space' ? '#06B6D4' : '#94A3B8';
               ctx.fillRect(beamLeft, beamY, totalSpan, Math.max(2, 4 * scale));
               ctx.fillRect(beamLeft, beamY + beamH - Math.max(2, 4 * scale), totalSpan, Math.max(2, 4 * scale));
 
               // Treliça metálica (Truss diagonal struts)
-              ctx.strokeStyle = '#475569';
+              ctx.strokeStyle = env === 'space' ? '#9333EA' : '#475569';
               ctx.lineWidth = Math.max(1, 2 * scale);
               const trussStep = Math.max(16, 40 * scale);
               ctx.beginPath();
@@ -546,18 +854,18 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
               }
               ctx.stroke();
 
-              // Highway Signboard mounted on the Gantry (Placa Rodoviária)
+              // Highway Signboard mounted on the Gantry
               const signW = rWidth * 0.72;
               const signH = beamH * 0.82;
               const signX = centerX - signW / 2;
               const signY = beamY + (beamH - signH) / 2;
 
-              // Sign green background
-              ctx.fillStyle = '#047857';
+              // Sign background
+              ctx.fillStyle = env === 'space' ? '#1E1B4B' : (env === 'forest' ? '#065F46' : '#047857');
               ctx.fillRect(signX, signY, signW, signH);
 
-              // White reflective border
-              ctx.strokeStyle = '#FFFFFF';
+              // Reflective border
+              ctx.strokeStyle = env === 'space' ? '#06B6D4' : '#FFFFFF';
               ctx.lineWidth = Math.max(1.5, 2.5 * scale);
               ctx.strokeRect(signX, signY, signW, signH);
 
@@ -566,10 +874,10 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
               ctx.font = `black ${Math.max(7, Math.floor(13 * scale))}px Outfit, sans-serif`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
-              const gantryText = obj.text || (scale > 0.4 ? 'AUTÓDROMO ➔' : 'TOP GEAR BR');
-              ctx.fillText(gantryText, centerX - 18 * scale, signY + signH / 2);
+              const defaultText = env === 'space' ? 'ORBITAL HIGHWAY' : (env === 'mountains' ? 'PASSO ALPINO ➔' : 'AUTÓDROMO ➔');
+              ctx.fillText(obj.text || defaultText, centerX - 18 * scale, signY + signH / 2);
 
-              // Speed limit circular plate (120 km/h)
+              // Speed limit circular plate
               if (scale > 0.3) {
                 const badgeR = Math.max(6, 11 * scale);
                 const badgeX = signX + signW - badgeR - 6 * scale;
@@ -593,24 +901,36 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
                 ctx.fillText('120', badgeX, badgeY);
               }
             } else if (obj.type === 'tree') {
-              // Tree on grass shoulder
               const objX = centerX + obj.side * (rWidth * 0.58 + 32 * scale);
-              const trunkW = Math.max(3, 8 * scale);
-              const trunkH = 65 * scale;
-              ctx.fillStyle = '#78350F';
-              ctx.fillRect(objX - trunkW / 2, y - trunkH, trunkW, trunkH);
 
-              // Foliage
-              ctx.fillStyle = '#059669';
-              ctx.beginPath();
-              ctx.arc(objX, y - trunkH - 14 * scale, 28 * scale, 0, Math.PI * 2);
-              ctx.fill();
-              ctx.fillStyle = '#10B981';
-              ctx.beginPath();
-              ctx.arc(objX, y - trunkH - 22 * scale, 20 * scale, 0, Math.PI * 2);
-              ctx.fill();
+              if (env === 'space') {
+                // Cosmic Crystal Pylon in space
+                const pylonH = 75 * scale;
+                const pylonW = Math.max(4, 10 * scale);
+                ctx.fillStyle = '#06B6D4';
+                ctx.beginPath();
+                ctx.moveTo(objX, y - pylonH);
+                ctx.lineTo(objX + pylonW / 2, y);
+                ctx.lineTo(objX - pylonW / 2, y);
+                ctx.closePath();
+                ctx.fill();
+              } else {
+                // Natural Trees (Palm or Pine)
+                const trunkW = Math.max(3, 8 * scale);
+                const trunkH = 65 * scale;
+                ctx.fillStyle = '#78350F';
+                ctx.fillRect(objX - trunkW / 2, y - trunkH, trunkW, trunkH);
+
+                ctx.fillStyle = env === 'forest' ? '#047857' : '#059669';
+                ctx.beginPath();
+                ctx.arc(objX, y - trunkH - 14 * scale, 28 * scale, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#10B981';
+                ctx.beginPath();
+                ctx.arc(objX, y - trunkH - 22 * scale, 20 * scale, 0, Math.PI * 2);
+                ctx.fill();
+              }
             } else if (obj.type === 'sign') {
-              // Ground-mounted roadside sign
               const objX = centerX + obj.side * (rWidth * 0.58 + 22 * scale);
               const signW = 46 * scale;
               const signH = 32 * scale;
@@ -619,7 +939,7 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
               ctx.fillStyle = '#64748B';
               ctx.fillRect(objX - 2.5 * scale, y - signPoleH, 5 * scale, signPoleH);
 
-              ctx.fillStyle = '#1D4ED8';
+              ctx.fillStyle = env === 'space' ? '#9333EA' : '#1D4ED8';
               ctx.strokeStyle = '#FFFFFF';
               ctx.lineWidth = Math.max(1, 2 * scale);
               ctx.fillRect(objX - signW / 2, y - signPoleH - signH, signW, signH);
@@ -674,48 +994,65 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
         });
       }
 
-      // 7. PREPARE TRAFFIC CARS (Top Gear style)
+      // 7. PREPARE TRAFFIC CARS (Diverse Silhouettes & Space Hovers)
       state.traffic.forEach((car) => {
         if (car.z < 0 || car.z > 1000) return;
         sceneItems.push({
           z: car.z,
           draw: () => {
             const { x, y, scale } = projectRoad(car.lane, car.z);
-
             const carW = 68 * scale;
             const carH = 38 * scale;
 
-            // Shadow under traffic car
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-            ctx.beginPath();
-            ctx.ellipse(x, y + carH * 0.38, carW * 0.55, carH * 0.22, 0, 0, Math.PI * 2);
-            ctx.fill();
+            if (env === 'space') {
+              // Space Hover Traffic Vehicle
+              ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
+              ctx.beginPath();
+              ctx.ellipse(x, y + carH * 0.4, carW * 0.55, carH * 0.22, 0, 0, Math.PI * 2);
+              ctx.fill();
 
-            // Car Body
-            ctx.fillStyle = car.color;
-            ctx.beginPath();
-            ctx.roundRect(x - carW / 2, y - carH / 2, carW, carH, 6 * scale);
-            ctx.fill();
+              // Hover body
+              ctx.fillStyle = car.color;
+              ctx.beginPath();
+              ctx.roundRect(x - carW / 2, y - carH / 2, carW, carH, 10 * scale);
+              ctx.fill();
 
-            // Rear Windshield
-            ctx.fillStyle = '#0F172A';
-            ctx.fillRect(x - carW * 0.35, y - carH * 0.35, carW * 0.7, carH * 0.35);
+              // Cyan jet thruster
+              ctx.fillStyle = '#38BDF8';
+              ctx.fillRect(x - carW * 0.35, y + carH * 0.2, 10 * scale, 6 * scale);
+              ctx.fillRect(x + carW * 0.35 - 10 * scale, y + carH * 0.2, 10 * scale, 6 * scale);
+            } else {
+              // Standard Traffic Car Body
+              ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+              ctx.beginPath();
+              ctx.ellipse(x, y + carH * 0.38, carW * 0.55, carH * 0.22, 0, 0, Math.PI * 2);
+              ctx.fill();
 
-            // Roof
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-            ctx.fillRect(x - carW * 0.3, y - carH * 0.45, carW * 0.6, carH * 0.15);
+              ctx.fillStyle = car.color;
+              ctx.beginPath();
+              ctx.roundRect(x - carW / 2, y - carH / 2, carW, carH, 6 * scale);
+              ctx.fill();
 
-            // Taillights
-            ctx.fillStyle = '#EF4444';
-            ctx.shadowColor = '#EF4444';
-            ctx.shadowBlur = 8 * scale;
-            ctx.fillRect(x - carW * 0.44, y + carH * 0.05, 10 * scale, 8 * scale);
-            ctx.fillRect(x + carW * 0.44 - 10 * scale, y + carH * 0.05, 10 * scale, 8 * scale);
-            ctx.shadowBlur = 0;
+              // Rear Windshield
+              ctx.fillStyle = '#0F172A';
+              ctx.fillRect(x - carW * 0.35, y - carH * 0.35, carW * 0.7, carH * 0.35);
 
-            // License Plate
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(x - 8 * scale, y + carH * 0.1, 16 * scale, 6 * scale);
+              // Roof
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+              ctx.fillRect(x - carW * 0.3, y - carH * 0.45, carW * 0.6, carH * 0.15);
+
+              // Taillights
+              ctx.fillStyle = '#EF4444';
+              ctx.shadowColor = '#EF4444';
+              ctx.shadowBlur = 8 * scale;
+              ctx.fillRect(x - carW * 0.44, y + carH * 0.05, 10 * scale, 8 * scale);
+              ctx.fillRect(x + carW * 0.44 - 10 * scale, y + carH * 0.05, 10 * scale, 8 * scale);
+              ctx.shadowBlur = 0;
+
+              // License Plate
+              ctx.fillStyle = '#FFFFFF';
+              ctx.fillRect(x - 8 * scale, y + carH * 0.1, 16 * scale, 6 * scale);
+            }
           },
         });
       });
@@ -733,109 +1070,272 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
       // Player X position calculated from interpolated state.playerX
       const playerX = curRoadCenterX + curRoadW * (state.playerX / 3);
 
-      // A) AUTOMATIC HEADLIGHTS ILLUMINATION CONE ON ASPHALT (Smooth progressive fade to transparent)
-      const headlightBeamH = height * 0.45;
-      const beamTopY = playerY - headlightBeamH;
+      // A) AUTOMATIC HEADLIGHTS ILLUMINATION CONE ON ASPHALT (Only on night tracks or space)
+      if (isNight || env === 'space') {
+        const headlightBeamH = height * 0.45;
+        const beamTopY = playerY - headlightBeamH;
 
-      // Vertical linear gradient fading gradually to 0% opacity with no hard cut
-      const beamGrad = ctx.createLinearGradient(0, playerY - 10, 0, beamTopY);
-      beamGrad.addColorStop(0, 'rgba(254, 240, 138, 0.45)');
-      beamGrad.addColorStop(0.20, 'rgba(254, 240, 138, 0.28)');
-      beamGrad.addColorStop(0.45, 'rgba(254, 240, 138, 0.14)');
-      beamGrad.addColorStop(0.70, 'rgba(254, 240, 138, 0.05)');
-      beamGrad.addColorStop(0.88, 'rgba(254, 240, 138, 0.01)');
-      beamGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
+        const beamGrad = ctx.createLinearGradient(0, playerY - 10, 0, beamTopY);
+        beamGrad.addColorStop(0, env === 'space' ? 'rgba(56, 189, 248, 0.45)' : 'rgba(254, 240, 138, 0.45)');
+        beamGrad.addColorStop(0.20, env === 'space' ? 'rgba(56, 189, 248, 0.28)' : 'rgba(254, 240, 138, 0.28)');
+        beamGrad.addColorStop(0.45, env === 'space' ? 'rgba(56, 189, 248, 0.14)' : 'rgba(254, 240, 138, 0.14)');
+        beamGrad.addColorStop(0.70, env === 'space' ? 'rgba(56, 189, 248, 0.05)' : 'rgba(254, 240, 138, 0.05)');
+        beamGrad.addColorStop(0.88, env === 'space' ? 'rgba(56, 189, 248, 0.01)' : 'rgba(254, 240, 138, 0.01)');
+        beamGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
 
-      ctx.fillStyle = beamGrad;
-      ctx.beginPath();
-      ctx.moveTo(playerX - 26, playerY - 10);
-      ctx.lineTo(playerX + 26, playerY - 10);
-      ctx.lineTo(playerX + curRoadW * 0.42, beamTopY + 24);
-      // Soft parabolic top apex so light dissipates naturally without any flat line
-      ctx.quadraticCurveTo(playerX, beamTopY - 20, playerX - curRoadW * 0.42, beamTopY + 24);
-      ctx.closePath();
-      ctx.fill();
+        ctx.fillStyle = beamGrad;
+        ctx.beginPath();
+        ctx.moveTo(playerX - 26, playerY - 10);
+        ctx.lineTo(playerX + 26, playerY - 10);
+        ctx.lineTo(playerX + curRoadW * 0.42, beamTopY + 24);
+        ctx.quadraticCurveTo(playerX, beamTopY - 20, playerX - curRoadW * 0.42, beamTopY + 24);
+        ctx.closePath();
+        ctx.fill();
 
-      // Front Headlight bulbs glow on car bumper
-      const bulbGlowL = ctx.createRadialGradient(playerX - 22, playerY - 10, 1, playerX - 22, playerY - 10, 12);
-      bulbGlowL.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
-      bulbGlowL.addColorStop(0.5, 'rgba(254, 240, 138, 0.45)');
-      bulbGlowL.addColorStop(1, 'rgba(254, 240, 138, 0)');
-      ctx.fillStyle = bulbGlowL;
-      ctx.beginPath();
-      ctx.arc(playerX - 22, playerY - 10, 12, 0, Math.PI * 2);
-      ctx.fill();
+        // Front Headlight bulbs glow on car bumper
+        const bulbColor = env === 'space' ? '#38BDF8' : '#FEF08A';
+        const bulbGlowL = ctx.createRadialGradient(playerX - 22, playerY - 10, 1, playerX - 22, playerY - 10, 12);
+        bulbGlowL.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+        bulbGlowL.addColorStop(0.5, bulbColor);
+        bulbGlowL.addColorStop(1, 'rgba(254, 240, 138, 0)');
+        ctx.fillStyle = bulbGlowL;
+        ctx.beginPath();
+        ctx.arc(playerX - 22, playerY - 10, 12, 0, Math.PI * 2);
+        ctx.fill();
 
-      const bulbGlowR = ctx.createRadialGradient(playerX + 22, playerY - 10, 1, playerX + 22, playerY - 10, 12);
-      bulbGlowR.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
-      bulbGlowR.addColorStop(0.5, 'rgba(254, 240, 138, 0.45)');
-      bulbGlowR.addColorStop(1, 'rgba(254, 240, 138, 0)');
-      ctx.fillStyle = bulbGlowR;
-      ctx.beginPath();
-      ctx.arc(playerX + 22, playerY - 10, 12, 0, Math.PI * 2);
-      ctx.fill();
+        const bulbGlowR = ctx.createRadialGradient(playerX + 22, playerY - 10, 1, playerX + 22, playerY - 10, 12);
+        bulbGlowR.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+        bulbGlowR.addColorStop(0.5, bulbColor);
+        bulbGlowR.addColorStop(1, 'rgba(254, 240, 138, 0)');
+        ctx.fillStyle = bulbGlowR;
+        ctx.beginPath();
+        ctx.arc(playerX + 22, playerY - 10, 12, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
-      // B) PLAYER CAR BODY (Retro Sports Car with Spoiler & Details)
-      const pCarW = 86;
+      // B) PLAYER CAR BODY (4 Distinct Models: retro_coupe, supercar_gt, muscle_car, cyber_hover)
+      const pCarW = 88;
       const pCarH = 46;
 
-      // Invincible blinking
       const isInv = now < state.invincibleUntil;
       const blink = isInv && Math.floor(now / 100) % 2 === 0;
 
       if (!blink) {
-        // Shadow under car
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-        ctx.beginPath();
-        ctx.ellipse(playerX, playerY + pCarH * 0.4, pCarW * 0.55, pCarH * 0.25, 0, 0, Math.PI * 2);
-        ctx.fill();
+        if (carModel === 'cyber_hover') {
+          // ==========================================
+          // MODEL 4: CYBER HOVERCRAFT (Anti-Gravity Futuristic)
+          // ==========================================
+          // Pulsing Anti-Gravity Field below vehicle
+          const levitateGrad = ctx.createRadialGradient(
+            playerX, playerY + 8, 4,
+            playerX, playerY + 8, 38
+          );
+          levitateGrad.addColorStop(0, 'rgba(56, 189, 248, 0.85)');
+          levitateGrad.addColorStop(0.5, 'rgba(168, 85, 247, 0.45)');
+          levitateGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.fillStyle = levitateGrad;
+          ctx.beginPath();
+          ctx.ellipse(playerX, playerY + 12, pCarW * 0.6, 14, 0, 0, Math.PI * 2);
+          ctx.fill();
 
-        // Rear Tires
-        ctx.fillStyle = '#09090B';
-        ctx.fillRect(playerX - pCarW * 0.52, playerY + pCarH * 0.05, 14, 22);
-        ctx.fillRect(playerX + pCarW * 0.52 - 14, playerY + pCarH * 0.05, 14, 22);
+          // Angular Cyber Wings Body
+          ctx.fillStyle = playerCarColor;
+          ctx.beginPath();
+          ctx.moveTo(playerX - pCarW * 0.5, playerY + 8);
+          ctx.lineTo(playerX - pCarW * 0.35, playerY - pCarH * 0.45);
+          ctx.lineTo(playerX + pCarW * 0.35, playerY - pCarH * 0.45);
+          ctx.lineTo(playerX + pCarW * 0.5, playerY + 8);
+          ctx.lineTo(playerX + pCarW * 0.25, playerY + pCarH * 0.35);
+          ctx.lineTo(playerX - pCarW * 0.25, playerY + pCarH * 0.35);
+          ctx.closePath();
+          ctx.fill();
 
-        // Main Car Body
-        const bodyGrad = ctx.createLinearGradient(playerX - pCarW / 2, playerY, playerX + pCarW / 2, playerY);
-        bodyGrad.addColorStop(0, playerCarColor);
-        bodyGrad.addColorStop(0.5, '#FFFFFF44');
-        bodyGrad.addColorStop(1, playerCarColor);
+          // Cockpit Canopy (Cyan Glow)
+          ctx.fillStyle = '#0F172A';
+          ctx.beginPath();
+          ctx.roundRect(playerX - 16, playerY - pCarH * 0.35, 32, 22, 6);
+          ctx.fill();
+          ctx.strokeStyle = '#06B6D4';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
 
-        ctx.fillStyle = playerCarColor;
-        ctx.beginPath();
-        ctx.roundRect(playerX - pCarW / 2, playerY - pCarH / 2, pCarW, pCarH, 10);
-        ctx.fill();
+          // Dual Plasma Jet Thrusters
+          const jetL = playerX - 22;
+          const jetR = playerX + 22;
+          ctx.fillStyle = '#1E293B';
+          ctx.fillRect(jetL - 8, playerY + 8, 16, 12);
+          ctx.fillRect(jetR - 8, playerY + 8, 16, 12);
 
-        // Shimmer shine
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.fillRect(playerX - pCarW * 0.35, playerY - pCarH * 0.45, pCarW * 0.7, 4);
+          // Ion Flames from Plasma Thrusters
+          const flameH = 10 + (state.speed / maxSpeed) * 22 + Math.random() * 6;
+          const flameGrad = ctx.createLinearGradient(0, playerY + 20, 0, playerY + 20 + flameH);
+          flameGrad.addColorStop(0, '#FFFFFF');
+          flameGrad.addColorStop(0.3, '#38BDF8');
+          flameGrad.addColorStop(1, 'rgba(168, 85, 247, 0)');
+          ctx.fillStyle = flameGrad;
 
-        // Rear Windshield Glass
-        ctx.fillStyle = '#020617';
-        ctx.beginPath();
-        ctx.roundRect(playerX - pCarW * 0.34, playerY - pCarH * 0.36, pCarW * 0.68, pCarH * 0.34, 4);
-        ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(jetL - 6, playerY + 20);
+          ctx.lineTo(jetL + 6, playerY + 20);
+          ctx.lineTo(jetL, playerY + 20 + flameH);
+          ctx.closePath();
+          ctx.fill();
 
-        // Rear Spoiler (Aerofólio Top Gear)
-        ctx.fillStyle = '#0F172A';
-        ctx.fillRect(playerX - pCarW * 0.48, playerY - pCarH * 0.55, pCarW * 0.96, 6);
-        ctx.fillRect(playerX - pCarW * 0.35, playerY - pCarH * 0.5, 6, 8);
-        ctx.fillRect(playerX + pCarW * 0.35 - 6, playerY - pCarH * 0.5, 6, 8);
+          ctx.beginPath();
+          ctx.moveTo(jetR - 6, playerY + 20);
+          ctx.lineTo(jetR + 6, playerY + 20);
+          ctx.lineTo(jetR, playerY + 20 + flameH);
+          ctx.closePath();
+          ctx.fill();
+        } else if (carModel === 'supercar_gt') {
+          // ==========================================
+          // MODEL 2: SUPERCAR GT (Modern Italian Aero)
+          // ==========================================
+          // Ground shadow
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+          ctx.beginPath();
+          ctx.ellipse(playerX, playerY + pCarH * 0.4, pCarW * 0.58, pCarH * 0.25, 0, 0, Math.PI * 2);
+          ctx.fill();
 
-        // Dual Taillights (Glowing Red)
-        ctx.fillStyle = '#EF4444';
-        ctx.shadowColor = '#EF4444';
-        ctx.shadowBlur = 15;
-        ctx.fillRect(playerX - pCarW * 0.44, playerY + 4, 16, 10);
-        ctx.fillRect(playerX + pCarW * 0.44 - 16, playerY + 4, 16, 10);
-        ctx.shadowBlur = 0;
+          // Low-profile wide tires
+          ctx.fillStyle = '#09090B';
+          ctx.fillRect(playerX - pCarW * 0.54, playerY + pCarH * 0.05, 16, 24);
+          ctx.fillRect(playerX + pCarW * 0.54 - 16, playerY + pCarH * 0.05, 16, 24);
 
-        // Exhaust tips with blue flame at high speed
-        ctx.fillStyle = '#94A3B8';
-        ctx.fillRect(playerX - 22, playerY + pCarH * 0.38, 8, 4);
-        ctx.fillRect(playerX + 14, playerY + pCarH * 0.38, 8, 4);
+          // Sculpted body
+          ctx.fillStyle = playerCarColor;
+          ctx.beginPath();
+          ctx.roundRect(playerX - pCarW / 2, playerY - pCarH / 2, pCarW, pCarH, 12);
+          ctx.fill();
 
-        if (state.speed > 180 && Math.random() < 0.6) {
+          // Mid-engine glass bay
+          ctx.fillStyle = '#020617';
+          ctx.fillRect(playerX - 18, playerY - pCarH * 0.42, 36, 16);
+          ctx.fillStyle = '#EF4444';
+          ctx.fillRect(playerX - 10, playerY - pCarH * 0.36, 20, 4);
+
+          // Carbon Aerodynamic Diffuser (4 vertical fins)
+          ctx.fillStyle = '#0F172A';
+          ctx.fillRect(playerX - 32, playerY + pCarH * 0.26, 64, 12);
+          ctx.fillStyle = '#94A3B8';
+          for (let f = -24; f <= 24; f += 16) {
+            ctx.fillRect(playerX + f, playerY + pCarH * 0.26, 3, 12);
+          }
+
+          // Single Continuous Razor-Thin LED Taillight Bar (Lightbar)
+          ctx.fillStyle = '#EF4444';
+          ctx.shadowColor = '#EF4444';
+          ctx.shadowBlur = 18;
+          ctx.fillRect(playerX - pCarW * 0.45, playerY + 2, pCarW * 0.9, 5);
+          ctx.shadowBlur = 0;
+
+          // Dual Center Oval Exhausts
+          ctx.fillStyle = '#E2E8F0';
+          ctx.beginPath();
+          ctx.ellipse(playerX - 7, playerY + pCarH * 0.32, 5, 3.5, 0, 0, Math.PI * 2);
+          ctx.ellipse(playerX + 7, playerY + pCarH * 0.32, 5, 3.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (carModel === 'muscle_car') {
+          // ==========================================
+          // MODEL 3: MUSCLE CAR (American V8 Beast)
+          // ==========================================
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+          ctx.beginPath();
+          ctx.ellipse(playerX, playerY + pCarH * 0.4, pCarW * 0.55, pCarH * 0.25, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Wide Tires
+          ctx.fillStyle = '#09090B';
+          ctx.fillRect(playerX - pCarW * 0.52, playerY + pCarH * 0.05, 15, 22);
+          ctx.fillRect(playerX + pCarW * 0.52 - 15, playerY + pCarH * 0.05, 15, 22);
+
+          // Boxy Muscle Body
+          ctx.fillStyle = playerCarColor;
+          ctx.beginPath();
+          ctx.roundRect(playerX - pCarW / 2, playerY - pCarH / 2, pCarW, pCarH, 6);
+          ctx.fill();
+
+          // Dual Crisp White Racing Stripes down the center!
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(playerX - 10, playerY - pCarH / 2, 7, pCarH);
+          ctx.fillRect(playerX + 3, playerY - pCarH / 2, 7, pCarH);
+
+          // Rear Window
+          ctx.fillStyle = '#0F172A';
+          ctx.fillRect(playerX - pCarW * 0.32, playerY - pCarH * 0.38, pCarW * 0.64, 14);
+
+          // Triple Vertical Taillights (Mustang/Challenger iconic style)
+          ctx.fillStyle = '#EF4444';
+          ctx.shadowColor = '#EF4444';
+          ctx.shadowBlur = 12;
+          for (let pod = 0; pod < 3; pod++) {
+            ctx.fillRect(playerX - pCarW * 0.45 + pod * 6, playerY + 4, 4, 12);
+            ctx.fillRect(playerX + pCarW * 0.45 - 4 - pod * 6, playerY + 4, 4, 12);
+          }
+          ctx.shadowBlur = 0;
+
+          // Black Ducktail Spoiler
+          ctx.fillStyle = '#0F172A';
+          ctx.fillRect(playerX - pCarW * 0.48, playerY - pCarH * 0.52, pCarW * 0.96, 5);
+
+          // Chrome Side-exit exhausts
+          ctx.fillStyle = '#CBD5E1';
+          ctx.fillRect(playerX - 28, playerY + pCarH * 0.4, 9, 4);
+          ctx.fillRect(playerX + 19, playerY + pCarH * 0.4, 9, 4);
+        } else {
+          // ==========================================
+          // MODEL 1: RETRO COUPE (Top Gear 90s Classic)
+          // ==========================================
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+          ctx.beginPath();
+          ctx.ellipse(playerX, playerY + pCarH * 0.4, pCarW * 0.55, pCarH * 0.25, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#09090B';
+          ctx.fillRect(playerX - pCarW * 0.52, playerY + pCarH * 0.05, 14, 22);
+          ctx.fillRect(playerX + pCarW * 0.52 - 14, playerY + pCarH * 0.05, 14, 22);
+
+          // Wedge body
+          ctx.fillStyle = playerCarColor;
+          ctx.beginPath();
+          ctx.roundRect(playerX - pCarW / 2, playerY - pCarH / 2, pCarW, pCarH, 10);
+          ctx.fill();
+
+          // Shimmer
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+          ctx.fillRect(playerX - pCarW * 0.35, playerY - pCarH * 0.45, pCarW * 0.7, 4);
+
+          // Slanted Rear Windshield
+          ctx.fillStyle = '#020617';
+          ctx.beginPath();
+          ctx.roundRect(playerX - pCarW * 0.34, playerY - pCarH * 0.36, pCarW * 0.68, pCarH * 0.34, 4);
+          ctx.fill();
+
+          // Rear Spoiler (Aerofólio Top Gear)
+          ctx.fillStyle = '#0F172A';
+          ctx.fillRect(playerX - pCarW * 0.48, playerY - pCarH * 0.55, pCarW * 0.96, 6);
+          ctx.fillRect(playerX - pCarW * 0.35, playerY - pCarH * 0.5, 6, 8);
+          ctx.fillRect(playerX + pCarW * 0.35 - 6, playerY - pCarH * 0.5, 6, 8);
+
+          // Dual Taillights with Amber blinkers
+          ctx.fillStyle = '#EF4444';
+          ctx.shadowColor = '#EF4444';
+          ctx.shadowBlur = 14;
+          ctx.fillRect(playerX - pCarW * 0.44, playerY + 4, 12, 10);
+          ctx.fillRect(playerX + pCarW * 0.44 - 16, playerY + 4, 12, 10);
+          ctx.fillStyle = '#F59E0B';
+          ctx.fillRect(playerX - pCarW * 0.44 + 12, playerY + 4, 4, 10);
+          ctx.fillRect(playerX + pCarW * 0.44 - 4, playerY + 4, 4, 10);
+          ctx.shadowBlur = 0;
+
+          // Dual Exhaust tips
+          ctx.fillStyle = '#94A3B8';
+          ctx.fillRect(playerX - 22, playerY + pCarH * 0.38, 8, 4);
+          ctx.fillRect(playerX + 14, playerY + pCarH * 0.38, 8, 4);
+        }
+
+        // Blue Nitro Flame at high speed (for wheeled cars)
+        if (carModel !== 'cyber_hover' && state.speed > 180 && Math.random() < 0.6) {
           ctx.fillStyle = '#38BDF8';
           ctx.beginPath();
           ctx.arc(playerX - 18, playerY + pCarH * 0.46, 4 + Math.random() * 4, 0, Math.PI * 2);
@@ -887,6 +1387,10 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
       finishZ: 9999,
       crossingFinish: false,
       gameOver: false,
+      effectiveEnv,
+      effectiveTimeOfDay,
+      effectiveCarModel,
+      stars,
     };
   };
 

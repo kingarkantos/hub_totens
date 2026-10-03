@@ -37,9 +37,16 @@ export interface CatcherCustomItem {
   type: 'gift' | 'star' | 'hazard';
 }
 
+export type TopGearEnvironment = 'auto' | 'city' | 'mountains' | 'forest' | 'space';
+export type TopGearTimeOfDay = 'auto' | 'day' | 'night';
+export type TopGearCarModel = 'auto' | 'retro_coupe' | 'supercar_gt' | 'muscle_car' | 'cyber_hover';
+
 export interface TopGearCustomConfig {
   trackName?: string;
   carColor?: string;
+  carModel?: TopGearCarModel;
+  environment?: TopGearEnvironment;
+  timeOfDay?: TopGearTimeOfDay;
   initialSpeed?: number;
   maxSpeed?: number;
   trafficDensity?: 'low' | 'normal' | 'high';

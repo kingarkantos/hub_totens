@@ -285,8 +285,8 @@
     "semantic_hash": ""
   },
   "src/views/ResellerPortfolioView.tsx": {
-    "mtime": 1791065791.4489448,
-    "ast_hash": "a6c2b012e76f8af6ef8b5bc6102eaef6",
+    "mtime": 1791068032.457911,
+    "ast_hash": "1c11a3b3eb2cbe366aa32139ebe64e67",
     "semantic_hash": ""
   },
   "src/views/TotemCampaignView.tsx": {
@@ -345,8 +345,8 @@
     "semantic_hash": ""
   },
   "src/games/TopGearGame.tsx": {
-    "mtime": 1791067409.4002328,
-    "ast_hash": "b8fb42d12dfd3ee67767c2444e31c558",
+    "mtime": 1791068746.3965063,
+    "ast_hash": "542c0ff1f8e77b0b5aef09eb94967d54",
     "semantic_hash": ""
   }
 }
