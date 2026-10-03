@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw, Image as ImageIcon, Loader2, Wand2, Eye, ZoomIn, ExternalLink, Shuffle, Type, Palette, FileSpreadsheet } from 'lucide-react';
+import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw, Image as ImageIcon, Loader2, Wand2, Eye, ZoomIn, ExternalLink, Shuffle, Type, Palette, FileSpreadsheet, Zap, Car, Gauge, Flag, Flame, CircleDot } from 'lucide-react';
 import { supabase, BUCKETS } from '../lib/supabase';
 import { GameDefinition } from '../types';
 import { GameLayoutId, GAME_LAYOUTS } from '../types/gameLayouts';
@@ -23,6 +23,9 @@ import {
   PuzzleCustomConfig,
   SpeedCustomConfig,
   GeniusPadCustom,
+  TopGearCustomConfig,
+  PlinkoCustomConfig,
+  PlinkoSlotItem,
 } from '../types/gameContent';
 import { parseGameCSV, downloadSampleCsv } from '../lib/csvParser';
 import { generateGameContentWithAI, generateImageWithAI, CampaignAIContext } from '../lib/gemini';
@@ -48,9 +51,11 @@ export const getDefaultTimeForGame = (id: string): number => {
     case 'map_epi': return 60;
     case 'wordsearch': return 90;
     case 'math_blitz': return 30;
-    case 'higher_lower': return 45;
+    case 'higher_lower': return 35;
     case 'reaction_time': return 30;
     case 'bullseye': return 40;
+    case 'top_gear': return 45;
+    case 'plinko': return 0;
     case 'wheel': return 0;
     case 'genius': return 0;
     default: return 30;
@@ -230,6 +235,34 @@ export const getStarterContentForGame = (gameId: string): any => {
         { id: 'electric', sectorName: 'Subestação Elétrica 13.8kV', requiredEpi: 'Luvas de Alta Tensão 10kV', epiEmoji: '🧤', color: '#8B5CF6' },
         { id: 'weld', sectorName: 'Cabine de Soldagem Mig/Mag', requiredEpi: 'Máscara de Escurecimento', epiEmoji: '🥽', color: '#EF4444' },
       ];
+    case 'higher_lower':
+      return {
+        gridMax: 16,
+        title: 'Ordem Numérica Relâmpago',
+        errorPenaltySeconds: 1,
+        bonusPoints: 1000,
+      };
+    case 'top_gear':
+      return {
+        trackName: 'Autódromo Top Gear',
+        carColor: '#DC2626',
+        initialSpeed: 120,
+        maxSpeed: 240,
+        trafficDensity: 'normal',
+      };
+    case 'plinko':
+      return {
+        title: 'Plinko da Sorte',
+        ballsCount: 3,
+        slots: [
+          { id: 0, label: '100 pts', points: 100, color: '#3B82F6' },
+          { id: 1, label: '250 pts', points: 250, color: '#10B981' },
+          { id: 2, label: '500 pts', points: 500, color: '#F59E0B' },
+          { id: 3, label: '1000 pts', points: 1000, color: '#DC2626' },
+          { id: 4, label: '250 pts', points: 250, color: '#10B981' },
+          { id: 5, label: '100 pts', points: 100, color: '#3B82F6' },
+        ],
+      };
     default:
       return [];
   }
@@ -239,6 +272,9 @@ export const getContentCount = (data: any): number => {
   if (!data) return 0;
   if (Array.isArray(data)) return data.length;
   if (typeof data === 'object') {
+    if (data.gridMax !== undefined) return 1;
+    if (data.ballsCount !== undefined || Array.isArray(data.slots)) return data.slots ? data.slots.length : 1;
+    if (data.trackName !== undefined || data.carColor !== undefined) return 1;
     if (Array.isArray(data.words)) return data.words.length;
     if (Array.isArray(data.steps)) return data.steps.length;
     if (Array.isArray(data.hazards)) return data.hazards.length;
@@ -290,7 +326,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
 }) => {
   const meta = GAME_CONTENT_SCHEMAS[game.id];
   const isQuestionGame = ['quiz', 'truefalse', 'speed_trivia', 'complete_phrase'].includes(game.id);
-  const isPoolGame = isQuestionGame || ['hangman', 'wordsearch'].includes(game.id);
+  const isPoolGame = isQuestionGame || ['hangman', 'wordsearch', 'connect_pairs', 'memory'].includes(game.id);
   const defaultTime = getDefaultTimeForGame(game.id);
 
   // Layout choice for this game
@@ -1765,13 +1801,29 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
         const pairs: MemoryCustomPair[] = Array.isArray(content) ? content : [];
         return (
           <div className="space-y-4">
-            <div className="flex items-center justify-between flex-wrap gap-2">
+            {/* Banner com Dica de Design para PNG sem fundo */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 border border-emerald-200 text-emerald-950 flex items-start gap-3 shadow-xs">
+              <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                <ImageIcon className="w-4 h-4" />
+              </div>
+              <div className="text-xs leading-relaxed">
+                <strong className="block text-sm font-black text-emerald-900 mb-0.5">
+                  Personalização das Cartas (Imagens PNG ou Emojis)
+                </strong>
+                Você pode utilizar tanto <strong>Emojis</strong> quanto <strong>Imagens da sua marca</strong> (produtos, logos, fotos). 
+                <span className="block mt-1 font-semibold text-emerald-800">
+                  💡 <strong>Dica de Design:</strong> Para um acabamento mais profissional e moderno no totem, dê preferência a arquivos <strong>PNG com fundo transparente</strong>.
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
               <div>
                 <span className="text-xs font-black text-slate-800 uppercase tracking-wide">
-                  Cartas do Jogo da Memória ({pairs.length} pares)
+                  Pares Cadastrados ({pairs.length})
                 </span>
                 <p className="text-[11px] text-slate-500">
-                  Defina o ícone/emoji e o nome de cada par de cartas.
+                  Mínimo recomendado: 6 pares de cartas (12 cartas no tabuleiro).
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -1796,10 +1848,10 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                   type="button"
                   onClick={() => {
                     sound.playClick();
-                    setContent([...pairs, { symbol: '🛡️', label: 'Segurança' }]);
+                    setContent([...pairs, { symbol: '⭐', label: 'Nova Carta' }]);
                     setHasCustomEdits(true);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Adicionar Par</span>
@@ -1838,48 +1890,205 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[440px] overflow-y-auto pr-1">
-                {pairs.map((item, idx) => (
-                  <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-3 shadow-xs">
-                    <div className="w-16">
-                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Emoji</label>
-                      <input
-                        type="text"
-                        value={item.symbol}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setContent(pairs.map((it, i) => i === idx ? { ...it, symbol: val } : it));
-                          setHasCustomEdits(true);
-                        }}
-                        className="w-full text-center py-1.5 bg-white border border-slate-300 rounded-xl text-base focus:outline-none"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Nome da Carta</label>
-                      <input
-                        type="text"
-                        value={item.label}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setContent(pairs.map((it, i) => i === idx ? { ...it, label: val } : it));
-                          setHasCustomEdits(true);
-                        }}
-                        className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-red-500"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        sound.playClick();
-                        setContent(pairs.filter((_, i) => i !== idx));
-                        setHasCustomEdits(true);
-                      }}
-                      className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl mt-3"
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 max-h-[460px] overflow-y-auto pr-1">
+                {pairs.map((item, idx) => {
+                  const hasImage = Boolean(item.image_url || item.imageUrl);
+                  const activeImgUrl = item.image_url || item.imageUrl;
+
+                  return (
+                    <div
+                      key={idx}
+                      className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center gap-3 shadow-xs hover:border-slate-300 transition-all"
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
+                      {/* Visual Preview Box */}
+                      <div className="relative w-16 h-16 rounded-xl bg-white border-2 border-slate-200 flex items-center justify-center shrink-0 shadow-2xs overflow-hidden group">
+                        {hasImage ? (
+                          <img
+                            src={activeImgUrl}
+                            alt={item.label}
+                            className="w-12 h-12 object-contain pointer-events-none drop-shadow-xs"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <span className="text-3xl select-none">{item.symbol || '❓'}</span>
+                        )}
+
+                        {hasImage && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              sound.playClick();
+                              const copy = [...pairs];
+                              delete copy[idx].image_url;
+                              delete copy[idx].imageUrl;
+                              setContent(copy);
+                              setHasCustomEdits(true);
+                            }}
+                            title="Remover imagem e usar emoji"
+                            className="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-[10px] font-bold"
+                          >
+                            <Trash2 className="w-4 h-4 text-rose-400" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Controls and Inputs */}
+                      <div className="flex-1 w-full space-y-2">
+                        {/* Row 1: Label and Delete */}
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1">
+                            <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">
+                              Nome da Carta / Rótulo
+                            </label>
+                            <input
+                              type="text"
+                              value={item.label}
+                              placeholder="Ex: Sedan Turbo, Logo Honda..."
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setContent(pairs.map((it, i) => (i === idx ? { ...it, label: val } : it)));
+                                setHasCustomEdits(true);
+                              }}
+                              className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-red-500 shadow-2xs"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              sound.playClick();
+                              setContent(pairs.filter((_, i) => i !== idx));
+                              setHasCustomEdits(true);
+                            }}
+                            className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl mt-3 active:scale-95"
+                            title="Excluir este par"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* Row 2: Emoji or Image Upload Toggle */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {/* Emoji Input */}
+                          <div className="w-20">
+                            <input
+                              type="text"
+                              value={item.symbol}
+                              placeholder="Emoji"
+                              title="Digite ou cole um Emoji"
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setContent(pairs.map((it, i) => (i === idx ? { ...it, symbol: val } : it)));
+                                setHasCustomEdits(true);
+                              }}
+                              className="w-full text-center py-1 bg-white border border-slate-300 rounded-xl text-xs font-bold focus:outline-none"
+                            />
+                          </div>
+
+                          {/* Upload PNG File Button */}
+                          <label
+                            className={`cursor-pointer px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1.5 border transition-all ${
+                              hasImage
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                                : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300'
+                            }`}
+                          >
+                            <input
+                              type="file"
+                              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                              className="hidden"
+                              disabled={uploadingImgIdx === idx}
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                setUploadingImgIdx(idx);
+                                sound.playClick();
+                                try {
+                                  const fileExt = file.name.split('.').pop() || 'png';
+                                  const fileName = `memory_${Date.now()}_${Math.random().toString(36).substring(2, 6)}.${fileExt}`;
+                                  const filePath = `game_assets/${fileName}`;
+
+                                  const { error } = await supabase.storage
+                                    .from(BUCKETS.SPLASHES)
+                                    .upload(filePath, file, { contentType: file.type || 'image/png', upsert: true });
+
+                                  if (error) {
+                                    const reader = new FileReader();
+                                    reader.onload = () => {
+                                      const base64Url = reader.result as string;
+                                      const copy = [...pairs];
+                                      copy[idx].image_url = base64Url;
+                                      copy[idx].imageUrl = base64Url;
+                                      setContent(copy);
+                                      setHasCustomEdits(true);
+                                      sound.playSuccess();
+                                    };
+                                    reader.readAsDataURL(file);
+                                  } else {
+                                    const { data: publicUrlData } = supabase.storage
+                                      .from(BUCKETS.SPLASHES)
+                                      .getPublicUrl(filePath);
+                                    const url = publicUrlData?.publicUrl || '';
+                                    const copy = [...pairs];
+                                    copy[idx].image_url = url;
+                                    copy[idx].imageUrl = url;
+                                    setContent(copy);
+                                    setHasCustomEdits(true);
+                                    sound.playSuccess();
+                                  }
+                                } catch (err) {
+                                  const reader = new FileReader();
+                                  reader.onload = () => {
+                                    const base64Url = reader.result as string;
+                                    const copy = [...pairs];
+                                    copy[idx].image_url = base64Url;
+                                    copy[idx].imageUrl = base64Url;
+                                    setContent(copy);
+                                    setHasCustomEdits(true);
+                                    sound.playSuccess();
+                                  };
+                                  reader.readAsDataURL(file);
+                                } finally {
+                                  setUploadingImgIdx(null);
+                                }
+                              }}
+                            />
+                            {uploadingImgIdx === idx ? (
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+                                <span>Enviando...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="w-3.5 h-3.5 text-blue-600" />
+                                <span>{hasImage ? 'Trocar Imagem PNG' : 'Subir Imagem PNG'}</span>
+                              </>
+                            )}
+                          </label>
+
+                          {/* Direct Image URL input */}
+                          <div className="flex-1 min-w-[120px]">
+                            <input
+                              type="text"
+                              value={item.image_url || ''}
+                              placeholder="Ou cole URL da foto..."
+                              onChange={(e) => {
+                                const val = e.target.value.trim();
+                                const copy = [...pairs];
+                                copy[idx].image_url = val || undefined;
+                                copy[idx].imageUrl = val || undefined;
+                                setContent(copy);
+                                setHasCustomEdits(true);
+                              }}
+                              className="w-full px-2.5 py-1 bg-white border border-slate-300 rounded-xl text-[10px] text-slate-700 focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -2105,21 +2314,47 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
       }
 
       // 11. ENCONTRE O ERRO
+      // 11. ENCONTRE O ERRO (PAINEL DE INSPEÇÃO & AUDITORIA)
       case 'spot_error': {
         const data: SpotErrorCustomItem = typeof content === 'object' && content !== null && 'hazards' in content
           ? content
           : {
               scenarioTitle: 'Inspeção na Linha Operacional',
               hazards: [
-                { name: 'Trabalhador sem óculos de proteção', description: 'Risco de estilhaços e partículas nos olhos' },
-                { name: 'Cabo elétrico exposto e desencapado', description: 'Risco grave de choque elétrico e curto-circuito' },
-                { name: 'Extintor de incêndio obstruído por caixas', description: 'Impede o acesso rápido em emergência' },
-                { name: 'Líquido inflamável derramado no piso', description: 'Risco de escorregamento e combustão' },
+                { name: 'Trabalhador sem óculos de proteção', description: 'Risco de estilhaços e partículas nos olhos', isError: true, icon: '🥽' },
+                { name: 'Cabo elétrico exposto e desencapado', description: 'Risco grave de choque elétrico e curto-circuito', isError: true, icon: '⚡' },
+                { name: 'Extintor de incêndio obstruído por caixas', description: 'Impede o acesso rápido em emergência', isError: true, icon: '🧯' },
+                { name: 'Líquido inflamável derramado no piso', description: 'Risco de escorregamento e combustão', isError: true, icon: '💧' },
+              ],
+              safePractices: [
+                { name: 'Uso de capacete com jugular ajustada', description: 'Item 100% conforme com as normas de proteção', isError: false, icon: '⛑️' },
+                { name: 'Piso limpo, seco e bem sinalizado', description: 'Área de trânsito segura e desobstruída', isError: false, icon: '🧹' },
+                { name: 'Saída de emergência livre de obstáculos', description: 'Rota de fuga acessível e sinalizada', isError: false, icon: '🚪' },
+                { name: 'Botão de parada de emergência acessível', description: 'Dispositivo operacional para desligamento rápido', isError: false, icon: '🛑' },
               ],
             };
 
         return (
           <div className="space-y-4">
+            {/* Banner Explicativo do Painel de Inspeção */}
+            <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 shadow-xs">
+              <div className="p-2 rounded-xl bg-amber-500/10 text-amber-700 shrink-0">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div className="text-xs leading-relaxed">
+                <div className="font-bold flex items-center gap-2">
+                  <span>🔎 Painel de Inspeção e Auditoria:</span>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 text-[10px] font-black uppercase tracking-wider">
+                    Novo Formato
+                  </span>
+                </div>
+                <p className="text-slate-600 mt-0.5">
+                  O participante atua como auditor e deve analisar o painel para <strong>tocar apenas nos erros e irregularidades</strong>. As situações corretas testam a atenção dele (se tocar perde pontos/tempo).
+                </p>
+              </div>
+            </div>
+
+            {/* Título do Cenário */}
             <div>
               <label className="block text-xs font-bold text-slate-800 uppercase mb-1">
                 Título do Cenário de Inspeção:
@@ -2135,14 +2370,16 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
               />
             </div>
 
+            {/* Seção 1: Irregularidades / Erros */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
-                  <span className="text-xs font-black text-slate-800 uppercase">
-                    Perigos e Irregularidades ({data.hazards?.length || 0})
+                  <span className="text-xs font-black text-slate-800 uppercase flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-rose-500" />
+                    Irregularidades & Erros a Encontrar ({data.hazards?.length || 0})
                   </span>
                   <p className="text-[11px] text-slate-500">
-                    Cadastre os pontos de perigo que o participante deve identificar.
+                    O participante ganha pontos ao identificar e tocar nestes perigos.
                   </p>
                 </div>
                 <button
@@ -2153,29 +2390,41 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                       ...data,
                       hazards: [
                         ...(data.hazards || []),
-                        { name: 'Novo Perigo Identificado', description: 'Descrição do risco de acidente' },
+                        { name: 'Novo Perigo Identificado', description: 'Descrição do risco de acidente operacional', isError: true, icon: '⚠️' },
                       ],
                     });
                   }}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Adicionar Perigo</span>
+                  <span>Adicionar Irregularidade</span>
                 </button>
               </div>
 
-              <div className="space-y-3 max-h-[440px] overflow-y-auto pr-1">
+              <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
                 {data.hazards?.map((h, idx) => (
                   <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-start gap-3 shadow-xs">
-                    <span className="w-7 h-7 rounded-lg bg-orange-600 text-white font-mono font-black text-xs flex items-center justify-center flex-shrink-0 mt-1">
-                      {idx + 1}
-                    </span>
+                    <div className="w-12 shrink-0">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Ícone</label>
+                      <input
+                        type="text"
+                        value={h.icon || '⚠️'}
+                        onChange={(e) => {
+                          const copy = [...(data.hazards || [])];
+                          copy[idx].icon = e.target.value;
+                          setContent({ ...data, hazards: copy });
+                        }}
+                        className="w-full text-center py-1.5 bg-white border border-slate-300 rounded-xl text-sm"
+                        title="Emoji ou ícone"
+                      />
+                    </div>
                     <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Nome da Irregularidade</label>
                         <input
                           type="text"
                           value={h.name}
+                          placeholder="Ex: Extintor com prazo vencido"
                           onChange={(e) => {
                             const copy = [...data.hazards];
                             copy[idx].name = e.target.value;
@@ -2189,6 +2438,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                         <input
                           type="text"
                           value={h.description}
+                          placeholder="Ex: Falha em caso de princípio de incêndio"
                           onChange={(e) => {
                             const copy = [...data.hazards];
                             copy[idx].description = e.target.value;
@@ -2207,7 +2457,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                           hazards: data.hazards.filter((_, i) => i !== idx),
                         });
                       }}
-                      className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg mt-3"
+                      className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg mt-3 shrink-0"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -2215,18 +2465,129 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                 ))}
               </div>
             </div>
+
+            {/* Seção 2: Práticas Conformes (Distratores Corretos) */}
+            <div className="space-y-2 pt-2 border-t border-slate-200">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <span className="text-xs font-black text-slate-800 uppercase flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    Práticas Conformes / Seguras (Distratores: {data.safePractices?.length || 0})
+                  </span>
+                  <p className="text-[11px] text-slate-500">
+                    Situações corretas no painel que testam a atenção do jogador.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setContent({
+                      ...data,
+                      safePractices: [
+                        ...(data.safePractices || []),
+                        { name: 'Nova Boa Prática Conforme', description: 'Item devidamente em conformidade com as normas', isError: false, icon: '✅' },
+                      ],
+                    });
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Adicionar Conforme</span>
+                </button>
+              </div>
+
+              {(!data.safePractices || data.safePractices.length === 0) ? (
+                <div className="p-3 rounded-xl bg-slate-50 border border-dashed border-slate-300 text-slate-500 text-xs text-center">
+                  Nenhuma prática conforme personalizada cadastrada. O jogo usará práticas seguras padrão automaticamente como distratores.
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
+                  {data.safePractices.map((s, idx) => (
+                    <div key={idx} className="p-3 rounded-2xl bg-emerald-50/50 border border-emerald-200/80 flex items-start gap-3 shadow-xs">
+                      <div className="w-12 shrink-0">
+                        <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Ícone</label>
+                        <input
+                          type="text"
+                          value={s.icon || '✅'}
+                          onChange={(e) => {
+                            const copy = [...(data.safePractices || [])];
+                            copy[idx].icon = e.target.value;
+                            setContent({ ...data, safePractices: copy });
+                          }}
+                          className="w-full text-center py-1.5 bg-white border border-slate-300 rounded-xl text-sm"
+                          title="Emoji ou ícone"
+                        />
+                      </div>
+                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Situação Conforme (Correta)</label>
+                          <input
+                            type="text"
+                            value={s.name}
+                            onChange={(e) => {
+                              const copy = [...(data.safePractices || [])];
+                              copy[idx].name = e.target.value;
+                              setContent({ ...data, safePractices: copy });
+                            }}
+                            className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Descrição da Conformidade</label>
+                          <input
+                            type="text"
+                            value={s.description}
+                            onChange={(e) => {
+                              const copy = [...(data.safePractices || [])];
+                              copy[idx].description = e.target.value;
+                              setContent({ ...data, safePractices: copy });
+                            }}
+                            className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-700"
+                          />
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setContent({
+                            ...data,
+                            safePractices: data.safePractices?.filter((_, i) => i !== idx),
+                          });
+                        }}
+                        className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg mt-3 shrink-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         );
       }
 
-      // 12. QUEBRA-CABEÇA
+      // 12. QUEBRA-CABEÇA DE IMAGEM (PUZZLE)
       case 'puzzle': {
-        const data: PuzzleCustomConfig = typeof content === 'object' && content !== null && 'pieceLabels' in content
+        const DEFAULT_PUZZLE_IMG = 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80';
+        const data: PuzzleCustomConfig = typeof content === 'object' && content !== null
           ? content
           : {
-              puzzleTitle: 'Monte o Slogan Oficial',
-              pieceLabels: ['A', 'Força', 'Dos', 'Seus', 'Sonhos', 'Em', 'Cada', 'Curva'],
+              puzzleTitle: 'Monte a Imagem Oficial',
+              imageUrl: DEFAULT_PUZZLE_IMG,
+              showNumbers: true,
             };
+
+        const activeImg = data.imageUrl || DEFAULT_PUZZLE_IMG;
+
+        const PRESET_IMAGES = [
+          { name: '🚗 Esportivo', url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80' },
+          { name: '⚡ Futurista', url: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=800&q=80' },
+          { name: '🏍️ Moto', url: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80' },
+          { name: '🛡️ Segurança', url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80' },
+        ];
 
         return (
           <div className="space-y-4">
@@ -2237,7 +2598,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
               <input
                 type="text"
                 value={data.puzzleTitle || ''}
-                placeholder="Ex: Monte o Slogan Oficial da Campanha"
+                placeholder="Ex: Monte a Imagem do Novo Modelo"
                 onChange={(e) => {
                   setContent({ ...data, puzzleTitle: e.target.value });
                 }}
@@ -2247,24 +2608,103 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
 
             <div className="space-y-2">
               <label className="block text-xs font-bold text-slate-800 uppercase">
-                Texto das 8 Peças (em ordem de montagem):
+                Imagem do Quebra-Cabeça (Será dividida em 9 pedaços 3x3):
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                {[0, 1, 2, 3, 4, 5, 6, 7].map((idx) => (
-                  <div key={idx} className="p-2.5 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col gap-1">
-                    <span className="text-[10px] font-black uppercase text-teal-700">Peça #{idx + 1}</span>
-                    <input
-                      type="text"
-                      value={data.pieceLabels?.[idx] || ''}
-                      onChange={(e) => {
-                        const copy = [...(data.pieceLabels || ['', '', '', '', '', '', '', ''])];
-                        copy[idx] = e.target.value;
-                        setContent({ ...data, pieceLabels: copy });
-                      }}
-                      className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900 text-center focus:border-teal-500 focus:outline-none"
-                    />
-                  </div>
+              
+              <div className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  value={data.imageUrl || ''}
+                  placeholder="Cole aqui a URL da imagem (https://...)"
+                  onChange={(e) => {
+                    setContent({ ...data, imageUrl: e.target.value });
+                  }}
+                  className="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:border-teal-500"
+                />
+                <label className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-bold cursor-pointer shrink-0 transition-colors">
+                  Upload Imagem
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const base64 = event.target?.result as string;
+                          setContent({ ...data, imageUrl: base64 });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+
+              {/* Presets */}
+              <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                <span className="text-[10px] text-slate-400 font-bold uppercase mr-1">Sugestões:</span>
+                {PRESET_IMAGES.map((preset, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setContent({ ...data, imageUrl: preset.url });
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${
+                      data.imageUrl === preset.url
+                        ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    {preset.name}
+                  </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Live 3x3 Slices Preview */}
+            <div className="p-4 bg-slate-900 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-center gap-4">
+              <div className="w-36 h-36 rounded-xl overflow-hidden grid grid-cols-3 gap-0.5 border-2 border-teal-500/50 shadow-lg bg-black shrink-0">
+                {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((idx) => {
+                  const col = idx % 3;
+                  const row = Math.floor(idx / 3);
+                  return (
+                    <div
+                      key={idx}
+                      style={{
+                        backgroundImage: `url(${activeImg})`,
+                        backgroundSize: '300% 300%',
+                        backgroundPosition: `${col * 50}% ${row * 50}%`,
+                      }}
+                      className="w-full h-full relative border border-white/20 flex items-center justify-center"
+                    >
+                      <span className="text-[8px] font-mono font-black text-white/90 bg-black/50 px-1 rounded-sm">
+                        {idx + 1}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex-1 space-y-2 text-slate-300 text-xs">
+                <div className="font-bold text-white flex items-center gap-2">
+                  <span>🧩 Prévia das 9 Peças (Grade 3x3)</span>
+                </div>
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  A imagem acima é cortada em 9 partes de tamanho igual. No totem, as 9 peças surgirão embaralhadas na parte inferior, e o jogador deverá arrastá-las (ou tocar) para posicionar na grade superior.
+                </p>
+                <label className="flex items-center gap-2 pt-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={data.showNumbers !== false}
+                    onChange={(e) => setContent({ ...data, showNumbers: e.target.checked })}
+                    className="rounded text-teal-600 focus:ring-teal-500"
+                  />
+                  <span className="text-[11px] font-bold text-slate-300">Mostrar números guias nas peças para auxiliar</span>
+                </label>
               </div>
             </div>
           </div>
@@ -2351,91 +2791,160 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                   Tipos de Alvos Cadastrados ({items.length})
                 </span>
                 <p className="text-[11px] text-slate-500">
-                  Edite os alvos que surgem na tela para o participante tocar.
+                  Edite os alvos que surgem na tela (pontos positivos e negativos/perigo que tiram pontos).
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  sound.playClick();
-                  setContent([...items, { name: 'Novo Alvo', symbol: '🎯', points: 100, isBonus: false }]);
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Adicionar Alvo</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setContent([...items, { name: 'Novo Alvo', symbol: '🎯', points: 100, isBonus: false, isHazard: false }]);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Alvo Positivo</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setContent([...items, { name: 'Alvo Perigo', symbol: '💣', points: -150, isBonus: false, isHazard: true }]);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Alvo Negativo (Tira Pontos)</span>
+                </button>
+              </div>
             </div>
 
             <div className="space-y-3 max-h-[440px] overflow-y-auto pr-1">
-              {items.map((item, idx) => (
-                <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-3 shadow-xs flex-wrap">
-                  <div className="w-16">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Símbolo</label>
-                    <input
-                      type="text"
-                      value={item.symbol}
-                      onChange={(e) => {
-                        const copy = [...items];
-                        copy[idx].symbol = e.target.value;
-                        setContent(copy);
-                      }}
-                      className="w-full text-center py-1.5 bg-white border border-slate-300 rounded-xl text-sm"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-[140px]">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Nome do Alvo</label>
-                    <input
-                      type="text"
-                      value={item.name}
-                      onChange={(e) => {
-                        const copy = [...items];
-                        copy[idx].name = e.target.value;
-                        setContent(copy);
-                      }}
-                      className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
-                    />
-                  </div>
-                  <div className="w-24">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Pontos</label>
-                    <input
-                      type="number"
-                      value={item.points}
-                      onChange={(e) => {
-                        const copy = [...items];
-                        copy[idx].points = Number(e.target.value);
-                        setContent(copy);
-                      }}
-                      className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-black text-red-600"
-                    />
-                  </div>
-                  <div className="flex items-center gap-1.5 mt-3">
-                    <label className="flex items-center gap-1 text-xs font-bold text-slate-700 cursor-pointer">
+              {items.map((item, idx) => {
+                const isHazard = Boolean(item.isHazard || item.isNegative || (Number(item.points) < 0));
+                return (
+                  <div 
+                    key={idx} 
+                    className={`p-3.5 rounded-2xl border flex items-center gap-3 shadow-xs flex-wrap transition-colors ${
+                      isHazard 
+                        ? 'bg-rose-50/70 border-rose-300 ring-1 ring-rose-200' 
+                        : item.isBonus 
+                        ? 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-200' 
+                        : 'bg-slate-50 border-slate-200'
+                    }`}
+                  >
+                    <div className="w-16">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Símbolo</label>
                       <input
-                        type="checkbox"
-                        checked={item.isBonus}
+                        type="text"
+                        value={item.symbol}
                         onChange={(e) => {
                           const copy = [...items];
-                          copy[idx].isBonus = e.target.checked;
+                          copy[idx].symbol = e.target.value;
                           setContent(copy);
                         }}
-                        className="rounded text-red-600 focus:ring-red-500"
+                        className="w-full text-center py-1.5 bg-white border border-slate-300 rounded-xl text-sm"
                       />
-                      <span>Bônus Especial</span>
-                    </label>
+                    </div>
+                    <div className="flex-1 min-w-[140px]">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <label className="block text-[10px] text-slate-500 font-bold uppercase">Nome do Alvo</label>
+                        {isHazard && (
+                          <span className="text-[9px] font-black text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded-full">
+                            ⚠️ Penalidade (Tira Pontos)
+                          </span>
+                        )}
+                        {!isHazard && item.isBonus && (
+                          <span className="text-[9px] font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
+                            ★ Bônus
+                          </span>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        value={item.name}
+                        onChange={(e) => {
+                          const copy = [...items];
+                          copy[idx].name = e.target.value;
+                          setContent(copy);
+                        }}
+                        className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
+                      />
+                    </div>
+                    <div className="w-36">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Tipo de Alvo</label>
+                      <select
+                        value={isHazard ? 'hazard' : item.isBonus ? 'bonus' : 'normal'}
+                        onChange={(e) => {
+                          const copy = [...items];
+                          const val = e.target.value;
+                          if (val === 'hazard') {
+                            copy[idx].isHazard = true;
+                            copy[idx].isBonus = false;
+                            const cur = Number(copy[idx].points) || 100;
+                            copy[idx].points = cur > 0 ? -cur : cur;
+                            if (copy[idx].symbol === '🎯' || copy[idx].symbol === '◎') copy[idx].symbol = '💣';
+                            if (copy[idx].name === 'Novo Alvo') copy[idx].name = 'Alvo Perigo';
+                          } else if (val === 'bonus') {
+                            copy[idx].isHazard = false;
+                            copy[idx].isBonus = true;
+                            const cur = Number(copy[idx].points) || -100;
+                            copy[idx].points = Math.abs(cur) || 250;
+                            if (copy[idx].symbol === '💣') copy[idx].symbol = '★';
+                            if (copy[idx].name === 'Alvo Perigo') copy[idx].name = 'Super Bônus';
+                          } else {
+                            copy[idx].isHazard = false;
+                            copy[idx].isBonus = false;
+                            const cur = Number(copy[idx].points) || -100;
+                            copy[idx].points = Math.abs(cur) || 100;
+                            if (copy[idx].symbol === '💣') copy[idx].symbol = '🎯';
+                            if (copy[idx].name === 'Alvo Perigo') copy[idx].name = 'Alvo Normal';
+                          }
+                          setContent(copy);
+                        }}
+                        className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
+                      >
+                        <option value="normal">🎯 Normal (+)</option>
+                        <option value="bonus">⭐ Bônus (+)</option>
+                        <option value="hazard">💣 Perigo (- pts)</option>
+                      </select>
+                    </div>
+                    <div className="w-28">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">
+                        {isHazard ? 'Tira Pontos (-)' : 'Ganha Pontos (+)'}
+                      </label>
+                      <input
+                        type="number"
+                        value={item.points}
+                        onChange={(e) => {
+                          const copy = [...items];
+                          copy[idx].points = Number(e.target.value);
+                          if (copy[idx].points < 0) {
+                            copy[idx].isHazard = true;
+                            copy[idx].isBonus = false;
+                          }
+                          setContent(copy);
+                        }}
+                        className={`w-full px-3 py-1.5 bg-white border rounded-xl text-xs font-black ${
+                          isHazard ? 'border-rose-300 text-rose-600' : 'border-slate-300 text-emerald-600'
+                        }`}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setContent(items.filter((_, i) => i !== idx));
+                      }}
+                      className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl mt-3 ml-auto"
+                      title="Excluir alvo"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      sound.playClick();
-                      setContent(items.filter((_, i) => i !== idx));
-                    }}
-                    className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl mt-3 ml-auto"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         );
@@ -2452,91 +2961,159 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                   Balões Cadastrados ({items.length})
                 </span>
                 <p className="text-[11px] text-slate-500">
-                  Edite as cores, pontuações e tipos de balões que sobem na tela.
+                  Edite as cores, pontuações e tipos de balões que sobem na tela (ganha pontos ou perigo que tira pontos).
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  sound.playClick();
-                  setContent([...items, { name: 'Novo Balão', color: '#EF4444', points: 100, isGold: false }]);
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Adicionar Balão</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setContent([...items, { name: 'Novo Balão', color: '#EF4444', points: 100, isGold: false, isHazard: false }]);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Balão Normal</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setContent([...items, { name: 'Balão Perigo', color: '#1F2937', points: -150, isGold: false, isHazard: true, symbol: '💣' }]);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Balão Perigo (- pts)</span>
+                </button>
+              </div>
             </div>
 
             <div className="space-y-3 max-h-[440px] overflow-y-auto pr-1">
-              {items.map((item, idx) => (
-                <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-3 shadow-xs flex-wrap">
-                  <div className="w-14">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Cor</label>
-                    <input
-                      type="color"
-                      value={item.color || '#EF4444'}
-                      onChange={(e) => {
-                        const copy = [...items];
-                        copy[idx].color = e.target.value;
-                        setContent(copy);
-                      }}
-                      className="w-full h-8 rounded-lg cursor-pointer border border-slate-300 bg-white"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-[140px]">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Nome do Balão</label>
-                    <input
-                      type="text"
-                      value={item.name}
-                      onChange={(e) => {
-                        const copy = [...items];
-                        copy[idx].name = e.target.value;
-                        setContent(copy);
-                      }}
-                      className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
-                    />
-                  </div>
-                  <div className="w-24">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Pontos</label>
-                    <input
-                      type="number"
-                      value={item.points}
-                      onChange={(e) => {
-                        const copy = [...items];
-                        copy[idx].points = Number(e.target.value);
-                        setContent(copy);
-                      }}
-                      className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-black text-red-600"
-                    />
-                  </div>
-                  <div className="flex items-center gap-1.5 mt-3">
-                    <label className="flex items-center gap-1 text-xs font-bold text-slate-700 cursor-pointer">
+              {items.map((item, idx) => {
+                const isHazard = Boolean(item.isHazard || (Number(item.points) < 0));
+                return (
+                  <div 
+                    key={idx} 
+                    className={`p-3.5 rounded-2xl border flex items-center gap-3 shadow-xs flex-wrap transition-colors ${
+                      isHazard 
+                        ? 'bg-rose-50/70 border-rose-300 ring-1 ring-rose-200' 
+                        : item.isGold 
+                        ? 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-200' 
+                        : 'bg-slate-50 border-slate-200'
+                    }`}
+                  >
+                    <div className="w-14">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Cor</label>
                       <input
-                        type="checkbox"
-                        checked={item.isGold}
+                        type="color"
+                        value={item.color || (isHazard ? '#1F2937' : '#EF4444')}
                         onChange={(e) => {
                           const copy = [...items];
-                          copy[idx].isGold = e.target.checked;
+                          copy[idx].color = e.target.value;
                           setContent(copy);
                         }}
-                        className="rounded text-amber-500 focus:ring-amber-400"
+                        className="w-full h-8 rounded-lg cursor-pointer border border-slate-300 bg-white"
                       />
-                      <span>Dourado / Bônus</span>
-                    </label>
+                    </div>
+                    <div className="flex-1 min-w-[140px]">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <label className="block text-[10px] text-slate-500 font-bold uppercase">Nome do Balão</label>
+                        {isHazard && (
+                          <span className="text-[9px] font-black text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded-full">
+                            ⚠️ Perigo (Tira Pontos)
+                          </span>
+                        )}
+                        {!isHazard && item.isGold && (
+                          <span className="text-[9px] font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
+                            ★ Bônus
+                          </span>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        value={item.name}
+                        onChange={(e) => {
+                          const copy = [...items];
+                          copy[idx].name = e.target.value;
+                          setContent(copy);
+                        }}
+                        className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
+                      />
+                    </div>
+                    <div className="w-36">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Tipo do Balão</label>
+                      <select
+                        value={isHazard ? 'hazard' : item.isGold ? 'gold' : 'normal'}
+                        onChange={(e) => {
+                          const copy = [...items];
+                          const val = e.target.value;
+                          if (val === 'hazard') {
+                            copy[idx].isHazard = true;
+                            copy[idx].isGold = false;
+                            const cur = Number(copy[idx].points) || 100;
+                            copy[idx].points = cur > 0 ? -cur : cur;
+                            copy[idx].color = copy[idx].color === '#EF4444' ? '#1F2937' : copy[idx].color;
+                            copy[idx].symbol = '💣';
+                          } else if (val === 'gold') {
+                            copy[idx].isHazard = false;
+                            copy[idx].isGold = true;
+                            const cur = Number(copy[idx].points) || -100;
+                            copy[idx].points = Math.abs(cur) || 250;
+                            copy[idx].color = '#F59E0B';
+                            copy[idx].symbol = '★';
+                          } else {
+                            copy[idx].isHazard = false;
+                            copy[idx].isGold = false;
+                            const cur = Number(copy[idx].points) || -100;
+                            copy[idx].points = Math.abs(cur) || 100;
+                            copy[idx].symbol = undefined;
+                          }
+                          setContent(copy);
+                        }}
+                        className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
+                      >
+                        <option value="normal">🎈 Normal (+)</option>
+                        <option value="gold">⭐ Dourado (+)</option>
+                        <option value="hazard">💣 Perigo (- pts)</option>
+                      </select>
+                    </div>
+                    <div className="w-28">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">
+                        {isHazard ? 'Tira Pontos (-)' : 'Ganha Pontos (+)'}
+                      </label>
+                      <input
+                        type="number"
+                        value={item.points}
+                        onChange={(e) => {
+                          const copy = [...items];
+                          copy[idx].points = Number(e.target.value);
+                          if (copy[idx].points < 0) {
+                            copy[idx].isHazard = true;
+                            copy[idx].isGold = false;
+                          }
+                          setContent(copy);
+                        }}
+                        className={`w-full px-3 py-1.5 bg-white border rounded-xl text-xs font-black ${
+                          isHazard ? 'border-rose-300 text-rose-600' : 'border-slate-300 text-emerald-600'
+                        }`}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setContent(items.filter((_, i) => i !== idx));
+                      }}
+                      className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl mt-3 ml-auto"
+                      title="Excluir balão"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      sound.playClick();
-                      setContent(items.filter((_, i) => i !== idx));
-                    }}
-                    className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl mt-3 ml-auto"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         );
@@ -2556,89 +3133,148 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                   Cadastre brindes, estrelas bônus e obstáculos que caem da tela.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  sound.playClick();
-                  setContent([...items, { name: 'Novo Brinde', symbol: '🎁', points: 150, type: 'gift' }]);
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Adicionar Item</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setContent([...items, { name: 'Novo Brinde', symbol: '🎁', points: 150, type: 'gift' }]);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Brinde</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setContent([...items, { name: 'Obstáculo / Bomba', symbol: '💣', points: -200, type: 'hazard' }]);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Obstáculo (- pts)</span>
+                </button>
+              </div>
             </div>
 
             <div className="space-y-3 max-h-[440px] overflow-y-auto pr-1">
-              {items.map((item, idx) => (
-                <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-3 shadow-xs flex-wrap">
-                  <div className="w-16">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Símbolo</label>
-                    <input
-                      type="text"
-                      value={item.symbol}
-                      onChange={(e) => {
-                        const copy = [...items];
-                        copy[idx].symbol = e.target.value;
-                        setContent(copy);
-                      }}
-                      className="w-full text-center py-1.5 bg-white border border-slate-300 rounded-xl text-sm"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-[140px]">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Nome</label>
-                    <input
-                      type="text"
-                      value={item.name}
-                      onChange={(e) => {
-                        const copy = [...items];
-                        copy[idx].name = e.target.value;
-                        setContent(copy);
-                      }}
-                      className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
-                    />
-                  </div>
-                  <div className="w-40">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Tipo do Item</label>
-                    <select
-                      value={item.type}
-                      onChange={(e) => {
-                        const copy = [...items];
-                        copy[idx].type = e.target.value as any;
-                        setContent(copy);
-                      }}
-                      className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
-                    >
-                      <option value="gift">🎁 Brinde / Presente</option>
-                      <option value="star">⭐ Estrela Bônus</option>
-                      <option value="hazard">💣 Perigo / Obstáculo</option>
-                    </select>
-                  </div>
-                  <div className="w-24">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Pontos</label>
-                    <input
-                      type="number"
-                      value={item.points}
-                      onChange={(e) => {
-                        const copy = [...items];
-                        copy[idx].points = Number(e.target.value);
-                        setContent(copy);
-                      }}
-                      className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-black text-red-600"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      sound.playClick();
-                      setContent(items.filter((_, i) => i !== idx));
-                    }}
-                    className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl mt-3 ml-auto"
+              {items.map((item, idx) => {
+                const isHazard = item.type === 'hazard' || item.points < 0;
+                return (
+                  <div 
+                    key={idx} 
+                    className={`p-3.5 rounded-2xl border flex items-center gap-3 shadow-xs flex-wrap transition-colors ${
+                      isHazard
+                        ? 'bg-rose-50/70 border-rose-300 ring-1 ring-rose-200'
+                        : item.type === 'star'
+                        ? 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-200'
+                        : 'bg-slate-50 border-slate-200'
+                    }`}
                   >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
+                    <div className="w-16">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Símbolo</label>
+                      <input
+                        type="text"
+                        value={item.symbol}
+                        onChange={(e) => {
+                          const copy = [...items];
+                          copy[idx].symbol = e.target.value;
+                          setContent(copy);
+                        }}
+                        className="w-full text-center py-1.5 bg-white border border-slate-300 rounded-xl text-sm"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-[140px]">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <label className="block text-[10px] text-slate-500 font-bold uppercase">Nome</label>
+                        {isHazard && (
+                          <span className="text-[9px] font-black text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded-full">
+                            ⚠️ Perigo (Tira Pontos)
+                          </span>
+                        )}
+                        {!isHazard && item.type === 'star' && (
+                          <span className="text-[9px] font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
+                            ★ Super Bônus
+                          </span>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        value={item.name}
+                        onChange={(e) => {
+                          const copy = [...items];
+                          copy[idx].name = e.target.value;
+                          setContent(copy);
+                        }}
+                        className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
+                      />
+                    </div>
+                    <div className="w-40">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Tipo do Item</label>
+                      <select
+                        value={item.type}
+                        onChange={(e) => {
+                          const copy = [...items];
+                          const newType = e.target.value as 'gift' | 'star' | 'hazard';
+                          copy[idx].type = newType;
+                          if (newType === 'hazard') {
+                            const cur = Number(copy[idx].points) || 150;
+                            copy[idx].points = cur > 0 ? -cur : cur;
+                            if (copy[idx].symbol === '🎁' || copy[idx].symbol === '⭐') copy[idx].symbol = '💣';
+                          } else if (newType === 'star') {
+                            const cur = Number(copy[idx].points) || -200;
+                            copy[idx].points = Math.abs(cur) || 300;
+                            if (copy[idx].symbol === '💣' || copy[idx].symbol === '🎁') copy[idx].symbol = '⭐';
+                          } else {
+                            const cur = Number(copy[idx].points) || -200;
+                            copy[idx].points = Math.abs(cur) || 150;
+                            if (copy[idx].symbol === '💣' || copy[idx].symbol === '⭐') copy[idx].symbol = '🎁';
+                          }
+                          setContent(copy);
+                        }}
+                        className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
+                      >
+                        <option value="gift">🎁 Brinde (+)</option>
+                        <option value="star">⭐ Estrela Bônus (+)</option>
+                        <option value="hazard">💣 Perigo / Obstáculo (- pts)</option>
+                      </select>
+                    </div>
+                    <div className="w-28">
+                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">
+                        {isHazard ? 'Tira Pontos (-)' : 'Ganha Pontos (+)'}
+                      </label>
+                      <input
+                        type="number"
+                        value={item.points}
+                        onChange={(e) => {
+                          const copy = [...items];
+                          copy[idx].points = Number(e.target.value);
+                          if (copy[idx].points < 0) {
+                            copy[idx].type = 'hazard';
+                          }
+                          setContent(copy);
+                        }}
+                        className={`w-full px-3 py-1.5 bg-white border rounded-xl text-xs font-black ${
+                          isHazard ? 'border-rose-300 text-rose-600' : 'border-slate-300 text-emerald-600'
+                        }`}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setContent(items.filter((_, i) => i !== idx));
+                      }}
+                      className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl mt-3 ml-auto"
+                      title="Excluir item"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         );
@@ -2714,8 +3350,38 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
       // 18. MAPA DE EPI
       case 'map_epi': {
         const sectors = Array.isArray(content) ? content : [];
+        const isImgUrl = (val: string) => {
+          if (!val || typeof val !== 'string') return false;
+          const s = val.trim();
+          return (
+            s.startsWith('http://') ||
+            s.startsWith('https://') ||
+            s.startsWith('data:image/') ||
+            s.startsWith('/') ||
+            /\.(png|jpe?g|svg|webp|gif)$/i.test(s)
+          );
+        };
+
         return (
           <div className="space-y-4">
+            {/* Dica de Imagem PNG sem fundo */}
+            <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 shadow-xs">
+              <div className="p-2 rounded-xl bg-amber-500/10 text-amber-700 shrink-0">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div className="text-xs leading-relaxed">
+                <div className="font-bold flex items-center gap-2">
+                  <span>💡 Dica para Imagens:</span>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 text-[10px] font-black uppercase tracking-wider">
+                    PNG sem fundo
+                  </span>
+                </div>
+                <p className="text-slate-600 mt-0.5">
+                  Para um acabamento profissional no totem, prefira subir a imagem do EPI em <strong>formato PNG com fundo transparente</strong>. Você também pode alternar e usar <strong>emojis</strong> normais se preferir!
+                </p>
+              </div>
+            </div>
+
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
                 <span className="text-xs font-black text-slate-800 uppercase tracking-wide">
@@ -2744,19 +3410,132 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
             <div className="space-y-3 max-h-[440px] overflow-y-auto pr-1">
               {sectors.map((sec: any, idx: number) => (
                 <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-3 shadow-xs flex-wrap">
-                  <div className="w-14">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Emoji</label>
-                    <input
-                      type="text"
-                      value={sec.epiEmoji || '🛡️'}
-                      onChange={(e) => {
-                        const copy = [...sectors];
-                        copy[idx].epiEmoji = e.target.value;
-                        setContent(copy);
-                      }}
-                      className="w-full text-center py-1.5 bg-white border border-slate-300 rounded-xl text-sm"
-                    />
+                  {/* Ícone ou Imagem do EPI */}
+                  <div className="flex flex-col gap-1 shrink-0">
+                    <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">
+                      EPI (PNG ou Emoji)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <div className="relative w-12 h-12 rounded-xl border border-slate-300 bg-white flex items-center justify-center overflow-hidden shadow-xs shrink-0">
+                        {isImgUrl(sec.epiEmoji) ? (
+                          <>
+                            <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:6px_6px] opacity-40 pointer-events-none" />
+                            <img
+                              src={sec.epiEmoji}
+                              alt={sec.requiredEpi || 'EPI'}
+                              className="w-10 h-10 object-contain drop-shadow-xs relative z-10"
+                            />
+                          </>
+                        ) : (
+                          <span className="text-2xl select-none">{sec.epiEmoji || '🛡️'}</span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="cursor-pointer px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-[11px] font-bold flex items-center gap-1.5 transition-all active:scale-95">
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                            className="hidden"
+                            disabled={uploadingImgIdx === idx}
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              setUploadingImgIdx(idx);
+                              sound.playClick();
+                              try {
+                                const fileExt = file.name.split('.').pop() || 'png';
+                                const fileName = `map_epi_${Date.now()}_${Math.random().toString(36).substring(2, 6)}.${fileExt}`;
+                                const filePath = `game_assets/${fileName}`;
+
+                                const { error } = await supabase.storage
+                                  .from(BUCKETS.SPLASHES)
+                                  .upload(filePath, file, { contentType: file.type || 'image/png', upsert: true });
+
+                                if (error) {
+                                  const reader = new FileReader();
+                                  reader.onload = () => {
+                                    const base64Url = reader.result as string;
+                                    const copy = [...sectors];
+                                    copy[idx].epiEmoji = base64Url;
+                                    copy[idx].imageUrl = base64Url;
+                                    setContent(copy);
+                                    setHasCustomEdits(true);
+                                    sound.playSuccess();
+                                  };
+                                  reader.readAsDataURL(file);
+                                } else {
+                                  const { data: publicUrlData } = supabase.storage
+                                    .from(BUCKETS.SPLASHES)
+                                    .getPublicUrl(filePath);
+                                  const url = publicUrlData?.publicUrl || '';
+                                  const copy = [...sectors];
+                                  copy[idx].epiEmoji = url;
+                                  copy[idx].imageUrl = url;
+                                  setContent(copy);
+                                  setHasCustomEdits(true);
+                                  sound.playSuccess();
+                                }
+                              } catch (err) {
+                                const reader = new FileReader();
+                                reader.onload = () => {
+                                  const base64Url = reader.result as string;
+                                  const copy = [...sectors];
+                                  copy[idx].epiEmoji = base64Url;
+                                  copy[idx].imageUrl = base64Url;
+                                  setContent(copy);
+                                  setHasCustomEdits(true);
+                                  sound.playSuccess();
+                                };
+                                reader.readAsDataURL(file);
+                              } finally {
+                                setUploadingImgIdx(null);
+                              }
+                            }}
+                          />
+                          {uploadingImgIdx === idx ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+                          ) : (
+                            <Upload className="w-3.5 h-3.5 text-emerald-600" />
+                          )}
+                          <span>{isImgUrl(sec.epiEmoji) ? 'Trocar Imagem' : 'Subir PNG'}</span>
+                        </label>
+
+                        {isImgUrl(sec.epiEmoji) ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              sound.playClick();
+                              const copy = [...sectors];
+                              copy[idx].epiEmoji = '🛡️';
+                              delete copy[idx].imageUrl;
+                              setContent(copy);
+                              setHasCustomEdits(true);
+                            }}
+                            className="px-2 py-0.5 rounded-lg text-[10px] text-slate-500 hover:text-rose-600 hover:bg-slate-100 flex items-center gap-1 font-semibold transition-colors"
+                            title="Voltar para Emoji"
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                            <span>Usar Emoji</span>
+                          </button>
+                        ) : (
+                          <input
+                            type="text"
+                            value={sec.epiEmoji || ''}
+                            placeholder="🛡️"
+                            onChange={(e) => {
+                              const copy = [...sectors];
+                              copy[idx].epiEmoji = e.target.value;
+                              setContent(copy);
+                            }}
+                            className="w-20 text-center py-0.5 px-1 bg-white border border-slate-300 rounded-md text-xs font-bold"
+                            title="Ou digite um emoji"
+                          />
+                        )}
+                      </div>
+                    </div>
                   </div>
+
                   <div className="flex-1 min-w-[140px]">
                     <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Nome do Setor / Área</label>
                     <input
@@ -2800,7 +3579,509 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
         );
       }
 
-      // 19. DEFAULT GENÉRICO
+      // 19. ORDEM NUMÉRICA RELÂMPAGO
+      case 'higher_lower': {
+        const config = (typeof content === 'object' && !Array.isArray(content) && content) || {
+          gridMax: 16,
+          title: 'Ordem Numérica Relâmpago',
+          errorPenaltySeconds: 1,
+          bonusPoints: 1000,
+        };
+
+        const updateCfg = (patch: any) => {
+          setContent({ ...config, ...patch });
+        };
+
+        return (
+          <div className="space-y-6">
+            <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 text-amber-900 flex items-start gap-3">
+              <Zap className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div className="text-xs">
+                <strong className="block text-sm font-black text-amber-950 mb-0.5">
+                  Ordem Numérica Relâmpago (Reflexo & Lógica de Sequência)
+                </strong>
+                Os participantes devem tocar nos números embaralhados no totem em ordem crescente (do 1 ao número máximo) o mais rápido possível contra o cronômetro.
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Tamanho do Grid */}
+              <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-3">
+                <label className="block text-xs font-black uppercase text-slate-800 tracking-wider">
+                  Tamanho da Grade Numérica
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { count: 16, label: '1 a 16 (4x4)', desc: 'Padrão Totem' },
+                    { count: 20, label: '1 a 20 (4x5)', desc: 'Desafio Médio' },
+                    { count: 25, label: '1 a 25 (5x5)', desc: 'Avançado' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.count}
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        updateCfg({ gridMax: opt.count });
+                      }}
+                      className={`p-3 rounded-xl border text-center transition-all ${
+                        (config.gridMax || 16) === opt.count
+                          ? 'bg-amber-600 text-white border-amber-600 shadow-xs font-black'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 font-bold'
+                      }`}
+                    >
+                      <div className="text-xs sm:text-sm">{opt.label}</div>
+                      <div className={`text-[10px] ${ (config.gridMax || 16) === opt.count ? 'text-amber-100' : 'text-slate-400'}`}>
+                        {opt.desc}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Penalidade por Erro */}
+              <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-3">
+                <label className="block text-xs font-black uppercase text-slate-800 tracking-wider">
+                  Penalidade ao Tocar Fora da Ordem
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { sec: 0, label: 'Sem perda', desc: 'Apenas vibra/erro' },
+                    { sec: 1, label: '-1 segundo', desc: 'Recomendado' },
+                    { sec: 2, label: '-2 segundos', desc: 'Competição rígida' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.sec}
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        updateCfg({ errorPenaltySeconds: opt.sec });
+                      }}
+                      className={`p-3 rounded-xl border text-center transition-all ${
+                        (config.errorPenaltySeconds ?? 1) === opt.sec
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs font-black'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 font-bold'
+                      }`}
+                    >
+                      <div className="text-xs sm:text-sm">{opt.label}</div>
+                      <div className={`text-[10px] ${ (config.errorPenaltySeconds ?? 1) === opt.sec ? 'text-indigo-100' : 'text-slate-400'}`}>
+                        {opt.desc}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Custom Game Title & Points */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-2xl border border-slate-200 bg-white">
+                <label className="block text-xs font-bold uppercase text-slate-600 mb-1.5">
+                  Título do Jogo na Tela
+                </label>
+                <input
+                  type="text"
+                  value={config.title || 'Ordem Numérica Relâmpago'}
+                  onChange={(e) => updateCfg({ title: e.target.value })}
+                  placeholder="Ex: Ordem Numérica Relâmpago"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                />
+              </div>
+
+              <div className="p-4 rounded-2xl border border-slate-200 bg-white">
+                <label className="block text-xs font-bold uppercase text-slate-600 mb-1.5">
+                  Bônus por Completar a Grade
+                </label>
+                <input
+                  type="number"
+                  min="100"
+                  max="5000"
+                  step="100"
+                  value={config.bonusPoints ?? 1000}
+                  onChange={(e) => updateCfg({ bonusPoints: Number(e.target.value) || 1000 })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-black text-emerald-600 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                />
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // 20. TOP GEAR TURBO (CORRIDA RETRÔ EM 3 FAIXAS)
+      case 'top_gear': {
+        const config: TopGearCustomConfig = (typeof content === 'object' && !Array.isArray(content) && content) || {
+          trackName: 'Autódromo Top Gear',
+          carColor: '#DC2626',
+          initialSpeed: 120,
+          maxSpeed: 240,
+          trafficDensity: 'normal',
+        };
+
+        const updateCfg = (patch: Partial<TopGearCustomConfig>) => {
+          setContent({ ...config, ...patch });
+          setHasCustomEdits(true);
+        };
+
+        const carColors = [
+          { name: 'Vermelho Top Gear', hex: '#DC2626' },
+          { name: 'Amarelo Turbo', hex: '#F59E0B' },
+          { name: 'Azul Elétrico', hex: '#2563EB' },
+          { name: 'Verde Esmeralda', hex: '#10B981' },
+          { name: 'Roxo Cyber', hex: '#9333EA' },
+          { name: 'Ciano Neon', hex: '#06B6D4' },
+          { name: 'Preto Noturno', hex: '#1E293B' },
+          { name: 'Rosa Choque', hex: '#EC4899' },
+        ];
+
+        return (
+          <div className="space-y-6">
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-red-50 via-orange-50 to-amber-50 border border-red-200 text-red-950 flex items-start gap-3 shadow-xs">
+              <div className="w-8 h-8 rounded-xl bg-red-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                <Car className="w-4 h-4" />
+              </div>
+              <div className="text-xs leading-relaxed">
+                <strong className="block text-sm font-black text-red-950 mb-0.5">
+                  Top Gear Turbo (Corrida Arcade Pseudo-3D)
+                </strong>
+                O participante controla um supercarro esportivo em 3 faixas com faróis dinâmicos e aceleração progressiva, desviando de veículos em alta velocidade até cruzar a linha de chegada sincronizada ao final do cronômetro.
+              </div>
+            </div>
+
+            {/* SELETOR DE COR DO CARRO */}
+            <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-3">
+              <label className="block text-xs font-black uppercase text-slate-800 tracking-wider">
+                Cor do Carro do Jogador
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {carColors.map((c) => {
+                  const isSelected = (config.carColor || '#DC2626').toLowerCase() === c.hex.toLowerCase();
+                  return (
+                    <button
+                      key={c.hex}
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        updateCfg({ carColor: c.hex });
+                      }}
+                      className={`p-3 rounded-xl border flex items-center gap-3 transition-all ${
+                        isSelected
+                          ? 'border-slate-900 bg-white ring-2 ring-red-500 shadow-sm'
+                          : 'border-slate-200 bg-white hover:bg-slate-100'
+                      }`}
+                    >
+                      <div
+                        className="w-6 h-6 rounded-lg shadow-inner shrink-0"
+                        style={{ backgroundColor: c.hex }}
+                      />
+                      <div className="text-left">
+                        <span className="block text-xs font-black text-slate-900">{c.name}</span>
+                        <span className="block text-[10px] text-slate-400 font-mono">{c.hex}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* VELOCIDADES E DENSIDADE */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 rounded-2xl border border-slate-200 bg-white">
+                <label className="block text-xs font-bold uppercase text-slate-600 mb-1.5 flex items-center gap-1.5">
+                  <Gauge className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Velocidade Inicial</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="60"
+                    max="180"
+                    step="10"
+                    value={config.initialSpeed || 120}
+                    onChange={(e) => updateCfg({ initialSpeed: Number(e.target.value) || 120 })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-black font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                  <span className="text-xs font-bold text-slate-400">KM/H</span>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl border border-slate-200 bg-white">
+                <label className="block text-xs font-bold uppercase text-slate-600 mb-1.5 flex items-center gap-1.5">
+                  <Flame className="w-3.5 h-3.5 text-red-600" />
+                  <span>Velocidade Máxima</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="180"
+                    max="320"
+                    step="10"
+                    value={config.maxSpeed || 240}
+                    onChange={(e) => updateCfg({ maxSpeed: Number(e.target.value) || 240 })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-black font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                  />
+                  <span className="text-xs font-bold text-slate-400">KM/H</span>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl border border-slate-200 bg-white">
+                <label className="block text-xs font-bold uppercase text-slate-600 mb-1.5 flex items-center gap-1.5">
+                  <Flag className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Nome do Circuito / Pista</span>
+                </label>
+                <input
+                  type="text"
+                  value={config.trackName || 'Autódromo Top Gear'}
+                  onChange={(e) => updateCfg({ trackName: e.target.value })}
+                  placeholder="Ex: Autódromo Top Gear"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                />
+              </div>
+            </div>
+
+            {/* BANNER LINHA DE CHEGADA SINCRONIZADA */}
+            <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 flex items-center gap-3">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              <div className="text-xs text-slate-600">
+                <strong className="block font-black text-slate-900">Linha de Chegada Sincronizada Ativada</strong>
+                O pórtico de chegada aparece no horizonte nos últimos 4 segundos e cruza a pista exatamente quando o cronômetro atinge 0, celebrando a vitória com bandeirada e fanfarra de encerramento!
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // 21. PLINKO DA SORTE (TABULEIRO DE PINOS E CANALETAS DE PONTUAÇÃO)
+      case 'plinko': {
+        const config: PlinkoCustomConfig = (typeof content === 'object' && !Array.isArray(content) && content) || {
+          title: 'Plinko da Sorte',
+          ballsCount: 3,
+          slots: [
+            { id: 0, label: '100 pts', points: 100, color: '#3B82F6' },
+            { id: 1, label: '250 pts', points: 250, color: '#10B981' },
+            { id: 2, label: '500 pts', points: 500, color: '#F59E0B' },
+            { id: 3, label: '1000 pts', points: 1000, color: '#DC2626' },
+            { id: 4, label: '250 pts', points: 250, color: '#10B981' },
+            { id: 5, label: '100 pts', points: 100, color: '#3B82F6' },
+          ],
+        };
+
+        const updateCfg = (patch: Partial<PlinkoCustomConfig>) => {
+          setContent({ ...config, ...patch });
+          setHasCustomEdits(true);
+        };
+
+        const currentSlots = Array.isArray(config.slots) && config.slots.length > 0 ? config.slots : [
+          { id: 0, label: '100 pts', points: 100, color: '#3B82F6' },
+          { id: 1, label: '250 pts', points: 250, color: '#10B981' },
+          { id: 2, label: '500 pts', points: 500, color: '#F59E0B' },
+          { id: 3, label: '1000 pts', points: 1000, color: '#DC2626' },
+          { id: 4, label: '250 pts', points: 250, color: '#10B981' },
+          { id: 5, label: '100 pts', points: 100, color: '#3B82F6' },
+        ];
+
+        return (
+          <div className="space-y-6">
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50 via-indigo-50 to-cyan-50 border border-blue-200 text-blue-950 flex items-start gap-3 shadow-xs">
+              <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                <CircleDot className="w-4 h-4" />
+              </div>
+              <div className="text-xs leading-relaxed">
+                <strong className="block text-sm font-black text-blue-950 mb-0.5">
+                  Plinko da Sorte (Tabuleiro de Pinos & Canaletas de Pontuação)
+                </strong>
+                O participante posiciona o soltador e lança as bolinhas no topo do tabuleiro. A física calcula os quiques nos pinos e direciona cada bolinha para uma das canaletas inferiores. Defina abaixo a pontuação de cada canaleta e quantas bolinhas serão jogadas por partida.
+              </div>
+            </div>
+
+            {/* QUANTIDADE DE BOLINHAS & TÍTULO */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-3">
+                <label className="block text-xs font-black uppercase text-slate-800 tracking-wider">
+                  Quantidade de Bolinhas por Partida
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[1, 3, 5, 10].map((qty) => (
+                    <button
+                      key={qty}
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        updateCfg({ ballsCount: qty });
+                      }}
+                      className={`p-3 rounded-xl border text-center transition-all ${
+                        (config.ballsCount || 3) === qty
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs font-black'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 font-bold'
+                      }`}
+                    >
+                      <div className="text-sm sm:text-base">{qty}</div>
+                      <div className={`text-[10px] ${(config.ballsCount || 3) === qty ? 'text-blue-100' : 'text-slate-400'}`}>
+                        {qty === 1 ? 'Bolinha' : 'Bolinhas'}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-5 rounded-2xl border border-slate-200 bg-white space-y-2">
+                <label className="block text-xs font-black uppercase text-slate-700 tracking-wider">
+                  Título do Jogo na Tela
+                </label>
+                <input
+                  type="text"
+                  value={config.title || 'Plinko da Sorte'}
+                  onChange={(e) => updateCfg({ title: e.target.value })}
+                  placeholder="Ex: Plinko Premiado"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-2xs"
+                />
+                <p className="text-[11px] text-slate-400">
+                  Exibido no cabeçalho do jogo e na tela de premiação final.
+                </p>
+              </div>
+            </div>
+
+            {/* CONFIGURAÇÃO DAS CANALETAS / SLOTS INFERIORES */}
+            <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider">
+                    Canaletas Inferiores ({currentSlots.length} Caixas de Pontuação)
+                  </h4>
+                  <p className="text-[11px] text-slate-500">
+                    Defina os pontos atribuídos e o texto exibido na base de cada canaleta.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      updateCfg({
+                        slots: [
+                          { id: 0, label: '100 pts', points: 100, color: '#3B82F6' },
+                          { id: 1, label: '250 pts', points: 250, color: '#10B981' },
+                          { id: 2, label: '500 pts', points: 500, color: '#F59E0B' },
+                          { id: 3, label: '1000 pts', points: 1000, color: '#DC2626' },
+                          { id: 4, label: '250 pts', points: 250, color: '#10B981' },
+                          { id: 5, label: '100 pts', points: 100, color: '#3B82F6' },
+                        ],
+                      });
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200 shadow-2xs flex items-center gap-1.5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Restaurar 6 Padrão</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      const nextId = currentSlots.length;
+                      updateCfg({
+                        slots: [
+                          ...currentSlots,
+                          { id: nextId, label: '300 pts', points: 300, color: '#6366F1' },
+                        ],
+                      });
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Adicionar Canaleta</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Grid das Canaletas para Edição */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {currentSlots.map((slot, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-center gap-3"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 font-black text-xs flex items-center justify-center shrink-0">
+                      #{idx + 1}
+                    </div>
+
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <label className="block text-[9px] uppercase font-bold text-slate-400">Rótulo</label>
+                          <input
+                            type="text"
+                            value={slot.label}
+                            onChange={(e) => {
+                              const copy = [...currentSlots];
+                              copy[idx] = { ...copy[idx], label: e.target.value };
+                              updateCfg({ slots: copy });
+                            }}
+                            className="w-full px-2 py-1 rounded-lg border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
+                        <div className="w-20">
+                          <label className="block text-[9px] uppercase font-bold text-slate-400">Pontos</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="10000"
+                            step="50"
+                            value={slot.points}
+                            onChange={(e) => {
+                              const copy = [...currentSlots];
+                              copy[idx] = { ...copy[idx], points: Number(e.target.value) || 0 };
+                              updateCfg({ slots: copy });
+                            }}
+                            className="w-full px-2 py-1 rounded-lg border border-slate-200 text-xs font-black text-emerald-600 font-mono focus:outline-none focus:border-emerald-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {currentSlots.length > 3 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          updateCfg({ slots: currentSlots.filter((_, i) => i !== idx) });
+                        }}
+                        className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg active:scale-95 transition-all"
+                        title="Remover canaleta"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Preview Visual das Canaletas como no Tabuleiro */}
+              <div className="mt-4 pt-4 border-t border-slate-200">
+                <span className="block text-[10px] uppercase font-black tracking-wider text-slate-400 mb-2">
+                  Pré-visualização da Base do Tabuleiro:
+                </span>
+                <div className="flex items-stretch rounded-2xl overflow-hidden border-2 border-slate-300 bg-slate-900 shadow-md">
+                  {currentSlots.map((s, idx) => (
+                    <div
+                      key={idx}
+                      className={`flex-1 py-3 px-1 text-center border-r last:border-r-0 border-slate-200/40 flex flex-col items-center justify-center ${
+                        idx % 2 === 0 ? 'bg-white text-blue-900' : 'bg-blue-600 text-white'
+                      }`}
+                    >
+                      <span className="text-[10px] font-black uppercase tracking-tight block">
+                        {s.label}
+                      </span>
+                      <span className="text-xs font-mono font-black block mt-0.5">
+                        {s.points} pts
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // 22. DEFAULT GENÉRICO
       default: {
         const items = Array.isArray(content) ? content : [];
         return (
@@ -3240,103 +4521,120 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
           </div>
 
           {/* SEÇÃO: ORDEM E QUANTIDADE DE PERGUNTAS / ITENS POR PARTIDA */}
-          {isPoolGame && (
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5 shadow-xs space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wide flex items-center gap-2">
-                    <Shuffle className="w-4 h-4 text-purple-600" />
-                    <span>Ordem &amp; Sorteio de Perguntas</span>
-                  </h4>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Defina se as perguntas serão sorteadas aleatoriamente a cada partida ou fixas na ordem cadastrada.
-                  </p>
-                </div>
+          {isPoolGame && (() => {
+            const itemLabelPlural = isQuestionGame
+              ? 'perguntas'
+              : ['hangman', 'wordsearch'].includes(game.id)
+              ? 'palavras'
+              : ['connect_pairs', 'memory'].includes(game.id)
+              ? 'pares'
+              : 'itens';
+            const itemLabelSingular = isQuestionGame
+              ? 'pergunta'
+              : ['hangman', 'wordsearch'].includes(game.id)
+              ? 'palavra'
+              : ['connect_pairs', 'memory'].includes(game.id)
+              ? 'par'
+              : 'item';
+            const titleCapitalized = itemLabelPlural.charAt(0).toUpperCase() + itemLabelPlural.slice(1);
 
-                {/* Mode Selector Buttons */}
-                <div className="flex items-center gap-1.5 bg-slate-200/80 p-1 rounded-xl w-full sm:w-auto flex-shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      sound.playClick();
-                      setOrderMode('random');
-                    }}
-                    className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                      orderMode === 'random'
-                        ? 'bg-white text-slate-900 shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    <span>🎲 Aleatório (Sorteio)</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      sound.playClick();
-                      setOrderMode('ordered');
-                    }}
-                    className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                      orderMode === 'ordered'
-                        ? 'bg-white text-slate-900 shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    <span>🔢 Sequencial (Fixa)</span>
-                  </button>
-                </div>
-              </div>
+            return (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wide flex items-center gap-2">
+                      <Shuffle className="w-4 h-4 text-purple-600" />
+                      <span>Ordem &amp; Sorteio de {titleCapitalized}</span>
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Defina se {itemLabelPlural === 'pares' ? 'os' : 'as'} {itemLabelPlural} serão sorteados aleatoriamente a cada partida ou fixos na ordem cadastrada.
+                    </p>
+                  </div>
 
-              {/* Subset / Quantity Selector */}
-              <div className="pt-3 border-t border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <span className="text-xs font-bold text-slate-800 block">
-                    Quantidade de perguntas a utilizar por partida:
-                  </span>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    {orderMode === 'random'
-                      ? `Você pode ter um banco amplo (ex: ${Math.max(currentCount, 25)} perguntas) e sortear um grupo menor (ex: 5) para cada partida.`
-                      : 'Exibe as primeiras N perguntas cadastradas, ou todas se deixar o total.'}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                  {/* Stepper with number input */}
-                  <div className="flex items-center rounded-xl bg-white border border-slate-300 p-1 shadow-2xs">
+                  {/* Mode Selector Buttons */}
+                  <div className="flex items-center gap-1.5 bg-slate-200/80 p-1 rounded-xl w-full sm:w-auto flex-shrink-0">
                     <button
                       type="button"
                       onClick={() => {
                         sound.playClick();
-                        setQuestionsCount((prev) => Math.max(0, (prev || currentCount || 5) - 1));
+                        setOrderMode('random');
                       }}
-                      className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs flex items-center justify-center active:scale-95"
+                      className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                        orderMode === 'random'
+                          ? 'bg-white text-slate-900 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
                     >
-                      -
+                      <span>🎲 Aleatório (Sorteio)</span>
                     </button>
-                    <div className="px-2.5 flex items-center gap-1">
-                      <input
-                        type="number"
-                        min="0"
-                        max={currentCount || 999}
-                        value={questionsCount === 0 ? '' : questionsCount}
-                        placeholder={currentCount > 0 ? String(currentCount) : 'Todas'}
-                        onChange={(e) => {
-                          const val = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value) || 0);
-                          setQuestionsCount(val);
-                        }}
-                        className="w-12 text-center font-black text-xs text-slate-900 bg-transparent focus:outline-none font-mono"
-                      />
-                      <span className="text-[11px] text-slate-400 font-bold whitespace-nowrap">
-                        {questionsCount === 0 ? 'Todas' : 'perguntas'}
-                      </span>
-                    </div>
                     <button
                       type="button"
                       onClick={() => {
                         sound.playClick();
-                        setQuestionsCount((prev) => (prev === 0 ? 5 : prev + 1));
+                        setOrderMode('ordered');
                       }}
-                      className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs flex items-center justify-center active:scale-95"
+                      className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                        orderMode === 'ordered'
+                          ? 'bg-white text-slate-900 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
                     >
+                      <span>🔢 Sequencial (Fixa)</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Subset / Quantity Selector */}
+                <div className="pt-3 border-t border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <span className="text-xs font-bold text-slate-800 block">
+                      Quantidade de {itemLabelPlural} a utilizar por partida:
+                    </span>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      {orderMode === 'random'
+                        ? `Você pode ter um banco amplo (ex: ${Math.max(currentCount, 15)} ${itemLabelPlural}) e sortear um grupo menor para cada partida.`
+                        : `Exibe as primeiras N ${itemLabelPlural} cadastradas, ou todas se deixar o total.`}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    {/* Stepper with number input */}
+                    <div className="flex items-center rounded-xl bg-white border border-slate-300 p-1 shadow-2xs">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setQuestionsCount((prev) => Math.max(0, (prev || currentCount || 5) - 1));
+                        }}
+                        className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs flex items-center justify-center active:scale-95"
+                      >
+                        -
+                      </button>
+                      <div className="px-2.5 flex items-center gap-1">
+                        <input
+                          type="number"
+                          min="0"
+                          max={currentCount || 999}
+                          value={questionsCount === 0 ? '' : questionsCount}
+                          placeholder={currentCount > 0 ? String(currentCount) : 'Todas'}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value) || 0);
+                            setQuestionsCount(val);
+                          }}
+                          className="w-12 text-center font-black text-xs text-slate-900 bg-transparent focus:outline-none font-mono"
+                        />
+                        <span className="text-[11px] text-slate-400 font-bold whitespace-nowrap">
+                          {questionsCount === 0 ? 'Todas' : itemLabelPlural}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          setQuestionsCount((prev) => (prev === 0 ? 5 : prev + 1));
+                        }}
+                        className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs flex items-center justify-center active:scale-95"
+                      >
                       +
                     </button>
                   </div>
@@ -3378,7 +4676,8 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                 </div>
               </div>
             </div>
-            )}
+          );
+        })()}
             </div>
           )}
 

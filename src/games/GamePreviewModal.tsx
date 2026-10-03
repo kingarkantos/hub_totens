@@ -28,6 +28,8 @@ import { MathBlitzGame } from './MathBlitzGame';
 import { HigherLowerGame } from './HigherLowerGame';
 import { ReactionTimeGame } from './ReactionTimeGame';
 import { BullseyeGame } from './BullseyeGame';
+import { TopGearGame } from './TopGearGame';
+import { PlinkoGame } from './PlinkoGame';
 
 interface GamePreviewModalProps {
   game: GameDefinition | null;
@@ -82,12 +84,13 @@ export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
   };
 
   const activePalette = useMemo(() => {
-    if (palette && (layoutColorHue === undefined || palette.hue === layoutColorHue)) {
+    if (activeLayout === gameLayout && palette && (layoutColorHue === undefined || palette.hue === layoutColorHue)) {
       return palette;
     }
-    const hueToUse = layoutColorHue !== undefined ? layoutColorHue : getDefaultHueForLayout(activeLayout);
-    return generateLayoutPalette(hueToUse, isLight);
-  }, [palette, layoutColorHue, activeLayout, isLight]);
+    const defaultHue = getDefaultHueForLayout(activeLayout);
+    return generateLayoutPalette(defaultHue, isLight);
+  }, [palette, layoutColorHue, activeLayout, gameLayout, isLight]);
+
 
   const activeFontFamily = fontFamily || getFontFamilyById(fontId);
 
@@ -163,6 +166,10 @@ export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
         return <ReactionTimeGame {...commonProps} />;
       case 'bullseye':
         return <BullseyeGame {...commonProps} />;
+      case 'top_gear':
+        return <TopGearGame {...commonProps} />;
+      case 'plinko':
+        return <PlinkoGame {...commonProps} />;
       default:
         return (
           <div className="p-12 text-center text-slate-400">

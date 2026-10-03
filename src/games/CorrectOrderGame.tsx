@@ -141,6 +141,52 @@ export const CorrectOrderGame: React.FC<CorrectOrderGameProps> = (props) => {
       timeRemaining={timeLeft}
       gameOver={gameOver}
       gameWon={gameWon}
+      gameOverCustomContent={
+        <div
+          className={`w-full rounded-2xl sm:rounded-3xl p-4 sm:p-5 border-2 text-left shadow-lg backdrop-blur-xl ${
+            isLightMode
+              ? 'bg-slate-50/95 border-slate-200 text-slate-900 shadow-slate-200/50'
+              : 'bg-slate-800/90 border-white/10 text-white'
+          }`}
+          style={{ borderColor: `${layoutPrimary}55` }}
+        >
+          <div className="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-200/60 dark:border-slate-700/60">
+            <span className="text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-2 text-emerald-500">
+              <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 shrink-0" />
+              <span>{gameWon ? 'Ordem Finalizada com Sucesso:' : 'Sequência Correta do Procedimento:'}</span>
+            </span>
+            <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
+              {correctSteps.length} Passos
+            </span>
+          </div>
+
+          <div className="space-y-2 max-h-52 sm:max-h-60 overflow-y-auto pr-1">
+            {correctSteps.map((step, idx) => (
+              <div
+                key={idx}
+                className={`flex items-start gap-3 p-2.5 sm:p-3 rounded-2xl border transition-all ${
+                  isLightMode
+                    ? 'bg-white border-slate-200 text-slate-800 shadow-xs'
+                    : 'bg-slate-900/80 border-slate-700/80 text-slate-200 shadow-xs'
+                }`}
+              >
+                <div
+                  style={{
+                    background: `linear-gradient(135deg, ${layoutPrimary}, ${layoutSecondary})`,
+                    boxShadow: `0 2px 8px ${layoutGlow}`,
+                  }}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl text-white font-mono font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-sm mt-0.5"
+                >
+                  {idx + 1}º
+                </div>
+                <div className="flex-1 text-xs sm:text-sm font-bold leading-snug pt-0.5">
+                  {step}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      }
       onRestart={() => {
         const shuffled = [...correctSteps].sort(() => Math.random() - 0.5);
         setCurrentSteps(shuffled);

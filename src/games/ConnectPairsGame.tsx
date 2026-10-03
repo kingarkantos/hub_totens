@@ -7,6 +7,8 @@ import { ConnectPairCustomItem } from '../types/gameContent';
 
 interface ConnectPairsGameProps extends BaseGameProps {
   customContent?: ConnectPairCustomItem[];
+  orderMode?: 'random' | 'ordered';
+  questionsCount?: number;
 }
 
 const DEFAULT_PAIRS: ConnectPairCustomItem[] = [
@@ -32,6 +34,8 @@ export const ConnectPairsGame: React.FC<ConnectPairsGameProps> = (props) => {
     customContent,
     isLight,
     themeMode,
+    orderMode = 'random',
+    questionsCount,
     gameLayout,
     palette,
     layoutColorHue,
@@ -46,9 +50,31 @@ export const ConnectPairsGame: React.FC<ConnectPairsGameProps> = (props) => {
     themePrimary,
     gameLayout,
   });
-  const basePairs = useMemo(() => {
-    return customContent && customContent.length >= 3 ? customContent.slice(0, 4) : DEFAULT_PAIRS;
+
+  const rawPairs = useMemo(() => {
+    return customContent && customContent.length >= 3 ? customContent : DEFAULT_PAIRS;
   }, [customContent]);
+
+  const targetCount = useMemo(() => {
+    if (questionsCount && questionsCount >= 2) {
+      return Math.min(questionsCount, rawPairs.length);
+    }
+    return Math.min(4, rawPairs.length);
+  }, [questionsCount, rawPairs.length]);
+
+  const pickPairs = React.useCallback(() => {
+    let list = [...rawPairs];
+    if (orderMode !== 'ordered') {
+      list = list.sort(() => Math.random() - 0.5);
+    }
+    return list.slice(0, targetCount);
+  }, [rawPairs, orderMode, targetCount]);
+
+  const [basePairs, setBasePairs] = useState<ConnectPairCustomItem[]>(() => pickPairs());
+
+  useEffect(() => {
+    setBasePairs(pickPairs());
+  }, [pickPairs]);
 
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
   const [selectedRight, setSelectedRight] = useState<string | null>(null);
@@ -148,7 +174,9 @@ export const ConnectPairsGame: React.FC<ConnectPairsGameProps> = (props) => {
       gameOver={gameOver}
       gameWon={matchedPairs.length === basePairs.length}
       onRestart={() => {
-        const rights = basePairs.map((p) => p.right).sort(() => Math.random() - 0.5);
+        const nextPairs = pickPairs();
+        setBasePairs(nextPairs);
+        const rights = nextPairs.map((p) => p.right).sort(() => Math.random() - 0.5);
         setShuffledRights(rights);
         setMatchedPairs([]);
         setSelectedLeft(null);

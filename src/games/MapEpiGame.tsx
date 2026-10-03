@@ -6,7 +6,9 @@ import { MapPin, Check, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 import { BaseGameProps } from '../types';
 import { useActiveGamePalette } from '../context/GameLayoutContext';
 
-interface MapEpiGameProps extends BaseGameProps {}
+interface MapEpiGameProps extends BaseGameProps {
+  customContent?: any;
+}
 
 interface SectorMatch {
   id: string;
@@ -16,7 +18,19 @@ interface SectorMatch {
   color: string;
 }
 
-const SECTORS: SectorMatch[] = [
+const isImageUrl = (val: string) => {
+  if (!val || typeof val !== 'string') return false;
+  const s = val.trim();
+  return (
+    s.startsWith('http://') ||
+    s.startsWith('https://') ||
+    s.startsWith('data:image/') ||
+    s.startsWith('/') ||
+    /\.(png|jpe?g|svg|webp|gif)$/i.test(s)
+  );
+};
+
+const DEFAULT_SECTORS: SectorMatch[] = [
   { id: 'civil', sectorName: 'Canteiro de Obras & Altura', requiredEpi: 'Capacete com Jugular', epiEmoji: '⛑️', color: 'bg-amber-500' },
   { id: 'noise', sectorName: 'Área com Prensas e Compressores', requiredEpi: 'Protetor Auricular Concha', epiEmoji: '🎧', color: 'bg-blue-500' },
   { id: 'electric', sectorName: 'Subestação Elétrica 13.8kV', requiredEpi: 'Luvas de Alta Tensão 10kV', epiEmoji: '🧤', color: 'bg-purple-500' },
@@ -34,6 +48,7 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = (props) => {
     campaignName,
     clientName,
     splashImageUrl,
+    customContent,
     isLight,
     themeMode,
     gameLayout,
@@ -50,6 +65,29 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = (props) => {
     themePrimary,
     gameLayout,
   });
+
+  const sectorsList = React.useMemo<SectorMatch[]>(() => {
+    let list: any[] = [];
+    if (Array.isArray(customContent) && customContent.length >= 2) {
+      list = customContent;
+    } else if (typeof customContent === 'string') {
+      try {
+        const parsed = JSON.parse(customContent);
+        if (Array.isArray(parsed) && parsed.length >= 2) list = parsed;
+      } catch {}
+    }
+    if (list.length >= 2) {
+      return list.map((item, idx) => ({
+        id: item.id || `sec-${idx}`,
+        sectorName: item.sectorName || `Setor ${idx + 1}`,
+        requiredEpi: item.requiredEpi || `EPI ${idx + 1}`,
+        epiEmoji: item.imageUrl || item.epiEmoji || '🛡️',
+        color: item.color || '#EF4444',
+      }));
+    }
+    return DEFAULT_SECTORS;
+  }, [customContent]);
+
   const [selectedEpiId, setSelectedEpiId] = useState<string | null>(null);
   const [matchedIds, setMatchedIds] = useState<string[]>([]);
   const [score, setScore] = useState(0);
@@ -60,15 +98,19 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = (props) => {
   // Randomize EPI order
   const [shuffledEpis, setShuffledEpis] = useState<SectorMatch[]>([]);
 
-  useEffect(() => {
-    setShuffledEpis([...SECTORS].sort(() => Math.random() - 0.5));
+  const initGame = React.useCallback(() => {
+    setShuffledEpis([...sectorsList].sort(() => Math.random() - 0.5));
     setMatchedIds([]);
     setSelectedEpiId(null);
     setScore(0);
     setTimeLeft(60);
     setGameOver(false);
     setGameWon(false);
-  }, []);
+  }, [sectorsList]);
+
+  useEffect(() => {
+    initGame();
+  }, [initGame]);
 
   // Timer
   useEffect(() => {
@@ -78,14 +120,14 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = (props) => {
         if (prev <= 1) {
           clearInterval(timer);
           setGameOver(true);
-          setGameWon(matchedIds.length === SECTORS.length);
+          setGameWon(matchedIds.length === sectorsList.length);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [gameOver, matchedIds.length]);
+  }, [gameOver, matchedIds.length, sectorsList.length]);
 
   const handleSelectEpi = (id: string) => {
     if (matchedIds.includes(id) || gameOver) return;
@@ -103,7 +145,7 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = (props) => {
       setSelectedEpiId(null);
       setScore((prev) => prev + 250 + timeLeft * 5);
 
-      if (updated.length === SECTORS.length) {
+      if (updated.length === sectorsList.length) {
         sound.playFanfare();
         setGameOver(true);
         setGameWon(true);
@@ -120,19 +162,11 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = (props) => {
       category="EPIs"
       score={score}
       correctAnswers={matchedIds.length}
-      totalQuestions={SECTORS.length}
+      totalQuestions={sectorsList.length}
       timeRemaining={timeLeft}
       gameOver={gameOver}
-      gameWon={matchedIds.length === SECTORS.length}
-      onRestart={() => {
-        setShuffledEpis([...SECTORS].sort(() => Math.random() - 0.5));
-        setMatchedIds([]);
-        setSelectedEpiId(null);
-        setScore(0);
-        setTimeLeft(60);
-        setGameOver(false);
-        setGameWon(false);
-      }}
+      gameWon={matchedIds.length === sectorsList.length}
+      onRestart={initGame}
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
@@ -166,7 +200,7 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = (props) => {
 
         {/* Sectors on the Map */}
         <div className="my-auto py-2 grid grid-cols-2 gap-4 sm:gap-6">
-          {SECTORS.map((sector) => {
+          {sectorsList.map((sector) => {
             const isMatched = matchedIds.includes(sector.id);
 
             return (
@@ -212,9 +246,17 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = (props) => {
                 </div>
 
                 {isMatched && (
-                  <div className="text-xs sm:text-base font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-2">
-                    <span className="text-xl sm:text-2xl">{sector.epiEmoji}</span>
-                    <span>{sector.requiredEpi}</span>
+                  <div className="text-xs sm:text-base font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-2 mt-2">
+                    {isImageUrl(sector.epiEmoji) ? (
+                      <img
+                        src={sector.epiEmoji}
+                        alt={sector.requiredEpi}
+                        className="w-7 h-7 sm:w-8 sm:h-8 object-contain shrink-0 drop-shadow"
+                      />
+                    ) : (
+                      <span className="text-xl sm:text-2xl">{sector.epiEmoji}</span>
+                    )}
+                    <span className="truncate">{sector.requiredEpi}</span>
                   </div>
                 )}
               </button>
@@ -260,7 +302,17 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = (props) => {
                       : 'bg-slate-800 text-white hover:bg-slate-700 shadow-md'
                   }`}
                 >
-                  <span className="text-4xl sm:text-5xl">{epi.epiEmoji}</span>
+                  {isImageUrl(epi.epiEmoji) ? (
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center">
+                      <img
+                        src={epi.epiEmoji}
+                        alt={epi.requiredEpi}
+                        className="max-w-full max-h-full object-contain drop-shadow"
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-4xl sm:text-5xl">{epi.epiEmoji}</span>
+                  )}
                   <span className="text-xs sm:text-sm font-black text-center leading-tight">
                     {epi.requiredEpi}
                   </span>
@@ -273,3 +325,4 @@ export const MapEpiGame: React.FC<MapEpiGameProps> = (props) => {
     </GameContainer>
   );
 };
+

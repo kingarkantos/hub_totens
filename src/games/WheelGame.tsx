@@ -1,6 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
+import confetti from 'canvas-confetti';
+import { RotateCcw, CheckCircle2, Sparkles, Gift } from 'lucide-react';
 
 import { BaseGameProps } from '../types';
 import { WheelItem } from '../types/gameContent';
@@ -57,7 +59,6 @@ export const WheelGame: React.FC<WheelGameProps> = (props) => {
   const [currentAngle, setCurrentAngle] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [wonPrize, setWonPrize] = useState<(typeof PRIZES)[0] | null>(null);
-  const [score, setScore] = useState(0);
 
   const drawWheel = (angle: number) => {
     const canvas = canvasRef.current;
@@ -189,8 +190,13 @@ export const WheelGame: React.FC<WheelGameProps> = (props) => {
         setSpinning(false);
         const selected = PRIZES[targetIndex];
         setWonPrize(selected);
-        setScore(selected.score);
-        setGameOver(true);
+        sound.playFanfare();
+        confetti({
+          particleCount: 130,
+          spread: 85,
+          origin: { y: 0.55 },
+          colors: [selected.color, '#F59E0B', '#10B981', '#38BDF8', '#EC4899', '#FFFFFF'],
+        });
       }
     };
 
@@ -200,7 +206,6 @@ export const WheelGame: React.FC<WheelGameProps> = (props) => {
   const restart = () => {
     setGameOver(false);
     setWonPrize(null);
-    setScore(0);
     drawWheel(currentAngle);
   };
 
@@ -208,14 +213,15 @@ export const WheelGame: React.FC<WheelGameProps> = (props) => {
     <GameContainer
       title="Roleta Premiada"
       category="Sorte"
-      score={score}
+      score={0}
+      hideScore={true}
+      prizeWon={wonPrize ? { label: wonPrize.label, color: wonPrize.color } : undefined}
       gameOver={gameOver}
-      gameWon={score >= Math.max(...PRIZES.map((p) => p.score || 0))}
+      gameWon={!!wonPrize}
       onRestart={restart}
       onExit={onExit}
       rankingEnabled={rankingEnabled}
-      onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
-      customScoreLabel="Pts"
+      onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, 1)}
       themePrimary={layoutPrimary}
       theme={theme}
       isLight={isLightMode}
@@ -232,13 +238,15 @@ export const WheelGame: React.FC<WheelGameProps> = (props) => {
         {/* Pointer indicator */}
         <div className="relative flex flex-col items-center">
           <div 
-            style={{ borderTopColor: layoutPrimary }}
-            className="w-0 h-0 border-x-[20px] sm:border-x-[26px] border-x-transparent border-t-[34px] sm:border-t-[44px] drop-shadow-2xl z-20 -mb-6 sm:-mb-8" 
+            style={{ borderTopColor: wonPrize?.color || layoutPrimary }}
+            className={`w-0 h-0 border-x-[20px] sm:border-x-[26px] border-x-transparent border-t-[34px] sm:border-t-[44px] drop-shadow-2xl z-20 -mb-6 sm:-mb-8 transition-all duration-300 ${
+              wonPrize ? 'scale-125 animate-bounce' : ''
+            }`} 
           />
           
           <div 
-            style={{ borderColor: `${layoutPrimary}44` }}
-            className="relative rounded-full p-3 sm:p-4 bg-slate-900/90 border-4 shadow-2xl backdrop-blur-xl"
+            style={{ borderColor: wonPrize ? (wonPrize.color || layoutPrimary) : `${layoutPrimary}44` }}
+            className="relative rounded-full p-3 sm:p-4 bg-slate-900/90 border-4 shadow-2xl backdrop-blur-xl transition-colors duration-500"
           >
             <canvas
               ref={canvasRef}
@@ -250,28 +258,78 @@ export const WheelGame: React.FC<WheelGameProps> = (props) => {
           </div>
         </div>
 
-        {/* Big Spin button for totem */}
-        <button
-          onClick={spin}
-          disabled={spinning || gameOver}
-          style={{ 
-            backgroundColor: layoutPrimary,
-            boxShadow: `0 10px 30px ${layoutGlow}`,
-            borderColor: `${darkPrimary}66`,
-          }}
-          className="w-full py-6 sm:py-8 px-10 rounded-3xl text-white font-black text-2xl sm:text-3xl tracking-wider uppercase shadow-2xl active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none hover:brightness-110 flex items-center justify-center gap-4 animate-totem-pulse border-4"
-        >
-          <span className="text-3xl">🎯</span>
-          <span>{spinning ? 'GIRANDO...' : 'TOQUE PARA GIRAR!'}</span>
-        </button>
-
-        {wonPrize && !gameOver && (
+        {/* Prize Showcase Card when won, or Big Spin button */}
+        {wonPrize ? (
           <div 
-            style={{ color: layoutPrimary }}
-            className="text-center font-black text-lg sm:text-2xl"
+            style={{
+              borderColor: wonPrize.color || layoutPrimary,
+              boxShadow: `0 0 45px ${wonPrize.color || layoutPrimary}44`,
+            }}
+            className="w-full p-5 sm:p-7 rounded-3xl bg-slate-900/95 backdrop-blur-xl border-4 shadow-2xl flex flex-col items-center justify-center gap-3 animate-in zoom-in-95 duration-400"
           >
-            Você ganhou: <span className="text-white text-xl sm:text-3xl">{wonPrize.label}</span>!
+            <div className="flex items-center gap-2 text-amber-400 font-black text-xs sm:text-sm tracking-widest uppercase">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 animate-spin" />
+              <span>PARABÉNS! VOCÊ GANHOU:</span>
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 animate-spin" />
+            </div>
+
+            <div 
+              style={{ color: wonPrize.color || '#F59E0B' }}
+              className="text-2xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-center drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]"
+            >
+              {wonPrize.label}
+            </div>
+
+            <p className="text-xs sm:text-sm text-slate-300 font-bold text-center">
+              Apresente esta tela no ponto de atendimento para resgatar seu brinde!
+            </p>
+
+            <div className="flex items-center gap-3 w-full mt-2">
+              <button
+                type="button"
+                onClick={restart}
+                className="flex-1 py-4 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-black text-sm sm:text-base border-2 border-slate-600 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+              >
+                <RotateCcw className="w-5 h-5 text-amber-400" />
+                <span>Girar Novamente</span>
+              </button>
+
+              {rankingEnabled && onSubmitScore ? (
+                <button
+                  type="button"
+                  onClick={() => setGameOver(true)}
+                  className="flex-1 py-4 px-4 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-sm sm:text-base border-2 border-yellow-300 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                >
+                  <Gift className="w-5 h-5 text-slate-950" />
+                  <span>Registrar Prêmio</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onExit}
+                  className="flex-1 py-4 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-sm sm:text-base border-2 border-emerald-300 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                >
+                  <CheckCircle2 className="w-5 h-5 text-white" />
+                  <span>Concluir</span>
+                </button>
+              )}
+            </div>
           </div>
+        ) : (
+          <button
+            type="button"
+            onClick={spin}
+            disabled={spinning}
+            style={{ 
+              backgroundColor: layoutPrimary,
+              boxShadow: `0 10px 30px ${layoutGlow}`,
+              borderColor: `${darkPrimary}66`,
+            }}
+            className="w-full py-6 sm:py-8 px-10 rounded-3xl text-white font-black text-2xl sm:text-3xl tracking-wider uppercase shadow-2xl active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none hover:brightness-110 flex items-center justify-center gap-4 animate-totem-pulse border-4 cursor-pointer"
+          >
+            <span className="text-3xl">🎯</span>
+            <span>{spinning ? 'GIRANDO...' : 'TOQUE PARA GIRAR!'}</span>
+          </button>
         )}
       </div>
     </GameContainer>

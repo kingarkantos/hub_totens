@@ -9,7 +9,7 @@ import { ThemeDefinition } from '../types';
 import { GameLayoutId, GAME_LAYOUTS, GameLayoutDefinition } from '../types/gameLayouts';
 import { GameLayoutProvider, useGameLayout } from '../context/GameLayoutContext';
 import { getFontFamilyById } from '../lib/fonts';
-import { LayoutColorPalette, generateLayoutPalette } from '../lib/colorHarmony';
+import { LayoutColorPalette, generateLayoutPalette, getDefaultHueForLayout } from '../lib/colorHarmony';
 
 const FEEDBACK_POOLS = {
   // 100% de acertos (Acertou tudo - SOMENTE AQUI dá parabéns!)
@@ -78,6 +78,9 @@ interface GameContainerProps {
   fontId?: string;
   palette?: LayoutColorPalette;
   layoutColorHue?: number;
+  hideScore?: boolean;
+  prizeWon?: { label: string; color?: string; icon?: string } | string;
+  gameOverCustomContent?: React.ReactNode;
 }
 
 export const GameContainer: React.FC<GameContainerProps> = ({
@@ -94,7 +97,11 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   rankingEnabled = false,
   onSubmitScore,
   customScoreLabel = 'Pontos',
+  hideScore = false,
+  prizeWon,
+  gameOverCustomContent,
   correctAnswers,
+
   totalQuestions,
   themePrimary = '#DC2626',
   theme,
@@ -162,14 +169,14 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
   const effectiveHue = layoutColorHue !== undefined ? layoutColorHue : palette?.hue;
   const activePalette = useMemo(() => {
-    if (palette && (layoutColorHue === undefined || palette.hue === layoutColorHue)) {
-      return palette;
-    }
     if (layoutColorHue !== undefined) {
       return generateLayoutPalette(layoutColorHue, isLightMode);
     }
-    return contextLayout?.palette;
-  }, [palette, layoutColorHue, isLightMode, contextLayout?.palette]);
+    if (palette && palette.hue === getDefaultHueForLayout(currentLayout)) {
+      return palette;
+    }
+    return generateLayoutPalette(getDefaultHueForLayout(currentLayout), isLightMode);
+  }, [palette, layoutColorHue, isLightMode, currentLayout]);
 
   const activePrimary = activePalette?.primary || theme?.primary || themePrimary || '#06B6D4';
   const activeSecondary = activePalette?.secondary || theme?.secondary || '#3B82F6';
@@ -385,8 +392,32 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
         {currentLayout === 'synthwave_grid' && (
           <>
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-purple-950/30 via-pink-950/20 to-black/80" />
-            <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-gradient-to-b from-pink-500/25 to-purple-600/10 blur-[120px] pointer-events-none" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-purple-950/40 via-purple-900/20 to-black" />
+            {/* Retro 80s Sun Glow */}
+            <div 
+              className="absolute -top-16 left-1/2 -translate-x-1/2 w-80 h-80 sm:w-[480px] sm:h-[480px] rounded-full blur-[100px] opacity-35 pointer-events-none"
+              style={{ background: 'radial-gradient(circle, #f43f5e 0%, #a855f7 50%, transparent 75%)' }}
+            />
+            {/* 3D Perspective Grid */}
+            <div 
+              className="pointer-events-none absolute bottom-0 inset-x-0 h-44 sm:h-64 opacity-30 overflow-hidden"
+              style={{ perspective: '300px' }}
+            >
+              <div 
+                className="w-full h-[200%] origin-bottom"
+                style={{
+                  transform: 'rotateX(65deg)',
+                  backgroundImage: `linear-gradient(to right, ${activePrimary} 1.5px, transparent 1.5px), linear-gradient(to bottom, ${activePrimary} 1.5px, transparent 1.5px)`,
+                  backgroundSize: '40px 40px',
+                  boxShadow: `inset 0 0 50px ${activeGlow}`,
+                }}
+              />
+            </div>
+            {/* Horizon Neon Line */}
+            <div 
+              className="pointer-events-none absolute bottom-44 sm:bottom-64 inset-x-0 h-0.5 opacity-60 shadow-[0_0_15px_#f43f5e]"
+              style={{ background: `linear-gradient(to right, transparent, ${activePrimary}, transparent)` }}
+            />
           </>
         )}
 
@@ -639,37 +670,39 @@ export const GameContainer: React.FC<GameContainerProps> = ({
               </div>
             )}
 
-            <div
-              style={{
-                ...(currentLayout === 'cartoon_pop'
-                  ? { background: `linear-gradient(to right, ${activePrimary}, ${activeSecondary})`, borderColor: '#FFFFFF', boxShadow: `0 3px 0 ${activeDarkShade}`, color: isLightMode ? '#000000' : '#FFFFFF' }
+            {!hideScore && (
+              <div
+                style={{
+                  ...(currentLayout === 'cartoon_pop'
+                    ? { background: `linear-gradient(to right, ${activePrimary}, ${activeSecondary})`, borderColor: '#FFFFFF', boxShadow: `0 3px 0 ${activeDarkShade}`, color: isLightMode ? '#000000' : '#FFFFFF' }
+                    : currentLayout === 'neon_arcade'
+                    ? { borderColor: activePrimary, color: activePrimary, boxShadow: `0 0 15px ${activeGlow}` }
+                    : currentLayout === 'pixel_retro'
+                    ? { borderColor: activePrimary, color: activePrimary, boxShadow: `2px 2px 0 ${activeDarkShade}` }
+                    : currentLayout === 'golden_casino'
+                    ? { background: `linear-gradient(to right, ${activePrimary}, ${activeSecondary})`, color: '#000000', boxShadow: `0 3px 0 ${activeDarkShade}` }
+                    : currentLayout === 'synthwave_grid'
+                    ? { borderColor: activePrimary, color: activePrimary, boxShadow: `0 0 12px ${activeGlow}` }
+                    : {}),
+                }}
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 ${currentLayoutDef.buttonClass} ${
+                currentLayout === 'cartoon_pop'
+                  ? 'border-2'
+                  : currentLayout === 'cartoon_comic'
+                  ? 'bg-emerald-400 text-black border-2 border-black shadow-[2px_2px_0_#000]'
                   : currentLayout === 'neon_arcade'
-                  ? { borderColor: activePrimary, color: activePrimary, boxShadow: `0 0 15px ${activeGlow}` }
-                  : currentLayout === 'pixel_retro'
-                  ? { borderColor: activePrimary, color: activePrimary, boxShadow: `2px 2px 0 ${activeDarkShade}` }
-                  : currentLayout === 'golden_casino'
-                  ? { background: `linear-gradient(to right, ${activePrimary}, ${activeSecondary})`, color: '#000000', boxShadow: `0 3px 0 ${activeDarkShade}` }
-                  : currentLayout === 'synthwave_grid'
-                  ? { borderColor: activePrimary, color: activePrimary, boxShadow: `0 0 12px ${activeGlow}` }
-                  : {}),
-              }}
-              className={`px-3 sm:px-4 py-1.5 sm:py-2 ${currentLayoutDef.buttonClass} ${
-              currentLayout === 'cartoon_pop'
-                ? 'border-2'
-                : currentLayout === 'cartoon_comic'
-                ? 'bg-emerald-400 text-black border-2 border-black shadow-[2px_2px_0_#000]'
-                : currentLayout === 'neon_arcade'
-                ? 'bg-black border'
-                : currentLayout === 'bento_tech'
-                ? 'bg-slate-800 border border-slate-700 text-white'
-                : isLightMode 
-                ? 'bg-slate-100 border border-slate-200 text-slate-800' 
-                : 'bg-white/10 border border-white/15 text-white'
-            } flex items-center gap-1.5 font-black text-sm sm:text-base shadow-sm`}>
-              <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
-              <span>{score}</span>
-              <span className={`text-xs ${isLightMode ? 'text-slate-500' : 'text-slate-300/80'} hidden sm:inline`}>{customScoreLabel}</span>
-            </div>
+                  ? 'bg-black border'
+                  : currentLayout === 'bento_tech'
+                  ? 'bg-slate-800 border border-slate-700 text-white'
+                  : isLightMode 
+                  ? 'bg-slate-100 border border-slate-200 text-slate-800' 
+                  : 'bg-white/10 border border-white/15 text-white'
+              } flex items-center gap-1.5 font-black text-sm sm:text-base shadow-sm`}>
+                <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
+                <span>{score}</span>
+                <span className={`text-xs ${isLightMode ? 'text-slate-500' : 'text-slate-300/80'} hidden sm:inline`}>{customScoreLabel}</span>
+              </div>
+            )}
 
             <button
               onClick={toggleSound}
@@ -768,28 +801,54 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 )}
               </div>
 
-              {/* Título dinâmico (somente dá parabéns se acertar tudo!) */}
+              {/* Título dinâmico (somente dá parabéns se acertar tudo ou se ganhou prêmio!) */}
               <h3 className={`text-2xl sm:text-4xl font-black tracking-tight mb-1.5 ${
-                isPerfect
+                isPerfect || prizeWon
                   ? 'text-amber-400 drop-shadow-sm'
                   : isLightMode
                   ? 'text-slate-900'
                   : 'text-white'
               }`}>
-                {feedback?.title || (isPerfect ? 'Parabéns!' : 'Não foi dessa vez!')}
+                {prizeWon ? 'Parabéns!' : feedback?.title || (isPerfect ? 'Parabéns!' : 'Não foi dessa vez!')}
               </h3>
               
-              {/* Frase contextual de acordo com o aproveitamento */}
+              {/* Frase contextual de acordo com o aproveitamento ou prêmio */}
               <p className={`${isLightMode ? 'text-slate-600' : 'text-slate-300'} text-sm sm:text-base mb-4 sm:mb-6 max-w-md leading-relaxed`}>
-                {feedback?.subtitle || `Você concluiu o desafio ${title}.`}
+                {prizeWon ? 'Você girou a roleta e conquistou este prêmio:' : feedback?.subtitle || `Você concluiu o desafio ${title}.`}
               </p>
 
-              <div className={`w-full ${isLightMode ? 'bg-slate-50 border-2 border-slate-200' : 'bg-slate-800/95 border-2 border-white/15'} ${currentLayoutDef.cardClass} p-4 sm:p-6 mb-4 sm:mb-5 flex-shrink-0 shadow-inner`}>
-                <span className={`text-xs sm:text-sm ${isLightMode ? 'text-slate-500' : 'text-slate-400'} font-black uppercase tracking-widest`}>Pontuação Final</span>
-                <div className="text-4xl sm:text-6xl font-black text-amber-500 tracking-tight mt-1 font-mono drop-shadow-sm">
-                  {score} <span className={`text-sm sm:text-lg ${isLightMode ? 'text-slate-500' : 'text-slate-400'} font-normal`}>{customScoreLabel}</span>
+              {/* Card de Prêmio (se houver prizeWon) ou Pontuação Final */}
+              {prizeWon ? (
+                <div 
+                  style={{
+                    borderColor: typeof prizeWon === 'object' && prizeWon.color ? prizeWon.color : '#F59E0B',
+                    boxShadow: typeof prizeWon === 'object' && prizeWon.color ? `0 0 35px ${prizeWon.color}44` : '0 0 35px rgba(245, 158, 11, 0.3)',
+                  }}
+                  className={`w-full ${
+                    isLightMode ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-3' : 'bg-gradient-to-br from-slate-800 to-slate-900 border-3'
+                  } ${currentLayoutDef.cardClass} p-5 sm:p-7 mb-4 sm:mb-5 flex flex-col items-center justify-center flex-shrink-0 shadow-2xl animate-in zoom-in-95 duration-300`}
+                >
+                  <span className="text-4xl sm:text-5xl mb-2 animate-bounce-subtle">🎁</span>
+                  <span className={`text-xs sm:text-sm font-black uppercase tracking-widest ${isLightMode ? 'text-amber-700' : 'text-amber-400'}`}>
+                    Prêmio Conquistado
+                  </span>
+                  <div className="text-2xl sm:text-4xl font-black text-white tracking-tight mt-1 text-center drop-shadow-md">
+                    <span style={{ color: typeof prizeWon === 'object' && prizeWon.color ? prizeWon.color : undefined }} className="text-amber-400">
+                      {typeof prizeWon === 'string' ? prizeWon : prizeWon.label}
+                    </span>
+                  </div>
+                  <p className={`text-xs mt-2.5 font-bold ${isLightMode ? 'text-slate-500' : 'text-slate-300/80'} text-center`}>
+                    Apresente esta tela para retirar o seu brinde!
+                  </p>
                 </div>
-              </div>
+              ) : (
+                <div className={`w-full ${isLightMode ? 'bg-slate-50 border-2 border-slate-200' : 'bg-slate-800/95 border-2 border-white/15'} ${currentLayoutDef.cardClass} p-4 sm:p-6 mb-4 sm:mb-5 flex-shrink-0 shadow-inner`}>
+                  <span className={`text-xs sm:text-sm ${isLightMode ? 'text-slate-500' : 'text-slate-400'} font-black uppercase tracking-widest`}>Pontuação Final</span>
+                  <div className="text-4xl sm:text-6xl font-black text-amber-500 tracking-tight mt-1 font-mono drop-shadow-sm">
+                    {score} <span className={`text-sm sm:text-lg ${isLightMode ? 'text-slate-500' : 'text-slate-400'} font-normal`}>{customScoreLabel}</span>
+                  </div>
+                </div>
+              )}
 
               {/* Accuracy / Correct Answers for Question & Trivia Games */}
               {hasQuestionMetrics && (
@@ -844,6 +903,13 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 </div>
               )}
 
+              {/* Custom Game Over Content (e.g. Finalized Order, Review Details) */}
+              {gameOverCustomContent && (
+                <div className="w-full mb-4 sm:mb-5 flex-shrink-0 animate-in fade-in duration-300">
+                  {gameOverCustomContent}
+                </div>
+              )}
+
               {/* Ranking Action */}
               {rankingEnabled && onSubmitScore && !scoreSubmitted && (
                 <div className="w-full mb-4 sm:mb-6 flex flex-col items-center gap-2 flex-shrink-0">
@@ -856,14 +922,14 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                     className={`w-full py-4 sm:py-5 px-6 ${currentLayoutDef.buttonClass} bg-gradient-to-r from-amber-500/25 to-yellow-500/25 hover:from-amber-500/35 hover:to-yellow-500/35 border-2 border-amber-400/50 text-amber-300 font-black text-base sm:text-xl flex items-center justify-center gap-3 active:scale-95 transition-all shadow-lg`}
                   >
                     <Keyboard className="w-6 h-6 text-amber-400" />
-                    <span>Gravar Recorde no Ranking</span>
+                    <span>{prizeWon ? 'Registrar Ganhador(a)' : 'Gravar Recorde no Ranking'}</span>
                   </button>
                 </div>
               )}
 
               {scoreSubmitted && (
                 <div className={`w-full py-3.5 sm:py-4 mb-4 sm:mb-6 bg-emerald-500/20 border-2 border-emerald-500/40 ${currentLayoutDef.buttonClass} text-emerald-300 text-sm sm:text-base font-black flex items-center justify-center gap-2 flex-shrink-0 shadow-sm`}>
-                  <span>✓</span> Recorde de {playerName || 'Jogador'} registrado!
+                  <span>✓</span> {prizeWon ? `Prêmio registrado para ${playerName || 'Ganhador(a)'}!` : `Recorde de ${playerName || 'Jogador'} registrado!`}
                 </div>
               )}
 

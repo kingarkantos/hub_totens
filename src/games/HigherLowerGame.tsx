@@ -1,49 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 import { BaseGameProps } from '../types';
-import { ArrowUp, ArrowDown, Heart, Flame, Sparkles, TrendingUp, CheckCircle2, XCircle } from 'lucide-react';
+import { Zap, Flame, Award, CheckCircle2, AlertTriangle, RotateCcw, Trophy, ArrowRight, Sparkles } from 'lucide-react';
 import { useActiveGamePalette } from '../context/GameLayoutContext';
 
 interface HigherLowerGameProps extends BaseGameProps {
-  customContent?: any;
+  customContent?: {
+    gridMax?: number;
+    title?: string;
+    errorPenaltySeconds?: number;
+    bonusPoints?: number;
+  };
 }
 
-interface MetricCard {
-  title: string;
+interface NumberTile {
+  id: number;
   value: number;
-  unit: string;
-  category: string;
+  completed: boolean;
 }
 
-const METRIC_CARDS_POOL: MetricCard[] = [
-  { title: 'Potência Máxima', value: 182, unit: 'cv', category: 'Desempenho' },
-  { title: 'Torque do Motor', value: 240, unit: 'Nm', category: 'Força' },
-  { title: 'Velocidade Final', value: 210, unit: 'km/h', category: 'Pista' },
-  { title: 'Autonomia Total', value: 650, unit: 'km', category: 'Eficiência' },
-  { title: 'Capacidade do Porta-Malas', value: 519, unit: 'litros', category: 'Espaço' },
-  { title: 'Eficiência Energética', value: 92, unit: '%', category: 'Sustentável' },
-  { title: 'Aceleração 0-100', value: 85, unit: 'décimos', category: 'Arrancada' },
-  { title: 'Nota de Segurança Teste', value: 98, unit: 'pontos', category: 'Proteção' },
-  { title: 'Garantia de Fábrica', value: 60, unit: 'meses', category: 'Confiança' },
-  { title: 'Economia Urbana', value: 16, unit: 'km/l', category: 'Consumo' },
-  { title: 'Pressão dos Pneus Recomendada', value: 32, unit: 'psi', category: 'Manutenção' },
-  { title: 'Tempo de Resposta dos Freios', value: 45, unit: 'ms', category: 'Precisão' },
-  { title: 'Tela Touch do Painel', value: 12, unit: 'pol', category: 'Tecnologia' },
-  { title: 'Airbags de Série', value: 8, unit: 'unid', category: 'Segurança' },
-  { title: 'Satisfação dos Clientes', value: 96, unit: '%', category: 'Avaliação' },
-  { title: 'Autonomia no Modo Elétrico', value: 110, unit: 'km', category: 'Bateria' },
-  { title: 'Potência Combinada Híbrida', value: 215, unit: 'cv', category: 'Inovação' },
-  { title: 'Ângulo de Visão da Câmera', value: 180, unit: 'graus', category: 'Assistente' },
-];
+// Fisher-Yates shuffle
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
 
-const getRandomCard = (excludeValue?: number): MetricCard => {
-  const available = METRIC_CARDS_POOL.filter((c) => c.value !== excludeValue);
-  const selected = available[Math.floor(Math.random() * available.length)];
-  // Add a slight random variance to ensure dynamic values
-  const variance = Math.floor(Math.random() * 11) - 5;
-  const finalValue = Math.max(5, selected.value + variance);
-  return { ...selected, value: finalValue };
+const createTiles = (count: number): NumberTile[] => {
+  const base = Array.from({ length: count }, (_, i) => ({
+    id: i + 1,
+    value: i + 1,
+    completed: false,
+  }));
+  return shuffleArray(base);
 };
 
 export const HigherLowerGame: React.FC<HigherLowerGameProps> = (props) => {
@@ -51,7 +44,7 @@ export const HigherLowerGame: React.FC<HigherLowerGameProps> = (props) => {
     onExit,
     rankingEnabled,
     onSubmitScore,
-    themePrimary = '#3B82F6',
+    themePrimary = '#F59E0B',
     theme,
     customBgStyle,
     campaignName,
@@ -63,9 +56,10 @@ export const HigherLowerGame: React.FC<HigherLowerGameProps> = (props) => {
     gameLayout,
     palette,
     layoutColorHue,
+    customContent,
   } = props;
 
-  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+  const { activeLayout, layoutDef, layoutPrimary, layoutSecondary, layoutGlow, isLightMode } = useActiveGamePalette({
     palette,
     layoutColorHue,
     isLight,
@@ -75,20 +69,31 @@ export const HigherLowerGame: React.FC<HigherLowerGameProps> = (props) => {
     gameLayout,
   });
 
-  const initialTime = totalTimeLimit !== undefined && totalTimeLimit > 0 ? totalTimeLimit : 45;
-  const [timeLeft, setTimeLeft] = useState(initialTime);
-  const [score, setScore] = useState(0);
-  const [lives, setLives] = useState(3);
-  const [streak, setStreak] = useState(0);
-  const [maxStreak, setMaxStreak] = useState(0);
-  const [currentCard, setCurrentCard] = useState<MetricCard>(() => getRandomCard());
-  const [nextCard, setNextCard] = useState<MetricCard | null>(null);
-  const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
-  const [gameOver, setGameOver] = useState(false);
+  const gridMax = customContent?.gridMax && [16, 20, 25].includes(customContent.gridMax) ? customContent.gridMax : 16;
+  const initialTime = totalTimeLimit !== undefined && totalTimeLimit > 0 ? totalTimeLimit : 35;
+  const errorPenalty = customContent?.errorPenaltySeconds ?? 1;
+  const roundBonusBase = customContent?.bonusPoints ?? 1000;
 
-  // Countdown timer
+  const [timeLeft, setTimeLeft] = useState(initialTime);
+  const [tiles, setTiles] = useState<NumberTile[]>(() => createTiles(gridMax));
+  const [nextTarget, setNextTarget] = useState(1);
+  const [score, setScore] = useState(0);
+  const [combo, setCombo] = useState(1);
+  const [maxCombo, setMaxCombo] = useState(1);
+  const [round, setRound] = useState(1);
+  const [completedCount, setCompletedCount] = useState(0);
+  const [errorTileId, setErrorTileId] = useState<number | null>(null);
+  const [recentPenalty, setRecentPenalty] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+  const [gameWon, setGameWon] = useState(false);
+  const [roundCompletedModal, setRoundCompletedModal] = useState(false);
+
+  const errorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const penaltyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Timer countdown
   useEffect(() => {
-    if (gameOver) return;
+    if (gameOver || roundCompletedModal) return;
     if (timeLeft <= 0) {
       setGameOver(true);
       return;
@@ -97,71 +102,116 @@ export const HigherLowerGame: React.FC<HigherLowerGameProps> = (props) => {
       setTimeLeft((t) => (t > 0 ? t - 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft, gameOver]);
+  }, [timeLeft, gameOver, roundCompletedModal]);
 
-  const handleGuess = (guess: 'higher' | 'lower') => {
-    if (gameOver || feedback !== null) return;
+  // Clean up timeouts
+  useEffect(() => {
+    return () => {
+      if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+      if (penaltyTimeoutRef.current) clearTimeout(penaltyTimeoutRef.current);
+    };
+  }, []);
 
-    const drawnCard = getRandomCard(currentCard.value);
-    setNextCard(drawnCard);
+  const handleTileClick = (tile: NumberTile) => {
+    if (gameOver || roundCompletedModal || tile.completed) return;
 
-    const isHigher = drawnCard.value > currentCard.value;
-    const isLower = drawnCard.value < currentCard.value;
-    const isTie = drawnCard.value === currentCard.value;
-
-    const isCorrect = (guess === 'higher' && isHigher) || (guess === 'lower' && isLower) || isTie;
-
-    if (isCorrect) {
+    if (tile.value === nextTarget) {
+      // Correct number in sequence!
       sound.playSuccess();
-      const earned = 150 + streak * 50;
-      setScore((s) => s + earned);
-      const newStreak = streak + 1;
-      setStreak(newStreak);
-      if (newStreak > maxStreak) setMaxStreak(newStreak);
-      setFeedback('correct');
+      const pointsGained = 100 * combo;
+      setScore((s) => s + pointsGained);
+      const newCombo = combo + 1;
+      setCombo(newCombo);
+      if (newCombo > maxCombo) setMaxCombo(newCombo);
+
+      const newCompleted = completedCount + 1;
+      setCompletedCount(newCompleted);
+
+      // Update tile status
+      setTiles((prev) =>
+        prev.map((t) => (t.id === tile.id ? { ...t, completed: true } : t))
+      );
+
+      if (nextTarget >= gridMax) {
+        // Round Finished! All numbers cleared!
+        sound.playFanfare();
+        const timeBonus = timeLeft * 40;
+        const totalRoundBonus = roundBonusBase + timeBonus;
+        setScore((s) => s + totalRoundBonus);
+
+        // Check if there is still substantial time left or finish as speedrun victory
+        setGameWon(true);
+        setRoundCompletedModal(true);
+      } else {
+        setNextTarget((n) => n + 1);
+      }
     } else {
+      // Wrong number clicked!
       sound.playError();
-      setStreak(0);
-      setFeedback('wrong');
-      const newLives = lives - 1;
-      setLives(newLives);
-      if (newLives <= 0) {
-        setTimeout(() => setGameOver(true), 900);
+      setCombo(1);
+      setErrorTileId(tile.id);
+      if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+      errorTimeoutRef.current = setTimeout(() => {
+        setErrorTileId(null);
+      }, 500);
+
+      if (errorPenalty > 0) {
+        setTimeLeft((t) => Math.max(0, t - errorPenalty));
+        setRecentPenalty(true);
+        if (penaltyTimeoutRef.current) clearTimeout(penaltyTimeoutRef.current);
+        penaltyTimeoutRef.current = setTimeout(() => {
+          setRecentPenalty(false);
+        }, 800);
       }
     }
+  };
 
-    setTimeout(() => {
-      setCurrentCard(drawnCard);
-      setNextCard(null);
-      setFeedback(null);
-    }, 950);
+  const startNextRound = () => {
+    setRound((r) => r + 1);
+    setNextTarget(1);
+    setCompletedCount(0);
+    setTiles(createTiles(gridMax));
+    setRoundCompletedModal(false);
+    // Add extra time for the next round
+    setTimeLeft((t) => t + 25);
+  };
+
+  const finishGameAsChampion = () => {
+    setRoundCompletedModal(false);
+    setGameOver(true);
   };
 
   const restart = () => {
     setTimeLeft(initialTime);
     setScore(0);
-    setLives(3);
-    setStreak(0);
-    setMaxStreak(0);
+    setCombo(1);
+    setMaxCombo(1);
+    setRound(1);
+    setNextTarget(1);
+    setCompletedCount(0);
     setGameOver(false);
-    setFeedback(null);
-    setNextCard(null);
-    setCurrentCard(getRandomCard());
+    setGameWon(false);
+    setRoundCompletedModal(false);
+    setErrorTileId(null);
+    setRecentPenalty(false);
+    setTiles(createTiles(gridMax));
   };
+
+  const progressPercent = Math.min(100, Math.round(((nextTarget - 1) / gridMax) * 100));
 
   return (
     <GameContainer
-      title="Maior ou Menor"
+      title={customContent?.title || 'Ordem Numérica Relâmpago'}
       category="Cálculo & Lógica Numérica"
       score={score}
       timeRemaining={timeLeft}
       gameOver={gameOver}
-      gameWon={score > 300}
+      gameWon={gameWon || score > 800}
       onRestart={restart}
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
-      correctAnswers={maxStreak}
+      correctAnswers={completedCount}
       customScoreLabel="Pontos"
       themePrimary={layoutPrimary}
       theme={theme}
@@ -175,199 +225,229 @@ export const HigherLowerGame: React.FC<HigherLowerGameProps> = (props) => {
       palette={palette}
       layoutColorHue={layoutColorHue}
     >
-      <div className="relative w-full h-full flex flex-col items-center justify-between p-4 sm:p-8 max-w-4xl mx-auto">
-        {/* Top HUD: Lives & Streak */}
-        <div className="w-full flex items-center justify-between gap-4">
-          {/* Lives hearts */}
-          <div 
-            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border"
-            style={{ borderColor: `${layoutPrimary}44` }}
+      <div className="relative w-full h-full flex flex-col items-center justify-between p-3 sm:p-6 max-w-4xl mx-auto select-none">
+        {/* Top HUD: Target Indicator, Progress & Combo */}
+        <div className="w-full flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
+          {/* Target Indicator Card */}
+          <div
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl ${layoutDef.cardClass} border shadow-lg transition-all`}
+            style={{
+              borderColor: `${layoutPrimary}88`,
+              boxShadow: `0 0 20px ${layoutGlow}`,
+            }}
           >
-            <span className="text-xs font-bold uppercase text-slate-300 mr-1">Vidas:</span>
-            {[1, 2, 3].map((heart) => (
-               <Heart
-                 key={heart}
-                 className={`w-5 h-5 transition-transform ${
-                   heart <= lives
-                     ? 'text-rose-500 fill-rose-500 scale-110'
-                     : 'text-slate-600 scale-90 opacity-40'
-                 }`}
-               />
-             ))}
+            <div className="flex flex-col">
+              <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-400">
+                Toque no Número:
+              </span>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span
+                  className="text-2xl sm:text-3xl font-black font-mono tracking-tight drop-shadow animate-pulse"
+                  style={{ color: layoutPrimary }}
+                >
+                  {nextTarget <= gridMax ? nextTarget : '✓'}
+                </span>
+                <span className="text-[11px] font-bold text-slate-400">
+                  de {gridMax}
+                </span>
+              </div>
+            </div>
           </div>
 
-          {/* Current Streak with fire */}
-          <div
-            className={`flex items-center gap-2 px-5 py-2 rounded-2xl transition-all ${
-              streak > 0
-                ? 'text-white shadow-lg scale-105 animate-pulse'
-                : 'bg-white/10 text-slate-300 border border-white/10'
-            }`}
-            style={
-              streak > 0
-                ? {
-                    background: `linear-gradient(135deg, ${layoutPrimary}, ${layoutSecondary})`,
-                    boxShadow: `0 4px 20px ${layoutGlow}`
-                  }
-                : undefined
-            }
-          >
-            <Flame className="w-4 h-4 fill-current" />
-            <span className="text-xs sm:text-sm font-black uppercase tracking-wider">
-              Sequência: {streak}
-            </span>
+          {/* Penalty Toast Indicator */}
+          {recentPenalty && (
+            <div className="animate-bounce flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600 text-white font-black text-xs shadow-lg shadow-rose-600/50">
+              <AlertTriangle className="w-4 h-4" />
+              <span>-{errorPenalty}s Penalidade!</span>
+            </div>
+          )}
+
+          {/* Right Stats: Round & Multiplier Combo */}
+          <div className="flex items-center gap-2 ml-auto">
+            <div
+              className="px-3 py-1.5 rounded-xl border text-[11px] font-bold text-slate-300 bg-white/5"
+              style={{ borderColor: `${layoutPrimary}33` }}
+            >
+              Rodada <strong className="text-white">{round}</strong>
+            </div>
+
+            <div
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl transition-all duration-300 ${
+                combo > 1
+                  ? 'text-white shadow-lg scale-105 animate-pulse'
+                  : 'bg-white/10 text-slate-300 border border-white/10'
+              }`}
+              style={
+                combo > 1
+                  ? {
+                      background: `linear-gradient(135deg, ${layoutPrimary}, ${layoutSecondary})`,
+                      boxShadow: `0 4px 15px ${layoutGlow}`,
+                    }
+                  : undefined
+              }
+            >
+              <Flame className="w-4 h-4 fill-current" />
+              <span className="text-xs sm:text-sm font-black uppercase tracking-wider">
+                {combo}x Combo
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Center Cards Comparison Display */}
-        <div className="w-full max-w-2xl my-auto grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 items-center">
-          {/* Card 1: Reference Card */}
+        {/* Progress Bar */}
+        <div className="w-full max-w-xl my-2">
+          <div className="w-full h-2 sm:h-2.5 rounded-full bg-white/10 overflow-hidden p-0.5 border border-white/10">
+            <div
+              className="h-full rounded-full transition-all duration-300"
+              style={{
+                width: `${progressPercent}%`,
+                background: `linear-gradient(90deg, ${layoutPrimary}, ${layoutSecondary})`,
+                boxShadow: `0 0 10px ${layoutGlow}`,
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Number Grid (4x4 = 16 or 4x5 = 20 or 5x5 = 25) */}
+        <div className="my-auto w-full max-w-lg sm:max-w-xl flex items-center justify-center p-2">
           <div
-            style={{
-              borderColor: `${layoutPrimary}66`,
-              boxShadow: `0 0 30px ${layoutGlow}`
-            }}
-            className={`p-6 sm:p-8 rounded-3xl border-2 transition-all shadow-2xl flex flex-col items-center text-center select-none ${
-              isLightMode
-                ? 'bg-white/95 text-slate-900'
-                : 'bg-slate-900/90 text-white backdrop-blur-xl'
+            className={`w-full grid gap-2.5 sm:gap-3.5 ${
+              gridMax === 25
+                ? 'grid-cols-5'
+                : gridMax === 20
+                ? 'grid-cols-4 sm:grid-cols-5'
+                : 'grid-cols-4'
             }`}
           >
-            <span 
-              className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full mb-3"
+            {tiles.map((tile) => {
+              const isTarget = tile.value === nextTarget;
+              const isError = errorTileId === tile.id;
+
+              return (
+                <button
+                  key={tile.id}
+                  type="button"
+                  onClick={() => handleTileClick(tile)}
+                  disabled={tile.completed || gameOver || roundCompletedModal}
+                  style={
+                    tile.completed
+                      ? undefined
+                      : isError
+                      ? {
+                          borderColor: '#EF4444',
+                          backgroundColor: 'rgba(239, 68, 68, 0.25)',
+                          boxShadow: '0 0 20px rgba(239, 68, 68, 0.5)',
+                        }
+                      : {
+                          borderColor: isTarget ? `${layoutPrimary}` : `${layoutPrimary}44`,
+                          boxShadow: isTarget ? `0 0 25px ${layoutGlow}` : undefined,
+                        }
+                  }
+                  className={`relative aspect-square rounded-2xl sm:rounded-3xl border-2 flex items-center justify-center font-black font-mono transition-all duration-150 active:scale-90 select-none ${
+                    layoutDef.buttonClass
+                  } ${
+                    tile.completed
+                      ? 'opacity-20 scale-95 pointer-events-none bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                      : isError
+                      ? 'animate-pulse text-white scale-95'
+                      : isLightMode
+                      ? 'bg-white/90 text-slate-900 hover:border-slate-400 shadow-md hover:scale-[1.02]'
+                      : 'bg-slate-900/80 text-white hover:border-white/50 shadow-lg hover:scale-[1.02]'
+                  }`}
+                >
+                  {tile.completed ? (
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="text-xl sm:text-2xl line-through text-slate-500">
+                        {tile.value}
+                      </span>
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 absolute" />
+                    </div>
+                  ) : (
+                    <span className="text-2xl sm:text-4xl lg:text-5xl font-black drop-shadow tracking-tighter">
+                      {tile.value}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Footer Hint Bar */}
+        <div className="w-full text-center pb-2">
+          <p className="text-xs sm:text-sm font-semibold text-slate-400">
+            Toque nos números em ordem crescente de <strong>1 a {gridMax}</strong> sem errar!
+          </p>
+        </div>
+
+        {/* Round Complete Modal Overlay */}
+        {roundCompletedModal && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in zoom-in duration-200">
+            <div
+              className={`p-6 sm:p-8 rounded-3xl max-w-md w-full ${layoutDef.cardClass} border-2 text-center shadow-2xl flex flex-col items-center gap-4`}
               style={{
-                backgroundColor: `${layoutPrimary}22`,
-                borderColor: `${layoutPrimary}55`,
-                color: layoutPrimary,
-                borderWidth: 1
+                borderColor: layoutPrimary,
+                boxShadow: `0 0 50px ${layoutGlow}`,
               }}
             >
-              {currentCard.category}
-            </span>
-
-            <h3 className="text-base sm:text-lg font-bold text-slate-400 mb-2">
-              {currentCard.title}
-            </h3>
-
-            <div className="my-2">
-              <span className={`text-5xl sm:text-6xl font-black font-mono tracking-tight drop-shadow ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
-                {currentCard.value}
-              </span>
-              <span 
-                className="text-lg font-bold ml-2 font-mono"
-                style={{ color: layoutPrimary }}
+              <div
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl flex items-center justify-center shadow-xl animate-bounce"
+                style={{
+                  background: `linear-gradient(135deg, ${layoutPrimary}, ${layoutSecondary})`,
+                }}
               >
-                {currentCard.unit}
-              </span>
-            </div>
-
-            <span className="text-xs text-slate-500 mt-2 font-semibold">
-              Valor de Referência
-            </span>
-          </div>
-
-          {/* Card 2: Next Card / Prediction Target */}
-          <div
-            style={
-              nextCard
-                ? {
-                    borderColor: `${layoutSecondary}66`,
-                    boxShadow: `0 0 25px ${layoutGlow}`
-                  }
-                : undefined
-            }
-            className={`p-6 sm:p-8 rounded-3xl border-2 transition-all shadow-2xl flex flex-col items-center justify-center text-center relative select-none overflow-hidden ${
-              feedback === 'correct'
-                ? 'bg-emerald-500/20 border-emerald-400 scale-[1.02]'
-                : feedback === 'wrong'
-                ? 'bg-rose-500/20 border-rose-400 scale-[0.98]'
-                : isLightMode
-                ? 'bg-slate-50/90 border-dashed border-slate-300 text-slate-800'
-                : 'bg-slate-900/60 border-dashed border-white/20 text-white'
-            }`}
-          >
-            {nextCard ? (
-              <div className="animate-in zoom-in duration-200 flex flex-col items-center">
-                <span 
-                  className="text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full mb-3"
-                  style={{
-                    backgroundColor: `${layoutSecondary}22`,
-                    borderColor: `${layoutSecondary}55`,
-                    color: layoutSecondary,
-                    borderWidth: 1
-                  }}
-                >
-                  {nextCard.category}
-                </span>
-                <h3 className="text-base sm:text-lg font-bold text-slate-400 mb-2">
-                  {nextCard.title}
-                </h3>
-                <div className="my-2">
-                  <span className={`text-5xl sm:text-6xl font-black font-mono tracking-tight drop-shadow ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
-                    {nextCard.value}
-                  </span>
-                  <span 
-                    className="text-lg font-bold ml-2 font-mono"
-                    style={{ color: layoutSecondary }}
-                  >
-                    {nextCard.unit}
-                  </span>
-                </div>
-                {feedback === 'correct' ? (
-                  <span className="text-xs font-black text-emerald-400 flex items-center gap-1 mt-2">
-                    <CheckCircle2 className="w-4 h-4" /> Acertou!
-                  </span>
-                ) : (
-                  <span className="text-xs font-black text-rose-400 flex items-center gap-1 mt-2">
-                    <XCircle className="w-4 h-4" /> Errou!
-                  </span>
-                )}
+                <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
               </div>
-            ) : (
-              <div className="flex flex-col items-center py-6">
-                <div 
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center mb-3 animate-pulse"
-                  style={{ backgroundColor: `${layoutPrimary}22` }}
-                >
-                  <TrendingUp className="w-8 h-8" style={{ color: layoutPrimary }} />
-                </div>
-                <h4 className="text-lg font-black tracking-wide">Próximo Valor</h4>
-                <p className="text-xs text-slate-400 max-w-xs mt-1">
-                  Será <strong>MAIOR</strong> ou <strong>MENOR</strong> que {currentCard.value} {currentCard.unit}?
+
+              <div>
+                <span className="text-xs font-black uppercase tracking-widest text-emerald-400 flex items-center justify-center gap-1">
+                  <Sparkles className="w-4 h-4" /> Sequência Perfeita!
+                </span>
+                <h3 className="text-2xl sm:text-3xl font-black text-white mt-1">
+                  Rodada {round} Concluída!
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-300 mt-1">
+                  Você completou todos os {gridMax} números em tempo recorde!
                 </p>
               </div>
-            )}
+
+              {/* Stats Box */}
+              <div className="w-full grid grid-cols-2 gap-2.5 p-3 rounded-2xl bg-white/10 border border-white/10 text-left">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Tempo Restante:</span>
+                  <p className="text-lg font-black text-amber-400 font-mono">{timeLeft}s</p>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Pontuação Atual:</span>
+                  <p className="text-lg font-black text-emerald-400 font-mono">{score}</p>
+                </div>
+              </div>
+
+              <div className="w-full flex flex-col sm:flex-row gap-3 mt-2">
+                <button
+                  type="button"
+                  onClick={startNextRound}
+                  className={`flex-1 py-3.5 px-4 rounded-2xl font-black text-sm text-white shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all ${layoutDef.buttonClass}`}
+                  style={{
+                    background: `linear-gradient(135deg, ${layoutPrimary}, ${layoutSecondary})`,
+                    boxShadow: `0 4px 20px ${layoutGlow}`,
+                  }}
+                >
+                  <span>Próxima Rodada</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={finishGameAsChampion}
+                  className="py-3.5 px-4 rounded-2xl font-bold text-sm bg-white/15 hover:bg-white/20 active:scale-95 text-slate-200 border border-white/10 transition-all"
+                >
+                  Finalizar & Salvar Recorde
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-
-        {/* Big Touch CTA Buttons: HIGHER / LOWER */}
-        <div className="w-full max-w-2xl grid grid-cols-2 gap-4 pb-2">
-          {/* HIGHER BUTTON */}
-          <button
-            type="button"
-            onClick={() => handleGuess('higher')}
-            disabled={feedback !== null || gameOver}
-            className="py-6 sm:py-8 px-6 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white font-black text-xl sm:text-2xl tracking-wider uppercase shadow-xl shadow-emerald-600/30 border-2 border-emerald-400/50 flex flex-col sm:flex-row items-center justify-center gap-3 transition-all select-none"
-          >
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-              <ArrowUp className="w-6 h-6 stroke-[3]" />
-            </div>
-            <span>MAIOR ⬆️</span>
-          </button>
-
-          {/* LOWER BUTTON */}
-          <button
-            type="button"
-            onClick={() => handleGuess('lower')}
-            disabled={feedback !== null || gameOver}
-            className="py-6 sm:py-8 px-6 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 active:scale-95 text-white font-black text-xl sm:text-2xl tracking-wider uppercase shadow-xl shadow-rose-600/30 border-2 border-rose-400/50 flex flex-col sm:flex-row items-center justify-center gap-3 transition-all select-none"
-          >
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-              <ArrowDown className="w-6 h-6 stroke-[3]" />
-            </div>
-            <span>MENOR ⬇️</span>
-          </button>
-        </div>
+        )}
       </div>
     </GameContainer>
   );

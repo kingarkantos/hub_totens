@@ -206,13 +206,21 @@ Retorne um array JSON no formato:
   ...
 ]`,
 
-    spot_error: `Gere um cenário de inspeção com exatamente ${count || 4} irregularidades/riscos identificáveis.
+    spot_error: `Gere um cenário de auditoria e inspeção com exatamente ${count || 4} irregularidades/perigos a identificar e 4 boas práticas conformes (distratores seguros).
 Retorne um objeto JSON no formato:
 {
   "scenarioTitle": "Título do Cenário de Inspeção",
   "hazards": [
-    { "name": "Nome do Risco 1", "description": "Descrição sucinta do impacto" },
-    ...
+    { "name": "Nome da Irregularidade 1", "description": "Descrição sucinta do impacto ou risco", "icon": "⚠️" },
+    { "name": "Nome da Irregularidade 2", "description": "Descrição sucinta do impacto ou risco", "icon": "⚡" },
+    { "name": "Nome da Irregularidade 3", "description": "Descrição sucinta do impacto ou risco", "icon": "🧯" },
+    { "name": "Nome da Irregularidade 4", "description": "Descrição sucinta do impacto ou risco", "icon": "💧" }
+  ],
+  "safePractices": [
+    { "name": "Prática Conforme 1", "description": "Procedimento 100% seguro em conformidade com as normas", "icon": "⛑️" },
+    { "name": "Prática Conforme 2", "description": "Item limpo, sinalizado e desobstruído", "icon": "🧹" },
+    { "name": "Prática Conforme 3", "description": "Dispositivo de segurança operacional", "icon": "🛑" },
+    { "name": "Prática Conforme 4", "description": "EPI obrigatório em uso correto", "icon": "🧤" }
   ]
 }`,
   };

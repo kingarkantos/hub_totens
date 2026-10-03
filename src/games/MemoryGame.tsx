@@ -7,6 +7,8 @@ import { MemoryCustomPair } from '../types/gameContent';
 
 interface MemoryGameProps extends BaseGameProps {
   customContent?: MemoryCustomPair[];
+  orderMode?: 'random' | 'ordered';
+  questionsCount?: number;
 }
 
 interface Card {
@@ -27,6 +29,18 @@ const DEFAULT_ICONS: MemoryCustomPair[] = [
 
 import { useActiveGamePalette } from '../context/GameLayoutContext';
 
+const isImageUrl = (val: string) => {
+  if (!val || typeof val !== 'string') return false;
+  const s = val.trim();
+  return (
+    s.startsWith('http://') ||
+    s.startsWith('https://') ||
+    s.startsWith('data:image/') ||
+    s.startsWith('/') ||
+    /\.(png|jpe?g|svg|webp|gif)$/i.test(s)
+  );
+};
+
 export const MemoryGame: React.FC<MemoryGameProps> = (props) => {
   const {
     onExit,
@@ -41,6 +55,8 @@ export const MemoryGame: React.FC<MemoryGameProps> = (props) => {
     customContent,
     isLight,
     themeMode,
+    orderMode = 'random',
+    questionsCount,
     gameLayout,
     palette,
     layoutColorHue,
@@ -56,7 +72,37 @@ export const MemoryGame: React.FC<MemoryGameProps> = (props) => {
     gameLayout,
   });
 
-  const ICONS = customContent && customContent.length >= 4 ? customContent : DEFAULT_ICONS;
+  const rawIcons = React.useMemo(() => {
+    let list: MemoryCustomPair[] = [];
+    if (Array.isArray(customContent) && customContent.length >= 3) {
+      list = customContent;
+    } else if (typeof customContent === 'string') {
+      try {
+        const parsed = JSON.parse(customContent);
+        if (Array.isArray(parsed) && parsed.length >= 3) list = parsed;
+        else if (Array.isArray(parsed?.pairs) && parsed.pairs.length >= 3) list = parsed.pairs;
+      } catch {}
+    } else if (Array.isArray((customContent as any)?.pairs) && (customContent as any).pairs.length >= 3) {
+      list = (customContent as any).pairs;
+    }
+    return list.length >= 3 ? list : DEFAULT_ICONS;
+  }, [customContent]);
+
+  const targetPairCount = React.useMemo(() => {
+    if (questionsCount && questionsCount >= 3) {
+      return Math.min(questionsCount, rawIcons.length);
+    }
+    return Math.min(6, rawIcons.length);
+  }, [questionsCount, rawIcons.length]);
+
+  const pickActivePairs = React.useCallback(() => {
+    let list = [...rawIcons];
+    if (orderMode !== 'ordered') {
+      list = list.sort(() => Math.random() - 0.5);
+    }
+    return list.slice(0, targetPairCount);
+  }, [rawIcons, orderMode, targetPairCount]);
+
   const [cards, setCards] = useState<Card[]>([]);
   const [flipped, setFlipped] = useState<number[]>([]);
   const [moves, setMoves] = useState(0);
@@ -65,16 +111,20 @@ export const MemoryGame: React.FC<MemoryGameProps> = (props) => {
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
 
-  const initGame = () => {
-    const pairs = [...ICONS, ...ICONS];
+  const initGame = React.useCallback(() => {
+    const activePairs = pickActivePairs();
+    const pairs = [...activePairs, ...activePairs];
     const shuffled = pairs
       .sort(() => Math.random() - 0.5)
-      .map((item, index) => ({
-        id: index,
-        icon: item.symbol || (item as any).icon || '🚗',
-        label: item.label,
-        matched: false,
-      }));
+      .map((item, index) => {
+        const img = item.image_url || item.imageUrl || (isImageUrl(item.symbol) ? item.symbol : undefined);
+        return {
+          id: index,
+          icon: img || item.symbol || (item as any).icon || '🚗',
+          label: item.label,
+          matched: false,
+        };
+      });
     setCards(shuffled);
     setFlipped([]);
     setMoves(0);
@@ -82,11 +132,11 @@ export const MemoryGame: React.FC<MemoryGameProps> = (props) => {
     setTimeLeft(60);
     setGameOver(false);
     setWon(false);
-  };
+  }, [pickActivePairs]);
 
   useEffect(() => {
     initGame();
-  }, []);
+  }, [initGame]);
 
   // Timer
   useEffect(() => {
@@ -175,7 +225,7 @@ export const MemoryGame: React.FC<MemoryGameProps> = (props) => {
           }`}
         >
           <span>Movimentos: <strong className={isLightMode ? 'text-slate-950 font-mono' : 'text-white font-mono'}>{moves}</strong></span>
-          <span>Pares Encontrados: <strong style={{ color: layoutPrimary }} className="font-mono">{cards.filter(c => c.matched).length / 2} / {ICONS.length}</strong></span>
+          <span>Pares Encontrados: <strong style={{ color: layoutPrimary }} className="font-mono">{cards.filter(c => c.matched).length / 2} / {cards.length / 2}</strong></span>
         </div>
 
         {/* 4x3 Grid - Super tactile, large touch cards for totems */}
@@ -206,7 +256,7 @@ export const MemoryGame: React.FC<MemoryGameProps> = (props) => {
                         borderColor: `${layoutPrimary}33`,
                       }
                 }
-                className={`aspect-square rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center p-2 sm:p-4 font-black border-2 sm:border-4 transition-all duration-300 active:scale-95 shadow-lg ${
+                className={`aspect-square rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center p-1.5 sm:p-2.5 md:p-3 font-black border-2 sm:border-4 transition-all duration-300 active:scale-95 shadow-lg overflow-hidden ${
                   isFlipped
                     ? card.matched
                       ? 'bg-emerald-600/40 text-white scale-[1.02]'
@@ -215,14 +265,37 @@ export const MemoryGame: React.FC<MemoryGameProps> = (props) => {
                 }`}
               >
                 {isFlipped ? (
-                  <>
-                    <span className="text-4xl sm:text-6xl md:text-7xl mb-1 sm:mb-2 transition-transform scale-110 drop-shadow-md">
-                      {card.icon}
+                  <div className="flex flex-col items-center justify-center w-full h-full max-h-full overflow-hidden select-none">
+                    <span className="mb-1 sm:mb-1.5 transition-transform scale-105 drop-shadow-md flex items-center justify-center shrink-0">
+                      {isImageUrl(card.icon) ? (
+                        <img
+                          src={card.icon}
+                          alt={card.label}
+                          className="w-11 h-11 sm:w-16 sm:h-16 md:w-20 md:h-20 object-contain pointer-events-none drop-shadow-md"
+                        />
+                      ) : (
+                        <span className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl flex items-center justify-center">
+                          {card.icon}
+                        </span>
+                      )}
                     </span>
-                    <span className="text-[10px] sm:text-xs md:text-sm font-black text-slate-200 uppercase tracking-tight truncate max-w-full text-center">
+                    <span 
+                      className={`font-black text-slate-200 uppercase tracking-tight text-center w-full break-words leading-tight line-clamp-2 px-0.5 ${
+                        card.label.length > 20
+                          ? 'text-[8px] sm:text-[9px] md:text-[10px]'
+                          : card.label.length > 13
+                          ? 'text-[9px] sm:text-[10px] md:text-xs'
+                          : 'text-[10px] sm:text-xs md:text-sm'
+                      }`}
+                      style={{
+                        wordBreak: 'break-word',
+                        overflowWrap: 'break-word',
+                      }}
+                      title={card.label}
+                    >
                       {card.label}
                     </span>
-                  </>
+                  </div>
                 ) : (
                   <span 
                     style={{ color: `${layoutPrimary}aa` }}

@@ -7,6 +7,8 @@ import { HangmanCustomItem } from '../types/gameContent';
 
 interface HangmanGameProps extends BaseGameProps {
   customContent?: HangmanCustomItem[];
+  orderMode?: 'random' | 'ordered';
+  questionsCount?: number;
 }
 
 const DEFAULT_WORDS: HangmanCustomItem[] = [
@@ -36,6 +38,8 @@ export const HangmanGame: React.FC<HangmanGameProps> = (props) => {
     customContent,
     isLight,
     themeMode,
+    orderMode = 'random',
+    questionsCount,
     gameLayout,
     palette,
     layoutColorHue,
@@ -50,9 +54,27 @@ export const HangmanGame: React.FC<HangmanGameProps> = (props) => {
     themePrimary,
     gameLayout,
   });
-  const wordsList = useMemo(() => {
+
+  const rawWords = useMemo(() => {
     return customContent && customContent.length > 0 ? customContent : DEFAULT_WORDS;
   }, [customContent]);
+
+  const prepareWords = React.useCallback(() => {
+    let list = [...rawWords];
+    if (orderMode !== 'ordered') {
+      list = list.sort(() => Math.random() - 0.5);
+    }
+    if (questionsCount && questionsCount > 0 && questionsCount < list.length) {
+      list = list.slice(0, questionsCount);
+    }
+    return list;
+  }, [rawWords, orderMode, questionsCount]);
+
+  const [wordsList, setWordsList] = useState<HangmanCustomItem[]>(() => prepareWords());
+
+  useEffect(() => {
+    setWordsList(prepareWords());
+  }, [prepareWords]);
 
   const [currentWordIdx, setCurrentWordIdx] = useState(0);
   const [guessedLetters, setGuessedLetters] = useState<string[]>([]);
@@ -128,6 +150,7 @@ export const HangmanGame: React.FC<HangmanGameProps> = (props) => {
       gameOver={gameOver}
       gameWon={gameWon}
       onRestart={() => {
+        setWordsList(prepareWords());
         setCurrentWordIdx(0);
         setGuessedLetters([]);
         setScore(0);

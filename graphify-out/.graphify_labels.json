@@ -1,0 +1,23 @@
+{
+  "0": "CampaignFormModal.tsx",
+  "1": "devDependencies",
+  "2": "compilerOptions",
+  "3": "🎯 Hub de Jogos para Totens",
+  "4": "useActiveGamePalette",
+  "5": "SoundManager",
+  "6": "TotemCampaignView.tsx",
+  "7": "TargetGame.tsx",
+  "8": "TopGearGame.tsx",
+  "9": "Diretrizes do Projeto - Hub de Totens",
+  "10": "vite-env.d.ts",
+  "11": "auto-push-github.md",
+  "12": "run_graphify.py",
+  "13": "GameContentEditorModal.tsx",
+  "14": "TargetGame.tsx",
+  "15": "CorrectOrderGame.tsx",
+  "16": "vercel.json",
+  "17": "postcss.config.js",
+  "18": "tailwind.config.js",
+  "19": "vite.config.ts",
+  "20": "SafeGame.tsx"
+}

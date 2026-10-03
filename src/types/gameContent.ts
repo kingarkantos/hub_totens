@@ -19,11 +19,15 @@ export interface TargetCustomItem {
   symbol: string;
   points: number;
   isBonus: boolean;
+  isHazard?: boolean;
+  isNegative?: boolean;
 }
 
 export interface MemoryCustomPair {
   symbol: string;
   label: string;
+  image_url?: string;
+  imageUrl?: string;
 }
 
 export interface CatcherCustomItem {
@@ -31,6 +35,28 @@ export interface CatcherCustomItem {
   symbol: string;
   points: number;
   type: 'gift' | 'star' | 'hazard';
+}
+
+export interface TopGearCustomConfig {
+  trackName?: string;
+  carColor?: string;
+  initialSpeed?: number;
+  maxSpeed?: number;
+  trafficDensity?: 'low' | 'normal' | 'high';
+  finishLineTimeSeconds?: number;
+}
+
+export interface PlinkoSlotItem {
+  id: number;
+  label: string;
+  points: number;
+  color?: string;
+}
+
+export interface PlinkoCustomConfig {
+  ballsCount?: number;
+  slots?: PlinkoSlotItem[];
+  title?: string;
 }
 
 export interface SpeedCustomConfig {
@@ -55,7 +81,9 @@ export interface GeniusPadCustom {
 
 export interface PuzzleCustomConfig {
   puzzleTitle: string;
-  pieceLabels: string[]; // 8 items
+  imageUrl?: string;
+  pieceLabels?: string[];
+  showNumbers?: boolean;
 }
 
 export interface BalloonCustomItem {
@@ -63,6 +91,8 @@ export interface BalloonCustomItem {
   color: string;
   points: number;
   isGold: boolean;
+  isHazard?: boolean;
+  symbol?: string;
 }
 
 export interface WordSearchCustomConfig {
@@ -104,13 +134,20 @@ export interface SpeedTriviaCustomItem {
   correct: number;
 }
 
+export interface SpotHazardItem {
+  id?: string;
+  name: string;
+  description: string;
+  isError?: boolean;
+  icon?: string;
+}
+
 export interface SpotErrorCustomItem {
   scenarioTitle: string;
-  hazards: {
-    name: string;
-    description: string;
-  }[];
+  hazards: SpotHazardItem[];
+  safePractices?: SpotHazardItem[];
 }
+
 
 export type GamesConfigMap = {
   wheel?: WheelItem[];
@@ -123,6 +160,8 @@ export type GamesConfigMap = {
   genius?: GeniusPadCustom[];
   puzzle?: PuzzleCustomConfig;
   balloon?: BalloonCustomItem[];
+  top_gear?: TopGearCustomConfig;
+  plinko?: PlinkoCustomConfig;
   [key: string]: any;
 };
 
@@ -185,35 +224,38 @@ No painel digital touchscreen o que você pode conectar?,Somente fita cassete,Ap
   target: {
     gameId: 'target',
     gameName: 'Caça aos Alvos',
-    description: 'Cadastre os tipos de alvos que surgem na tela para o jogador tocar.',
+    description: 'Cadastre os tipos de alvos que surgem na tela para o jogador tocar (incluindo bônus e alvos de perigo que tiram pontos).',
     csvColumns: [
       { name: 'name', description: 'Nome do alvo', example: 'Alvo Padrão' },
       { name: 'symbol', description: 'Símbolo ou emoji do alvo', example: '🎯' },
-      { name: 'points', description: 'Pontos ganhos por toque', example: '100' },
+      { name: 'points', description: 'Pontos ganhos ou tirados por toque (ex: 100 ou -150)', example: '100' },
       { name: 'is_bonus', description: 'Se é um alvo especial bônus (true ou false)', example: 'false' },
+      { name: 'is_hazard', description: 'Se é um alvo negativo/perigo que tira pontos (true ou false)', example: 'false' },
     ],
-    sampleCsv: `name,symbol,points,is_bonus
-Alvo Tradicional,◎,100,false
-Estrela Dourada,★,250,true
-Logotipo Especial,🚗,150,false
-Troféu Relâmpago,🏆,300,true`,
+    sampleCsv: `name,symbol,points,is_bonus,is_hazard
+Alvo Tradicional,◎,100,false,false
+Estrela Dourada,★,250,true,false
+Logotipo Especial,🚗,150,false,false
+Bomba Perigo,💣,-150,false,true
+Troféu Relâmpago,🏆,300,true,false`,
   },
 
   memory: {
     gameId: 'memory',
     gameName: 'Jogo da Memória',
-    description: 'Cadastre os pares de cartas com símbolo/emoji e nome do produto/atributo.',
+    description: 'Cadastre os pares de cartas com símbolo/emoji ou imagem PNG e nome do produto/atributo.',
     csvColumns: [
-      { name: 'symbol', description: 'Emoji ou símbolo representativo', example: '🚗' },
+      { name: 'symbol', description: 'Emoji ou símbolo representativo (opcional se houver imagem)', example: '🚗' },
       { name: 'label', description: 'Nome do modelo ou atributo da carta', example: 'Sedan Turbo' },
+      { name: 'image_url', description: 'URL da imagem/logo PNG (opcional)', example: 'https://exemplo.com/icone.png' },
     ],
-    sampleCsv: `symbol,label
-🚗,Sedan Turbo
-🚙,SUV Híbrido
-🏍️,Moto Esportiva
-⚡,Bateria Elétrica
-🛡️,Segurança Sensing
-🏁,Performance R`,
+    sampleCsv: `symbol,label,image_url
+🚗,Sedan Turbo,
+🚙,SUV Híbrido,
+🏍️,Moto Esportiva,
+⚡,Bateria Elétrica,
+🛡️,Segurança Sensing,
+🏁,Performance R,`,
   },
 
   catcher: {
@@ -281,21 +323,15 @@ Novo Civic Type R,Super Esportivo,100,Sinta a potência do motor Turbo na pista!
 
   puzzle: {
     gameId: 'puzzle',
-    gameName: 'Quebra-Cabeça Rápido',
-    description: 'Personalize o título do quebra-cabeça e o texto das 8 peças ordenáveis.',
+    gameName: 'Quebra-Cabeça de Imagem',
+    description: 'Adicione uma imagem personalizada para o participante montar as 9 peças arrastando ou tocando nos locais corretos.',
     csvColumns: [
-      { name: 'puzzle_title', description: 'Título ou tema da montagem', example: 'Monte o Slogan Oficial' },
-      { name: 'piece_1', description: 'Texto da peça 1', example: 'A' },
-      { name: 'piece_2', description: 'Texto da peça 2', example: 'Força' },
-      { name: 'piece_3', description: 'Texto da peça 3', example: 'Dos' },
-      { name: 'piece_4', description: 'Texto da peça 4', example: 'Seus' },
-      { name: 'piece_5', description: 'Texto da peça 5', example: 'Sonhos' },
-      { name: 'piece_6', description: 'Texto da peça 6', example: 'Em' },
-      { name: 'piece_7', description: 'Texto da peça 7', example: 'Cada' },
-      { name: 'piece_8', description: 'Texto da peça 8', example: 'Curva' },
+      { name: 'puzzle_title', description: 'Título ou tema da montagem', example: 'Monte a Imagem Oficial' },
+      { name: 'image_url', description: 'URL da imagem do quebra-cabeça', example: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800' },
+      { name: 'show_numbers', description: 'Mostrar números guias nas peças (true ou false)', example: 'true' },
     ],
-    sampleCsv: `puzzle_title,piece_1,piece_2,piece_3,piece_4,piece_5,piece_6,piece_7,piece_8
-Monte o Slogan Oficial,A,Força,Dos,Seus,Sonhos,Em,Cada,Curva`,
+    sampleCsv: `puzzle_title,image_url,show_numbers
+Monte o Veículo Oficial,https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800,true`,
   },
 
   balloon: {
@@ -443,6 +479,38 @@ Em caso de alarme de incêndio o que você NUNCA deve utilizar?,Elevadores,Escad
     ],
     sampleCsv: `scenario_title,hazard_1,hazard_2,hazard_3
 Inspeção na Área Operacional,Trabalhador sem capacete próximo ao guindaste,Fio desencapado no chão molhado,Extintor com validade vencida e lacre rompido`,
+  },
+
+  top_gear: {
+    gameId: 'top_gear',
+    gameName: 'Top Gear Turbo',
+    description: 'Personalize a cor do carro do jogador, velocidades e o nome do circuito da corrida.',
+    csvColumns: [
+      { name: 'track_name', description: 'Nome do circuito da corrida', example: 'Circuito Ayrton Senna' },
+      { name: 'car_color', description: 'Cor do carro (hexadecimal)', example: '#DC2626' },
+      { name: 'initial_speed', description: 'Velocidade inicial em km/h', example: '120' },
+      { name: 'max_speed', description: 'Velocidade máxima em km/h', example: '240' },
+    ],
+    sampleCsv: `track_name,car_color,initial_speed,max_speed
+Autódromo Top Gear,#DC2626,120,240`,
+  },
+
+  plinko: {
+    gameId: 'plinko',
+    gameName: 'Plinko da Sorte',
+    description: 'Configure a quantidade de bolinhas e as pontuações de cada canaleta na base do tabuleiro.',
+    csvColumns: [
+      { name: 'slot_label', description: 'Rótulo da canaleta (ex: 500 pts, Brinde)', example: '500 pts' },
+      { name: 'points', description: 'Pontos atribuídos ao cair nesta canaleta', example: '500' },
+      { name: 'color', description: 'Cor da canaleta (hexadecimal)', example: '#F59E0B' },
+    ],
+    sampleCsv: `slot_label,points,color
+100 pts,100,#3B82F6
+250 pts,250,#10B981
+500 pts,500,#F59E0B
+SUPER 1000,1000,#DC2626
+250 pts,250,#10B981
+100 pts,100,#3B82F6`,
   },
 };
 

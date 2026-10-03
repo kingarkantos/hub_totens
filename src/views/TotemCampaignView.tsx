@@ -38,6 +38,8 @@ import { MathBlitzGame } from '../games/MathBlitzGame';
 import { HigherLowerGame } from '../games/HigherLowerGame';
 import { ReactionTimeGame } from '../games/ReactionTimeGame';
 import { BullseyeGame } from '../games/BullseyeGame';
+import { TopGearGame } from '../games/TopGearGame';
+import { PlinkoGame } from '../games/PlinkoGame';
 
 interface ScrollableDescriptionProps {
   description: string;
@@ -667,10 +669,10 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
     const activeGameLayout: GameLayoutId = campaign.games_config?.[`${activeGame.id}_layout`] || campaign.games_config?.game_layout || 'modern_glass';
     const activeGameHue = campaign.games_config?.[`${activeGame.id}_layout_color_hue`] !== undefined
       ? Number(campaign.games_config[`${activeGame.id}_layout_color_hue`])
-      : layoutColorHue;
-    const activeGamePalette = activeGameHue !== undefined
-      ? generateLayoutPalette(activeGameHue, isLight)
-      : sliderPalette || undefined;
+      : layoutColorHue !== undefined
+      ? layoutColorHue
+      : getDefaultHueForLayout(activeGameLayout);
+    const activeGamePalette = generateLayoutPalette(activeGameHue, isLight);
 
     const commonProps = {
       onExit: () => {
@@ -750,6 +752,10 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
           return <ReactionTimeGame {...commonProps} />;
         case 'bullseye':
           return <BullseyeGame {...commonProps} />;
+        case 'top_gear':
+          return <TopGearGame {...commonProps} />;
+        case 'plinko':
+          return <PlinkoGame {...commonProps} />;
         default:
           return null;
       }

@@ -170,16 +170,20 @@ export function parseGameCSV(gameId: string, csvText: string): any {
       return rows.map((r, idx) => {
         const name = getVal(r, ['name', 'alvo', 'nome', 'titulo'], 0) || `Alvo ${idx + 1}`;
         const symbol = getVal(r, ['symbol', 'simbolo', 'emoji', 'icone'], 1) || '🎯';
-        const points = parseInt(getVal(r, ['points', 'pontos', 'valor'], 2) || '100', 10) || 100;
+        const rawPoints = getVal(r, ['points', 'pontos', 'valor'], 2);
+        const points = rawPoints && !isNaN(parseInt(rawPoints, 10)) ? parseInt(rawPoints, 10) : 100;
         const bonusRaw = getVal(r, ['is_bonus', 'bonus'], 3).toLowerCase();
         const isBonus = bonusRaw === 'true' || bonusRaw === 'sim' || bonusRaw === '1' || bonusRaw === 's';
-        return { name, symbol, points, isBonus };
+        const hazardRaw = getVal(r, ['is_hazard', 'hazard', 'perigo', 'negativo'], 4).toLowerCase();
+        const isHazard = hazardRaw === 'true' || hazardRaw === 'sim' || hazardRaw === '1' || hazardRaw === 's' || points < 0;
+        return { name, symbol, points, isBonus, isHazard };
       });
 
     case 'memory':
       return rows.map((r, idx) => ({
         symbol: getVal(r, ['symbol', 'simbolo', 'emoji', 'icone'], 0) || '🚗',
         label: getVal(r, ['label', 'nome', 'item', 'titulo'], 1) || `Item ${idx + 1}`,
+        image_url: getVal(r, ['image_url', 'imagem', 'foto', 'icone_url', 'url'], 2) || undefined,
       }));
 
     case 'catcher':
@@ -226,29 +230,24 @@ export function parseGameCSV(gameId: string, csvText: string): any {
       }));
 
     case 'puzzle':
-      const pRow = rows[0];
+      const pRow = rows[0] || {};
       return {
         puzzleTitle: getVal(pRow, ['puzzle_title', 'titulo', 'nome'], 0) || 'Quebra-Cabeça da Marca',
-        pieceLabels: [
-          getVal(pRow, ['piece_1', 'peca_1', 'peca1'], 1) || '1',
-          getVal(pRow, ['piece_2', 'peca_2', 'peca2'], 2) || '2',
-          getVal(pRow, ['piece_3', 'peca_3', 'peca3'], 3) || '3',
-          getVal(pRow, ['piece_4', 'peca_4', 'peca4'], 4) || '4',
-          getVal(pRow, ['piece_5', 'peca_5', 'peca5'], 5) || '5',
-          getVal(pRow, ['piece_6', 'peca_6', 'peca6'], 6) || '6',
-          getVal(pRow, ['piece_7', 'peca_7', 'peca7'], 7) || '7',
-          getVal(pRow, ['piece_8', 'peca_8', 'peca8'], 8) || '8',
-        ],
+        imageUrl: getVal(pRow, ['image_url', 'imagem', 'foto', 'url'], 1) || undefined,
+        showNumbers: getVal(pRow, ['show_numbers', 'numeros'], 2)?.toLowerCase() === 'true',
       };
 
     case 'balloon':
       return rows.map((r, idx) => {
         const name = getVal(r, ['name', 'balao', 'nome'], 0) || `Balão #${idx + 1}`;
         const color = getVal(r, ['color', 'cor'], 1) || '#EF4444';
-        const points = parseInt(getVal(r, ['points', 'pontos'], 2) || '100', 10) || 100;
+        const rawPoints = getVal(r, ['points', 'pontos'], 2);
+        const points = rawPoints && !isNaN(parseInt(rawPoints, 10)) ? parseInt(rawPoints, 10) : 100;
         const goldRaw = getVal(r, ['is_gold', 'ouro', 'dourado'], 3).toLowerCase();
         const isGold = goldRaw === 'true' || goldRaw === 'sim' || goldRaw === '1' || goldRaw === 's';
-        return { name, color, points, isGold };
+        const hazardRaw = getVal(r, ['is_hazard', 'hazard', 'perigo', 'negativo'], 4).toLowerCase();
+        const isHazard = hazardRaw === 'true' || hazardRaw === 'sim' || hazardRaw === '1' || hazardRaw === 's' || points < 0;
+        return { name, color, points, isGold, isHazard };
       });
 
     case 'wordsearch':

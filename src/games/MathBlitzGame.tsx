@@ -86,7 +86,7 @@ export const MathBlitzGame: React.FC<MathBlitzGameProps> = (props) => {
     layoutColorHue,
   } = props;
 
-  const { activeLayout, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
+  const { activeLayout, layoutDef, layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, isLightMode } = useActiveGamePalette({
     palette,
     layoutColorHue,
     isLight,
@@ -233,19 +233,17 @@ export const MathBlitzGame: React.FC<MathBlitzGameProps> = (props) => {
             style={
               feedback === null
                 ? {
-                    borderColor: `${layoutPrimary}66`,
-                    boxShadow: `0 0 35px ${layoutGlow}`
+                    borderColor: layoutPrimary,
+                    boxShadow: `0 0 35px ${layoutGlow}`,
                   }
                 : undefined
             }
-            className={`w-full p-8 sm:p-12 rounded-3xl border-2 transition-all duration-300 shadow-2xl flex flex-col items-center justify-center text-center ${
+            className={`w-full p-8 sm:p-12 ${layoutDef.cardClass} transition-all duration-300 shadow-2xl flex flex-col items-center justify-center text-center ${
               feedback === 'correct'
                 ? 'bg-emerald-500/20 border-emerald-400 scale-[1.02]'
                 : feedback === 'wrong'
                 ? 'bg-rose-500/20 border-rose-400 animate-shake'
-                : isLightMode
-                ? 'bg-white/95 text-slate-900'
-                : 'bg-slate-900/90 text-white backdrop-blur-xl'
+                : ''
             }`}
           >
             <span 
@@ -281,17 +279,20 @@ export const MathBlitzGame: React.FC<MathBlitzGameProps> = (props) => {
                   disabled={feedback !== null}
                   style={
                     !showSuccess && !showFail
-                      ? { borderColor: `${layoutPrimary}44` }
+                      ? {
+                          borderColor: `${layoutPrimary}88`,
+                          boxShadow: `0 4px 20px ${layoutGlow}33`,
+                        }
                       : {}
                   }
-                  className={`py-6 sm:py-8 px-6 rounded-2xl sm:rounded-3xl border-2 font-mono font-black text-3xl sm:text-4xl sm:text-5xl transition-all duration-150 active:scale-95 shadow-xl flex items-center justify-center gap-3 relative select-none ${
+                  className={`py-6 sm:py-8 px-6 ${layoutDef.buttonClass} font-mono font-black text-3xl sm:text-4xl sm:text-5xl transition-all duration-150 active:scale-95 shadow-xl flex items-center justify-center gap-3 relative select-none ${
                     showSuccess
                       ? 'bg-emerald-600 border-emerald-400 text-white scale-[1.03]'
                       : showFail
                       ? 'bg-rose-600 border-rose-400 text-white scale-[0.98]'
                       : isLightMode
                       ? 'bg-white hover:bg-slate-50 text-slate-900 shadow-sm'
-                      : 'bg-slate-800/90 hover:bg-slate-800 text-white'
+                      : 'bg-slate-800/90 hover:bg-slate-700 text-white'
                   }`}
                 >
                   <span>{option}</span>

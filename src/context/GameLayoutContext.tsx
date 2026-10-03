@@ -37,13 +37,23 @@ export function useActiveGamePalette(props?: {
       props?.theme?.bgGradient?.includes('slate-100') ||
       false);
   const activeLayout: GameLayoutId = props?.gameLayout || context?.layout || 'cartoon_pop';
+  const layoutDef: GameLayoutDefinition =
+    GAME_LAYOUTS.find((l) => l.id === activeLayout) || GAME_LAYOUTS[0];
 
   const palette = useMemo(() => {
-    if (props?.palette && (props.layoutColorHue === undefined || props.palette.hue === props.layoutColorHue)) {
-      return props.palette;
-    }
+    // If an explicit custom hue was specified by user/admin, honor it
     if (props?.layoutColorHue !== undefined) {
       return generateLayoutPalette(props.layoutColorHue, isLightMode);
+    }
+    // If a specific gameLayout is set, always ensure the palette matches the layout's intended color harmony
+    if (props?.gameLayout) {
+      const defaultLayoutHue = getDefaultHueForLayout(props.gameLayout);
+      if (!props.palette || props.palette.hue !== defaultLayoutHue) {
+        return generateLayoutPalette(defaultLayoutHue, isLightMode);
+      }
+    }
+    if (props?.palette) {
+      return props.palette;
     }
     if (context?.palette) {
       return context.palette;
@@ -61,7 +71,7 @@ export function useActiveGamePalette(props?: {
       };
     }
     return generateLayoutPalette(getDefaultHueForLayout(activeLayout), isLightMode);
-  }, [props?.palette, props?.layoutColorHue, isLightMode, context?.palette, props?.theme, activeLayout]);
+  }, [props?.palette, props?.layoutColorHue, props?.gameLayout, isLightMode, context?.palette, props?.theme, activeLayout]);
 
   const layoutPrimary = palette.primary || props?.themePrimary || props?.theme?.primary || '#06B6D4';
   const layoutSecondary = palette.secondary || props?.theme?.secondary || '#3B82F6';
@@ -71,6 +81,7 @@ export function useActiveGamePalette(props?: {
 
   return {
     activeLayout,
+    layoutDef,
     palette,
     layoutPrimary,
     layoutSecondary,
