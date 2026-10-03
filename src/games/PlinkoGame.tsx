@@ -166,31 +166,48 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = (props) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Generate Pins Grid covering wide area
+    // Generate Pins Grid covering the entire rectangular area (full wire-mesh / aramado)
     const generatePins = (w: number, h: number): Pin[] => {
       const pinsList: Pin[] = [];
-      const rows = 10;
-      const startY = 95;
-      const slotAreaY = h - 120;
+      const rows = 11;
+      const startY = 90;
+      const slotAreaY = h - 125;
       const rowSpacing = (slotAreaY - startY) / (rows - 1);
       const pinRadius = 5.5;
 
-      for (let r = 0; r < rows; r++) {
-        const pinCount = 3 + r;
-        const py = startY + r * rowSpacing;
-        // Widen row span: 42% at top to 92% at bottom for maximum playable width
-        const rowWidth = w * (0.42 + (r / (rows - 1)) * 0.50);
-        const startX = (w - rowWidth) / 2;
-        const spacingX = rowWidth / (pinCount - 1);
+      const margin = 42;
+      const usableWidth = w - margin * 2;
+      const evenCols = 9;
+      const colSpacing = usableWidth / (evenCols - 1);
 
-        for (let c = 0; c < pinCount; c++) {
-          const px = startX + c * spacingX;
-          pinsList.push({
-            x: px,
-            y: py,
-            radius: pinRadius,
-            glowTime: 0,
-          });
+      for (let r = 0; r < rows; r++) {
+        const isEven = r % 2 === 0;
+        const py = startY + r * rowSpacing;
+
+        if (isEven) {
+          // Even row: 9 pins spanning edge-to-edge
+          for (let c = 0; c < evenCols; c++) {
+            const px = margin + c * colSpacing;
+            pinsList.push({
+              x: px,
+              y: py,
+              radius: pinRadius,
+              glowTime: 0,
+            });
+          }
+        } else {
+          // Odd row: 8 pins staggered exactly halfway between even pins
+          const oddCols = evenCols - 1;
+          const offset = colSpacing / 2;
+          for (let c = 0; c < oddCols; c++) {
+            const px = margin + offset + c * colSpacing;
+            pinsList.push({
+              x: px,
+              y: py,
+              radius: pinRadius,
+              glowTime: 0,
+            });
+          }
         }
       }
       return pinsList;
@@ -207,7 +224,7 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = (props) => {
       stateRef.current.boardWidth = width;
       stateRef.current.boardHeight = height;
 
-      if (stateRef.current.pins.length === 0) {
+      if (stateRef.current.pins.length === 0 || stateRef.current.pins.length !== 94) {
         stateRef.current.pins = generatePins(width, height);
       }
 
