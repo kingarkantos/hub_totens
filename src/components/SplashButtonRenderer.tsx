@@ -2,12 +2,13 @@ import React from 'react';
 import { 
   Play, Sparkles, Gamepad2, Award, Crown, Zap, Flame, Terminal, Crosshair, Box, Smile
 } from 'lucide-react';
-import { SplashButtonStyleId } from '../types/splashCustomization';
+import { SplashButtonStyleId, getSplashButtonStyleForLayout } from '../types/splashCustomization';
+import { GameLayoutId } from '../types/gameLayouts';
 import { LayoutColorPalette } from '../lib/colorHarmony';
 import { sound } from '../lib/audio';
 
 interface SplashButtonRendererProps {
-  styleId: SplashButtonStyleId;
+  styleId: SplashButtonStyleId | GameLayoutId | string;
   palette: LayoutColorPalette;
   onClick?: () => void;
   size?: 'sm' | 'md' | 'lg';
@@ -32,6 +33,8 @@ export const SplashButtonRenderer: React.FC<SplashButtonRendererProps> = ({
     if (onClick) onClick();
   };
 
+  const resolvedStyleId = getSplashButtonStyleForLayout(styleId as GameLayoutId) || styleId;
+
   const textSizes = isSm
     ? 'text-xs tracking-wider'
     : isMd
@@ -46,7 +49,7 @@ export const SplashButtonRenderer: React.FC<SplashButtonRendererProps> = ({
 
   const iconSizes = isSm ? 'w-4 h-4' : isMd ? 'w-5 h-5' : 'w-7 sm:w-8 h-7 sm:h-8';
 
-  switch (styleId) {
+  switch (resolvedStyleId) {
     // 1. CARTOON 3D GAME
     case 'cartoon_3d':
       return (

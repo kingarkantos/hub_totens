@@ -13,6 +13,8 @@ import { resellersService } from '../lib/resellersService';
 import { QUICK_HUE_PRESETS, generateLayoutPalette, getDefaultHueForLayout, getSplashOverlayStyle } from '../lib/colorHarmony';
 import { GAME_FONTS, getFontFamilyById } from '../lib/fonts';
 import { RealtimeLayoutPreviewCard } from './RealtimeLayoutPreviewCard';
+import { UnifiedThemePreviewPanel } from './UnifiedThemePreviewPanel';
+import { getSplashButtonStyleForLayout } from '../types/splashCustomization';
 import { getCopiedStyle } from '../lib/campaignStyleHelper';
 
 interface CampaignFormModalProps {
@@ -482,8 +484,8 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           campaign_font: campaignFont,
           description_align: descriptionAlign,
           description_size: descriptionSize,
-          splash_button_style: splashButtonStyle,
-          splash_button_hue: splashButtonHue,
+          splash_button_style: getSplashButtonStyleForLayout(gameLayout),
+          splash_button_hue: layoutColorHue,
           splash_bg_effect: splashBgEffect,
           splash_overlay_mode: splashOverlayMode,
           splash_overlay_hue: splashOverlayHue,
@@ -589,7 +591,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
               }`}
             >
               <ImageIcon className="w-4 h-4 text-emerald-600" />
-              <span>2. Splash Screen</span>
+              <span>2. Fundo &amp; Splash</span>
             </button>
 
             <button
@@ -605,7 +607,10 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
               }`}
             >
               <Palette className="w-4 h-4 text-indigo-600" />
-              <span>3. Design dos Jogos</span>
+              <span>3. Tema Visual &amp; Cores</span>
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200">
+                Unificado
+              </span>
             </button>
 
             <button
@@ -1502,196 +1507,35 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                 </div>
               </div>
 
-              {/* 2. Estilo do Botão "Toque para Jogar" */}
-              <div className="space-y-4 pt-4 border-t border-slate-200">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                    <Gamepad2 className="w-4 h-4 text-red-600" />
-                    <span>Estilo do Botão "Toque para Jogar" (17 Modelos Exclusivos)</span>
-                  </label>
-                  <span className="text-xs text-slate-500">
-                    Estilo ativo: <strong className="text-slate-900">{SPLASH_BUTTON_STYLES.find(s => s.id === splashButtonStyle)?.name}</strong>
-                  </span>
-                </div>
-
-                {/* PRÉ-VISUALIZAÇÃO INTERATIVA EM TEMPO REAL DO BOTÃO */}
-                <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-black border-2 border-slate-800 text-white shadow-xl space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-white/10 flex-wrap gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        style={{ backgroundColor: splashButtonPalette.primary, boxShadow: `0 0 15px ${splashButtonPalette.glowColor}` }}
-                        className="w-8 h-8 rounded-xl flex items-center justify-center text-white flex-shrink-0 transition-all duration-300"
-                      >
-                        <Eye className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <h4 className="text-xs sm:text-sm font-black flex items-center gap-2">
-                          <span>Pré-visualização do Botão de Início</span>
-                          <span style={{ color: splashButtonPalette.primary }} className="font-mono text-xs">
-                            ({SPLASH_BUTTON_STYLES.find(s => s.id === splashButtonStyle)?.name})
-                          </span>
-                        </h4>
-                        <p className="text-[11px] text-slate-400">
-                          Toque no botão abaixo para testar a resposta táctil, animação e áudio exatamente como no totem:
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-xs font-mono">
-                      <span className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-slate-300 flex items-center gap-1.5">
-                        <span style={{ backgroundColor: splashButtonPalette.primary }} className="w-2.5 h-2.5 rounded-full inline-block" />
-                        <span>{splashButtonPalette.primary}</span>
+              {/* Informação sobre Tema Unificado para o Botão */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-indigo-50 border-2 border-indigo-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-2xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+                    <Palette className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-indigo-950 flex items-center gap-2">
+                      <span>Botão de Início, Escolha de Jogos e Gameplay Unificados!</span>
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-200 text-indigo-800">
+                        {GAME_LAYOUTS.find((l) => l.id === gameLayout)?.name}
                       </span>
-                    </div>
-                  </div>
-
-                  {/* Visualização Central do Botão */}
-                  <div className="py-8 px-4 rounded-xl bg-slate-900/80 border border-white/10 flex items-center justify-center relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-radial from-white/5 to-transparent pointer-events-none" />
-                    <div className="scale-90 sm:scale-100 transition-transform">
-                      <SplashButtonRenderer
-                        styleId={splashButtonStyle}
-                        palette={splashButtonPalette}
-                        size="md"
-                        label="TOQUE PARA JOGAR"
-                      />
-                    </div>
-                  </div>
-
-                  {/* SLIDER DE VARIAÇÃO DE CORES DO BOTÃO */}
-                  <div className="pt-2 space-y-3">
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-300 flex-wrap gap-2">
-                      <span className="flex items-center gap-2">
-                        <Sliders className="w-3.5 h-3.5 text-amber-400" />
-                        <span>🎨 Barra de Arrastar para Variar Cores do Botão:</span>
-                        <span
-                          style={{ backgroundColor: splashButtonPalette.primary }}
-                          className="px-2 py-0.5 rounded-md text-[10px] font-black text-white shadow-xs font-mono"
-                        >
-                          {splashButtonHue}° ({splashButtonPalette.primary})
-                        </span>
-                      </span>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            sound.playClick();
-                            setSplashButtonHue(layoutColorHue);
-                          }}
-                          className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-[11px] text-slate-300 hover:text-white transition-all"
-                          title="Copiar a mesma tonalidade do Design dos Jogos"
-                        >
-                          Usar Cor dos Jogos
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            sound.playClick();
-                            setSplashButtonHue(38);
-                          }}
-                          className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-[11px] text-slate-300 hover:text-white flex items-center gap-1 transition-all"
-                        >
-                          <RotateCcw className="w-3 h-3" />
-                          <span>Padrão</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="relative flex items-center">
-                      <input
-                        type="range"
-                        min="0"
-                        max="360"
-                        step="1"
-                        value={splashButtonHue}
-                        onChange={(e) => setSplashButtonHue(Number(e.target.value))}
-                        className="w-full h-3 rounded-lg appearance-none cursor-pointer focus:outline-none transition-all shadow-inner"
-                        style={{
-                          background: 'linear-gradient(to right, #ef4444 0%, #f97316 12%, #eab308 25%, #22c55e 38%, #06b6d4 50%, #3b82f6 65%, #8b5cf6 78%, #ec4899 90%, #ef4444 100%)',
-                        }}
-                      />
-                    </div>
-
-                    {/* Presets Rápidos de Cores para o Botão */}
-                    <div className="flex items-center justify-between flex-wrap gap-2 pt-1 text-[11px] text-slate-400">
-                      <span>Paletas Rápidas:</span>
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {QUICK_HUE_PRESETS.map((preset) => (
-                          <button
-                            key={preset.name}
-                            type="button"
-                            onClick={() => {
-                              sound.playClick();
-                              setSplashButtonHue(preset.hue);
-                            }}
-                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5 border ${
-                              Math.abs(splashButtonHue - preset.hue) < 10
-                                ? 'bg-white text-slate-900 border-white shadow-sm font-black'
-                                : 'bg-slate-800/80 text-slate-300 border-slate-700 hover:border-slate-500 hover:text-white'
-                            }`}
-                          >
-                            <span style={{ backgroundColor: preset.previewHex }} className="w-2.5 h-2.5 rounded-full shadow-2xs" />
-                            <span>{preset.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                    </h4>
+                    <p className="text-xs text-indigo-800/90 mt-0.5 max-w-xl">
+                      O botão "Toque para Jogar", a lista de seleção dos jogos e as telas dos jogos agora utilizam o mesmo tema visual e paleta de cores. Configure o tema e os sliders de variação na aba <strong>3. Tema Visual &amp; Cores</strong>.
+                    </p>
                   </div>
                 </div>
-
-                {/* Grid dos 17 Modelos de Botão */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                  {SPLASH_BUTTON_STYLES.map((styleDef) => {
-                    const isSelected = splashButtonStyle === styleDef.id;
-                    return (
-                      <button
-                        key={styleDef.id}
-                        type="button"
-                        onClick={() => {
-                          sound.playClick();
-                          setSplashButtonStyle(styleDef.id);
-                        }}
-                        className={`p-3.5 rounded-2xl border-2 text-left transition-all flex flex-col justify-between gap-3 relative ${
-                          isSelected
-                            ? 'border-red-600 bg-white shadow-md ring-2 ring-red-500/20 scale-[1.01]'
-                            : 'border-slate-200 bg-white/80 hover:border-slate-300 hover:bg-white'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xl">{styleDef.icon}</span>
-                            <div>
-                              <div className="text-xs font-black text-slate-900">{styleDef.name}</div>
-                              <div className="text-[10px] text-slate-500">{styleDef.tagline}</div>
-                            </div>
-                          </div>
-                          {isSelected && (
-                            <span className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center flex-shrink-0">
-                              <Check className="w-3 h-3 stroke-[3]" />
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Visual Miniature Button Preview renderizado dinamicamente */}
-                        <div className="w-full py-2.5 px-2 rounded-xl flex items-center justify-center border border-slate-800 bg-slate-950 overflow-hidden shadow-inner">
-                          <div className="scale-75 origin-center pointer-events-none w-full flex justify-center">
-                            <SplashButtonRenderer
-                              styleId={styleDef.id}
-                              palette={splashButtonPalette}
-                              size="sm"
-                              label="JOGAR"
-                            />
-                          </div>
-                        </div>
-
-                        <p className="text-[10px] text-slate-500 leading-tight line-clamp-2">
-                          {styleDef.description}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setActiveCampaignTab('design');
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-black flex items-center justify-center gap-2 shadow-md transition-all flex-shrink-0"
+                >
+                  <Palette className="w-4 h-4" />
+                  <span>Configurar Tema &amp; Cores →</span>
+                </button>
               </div>
 
               {/* 2. Efeito de Animação de Fundo (Sobreposição / Overlay) */}
@@ -1884,7 +1728,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                   <div className="flex items-center justify-between flex-wrap gap-3">
                     <div className="flex items-center gap-2.5 text-sm sm:text-base font-black text-red-600 uppercase tracking-wider">
                       <Palette className="w-5 h-5" />
-                      <span>3. Design &amp; Layout dos Jogos (12 Estilos Exclusivos)</span>
+                      <span>3. Tema Visual &amp; Cores Unificadas (12 Estilos Exclusivos)</span>
                     </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
@@ -1893,7 +1737,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                 </div>
               </div>
               <p className="text-xs sm:text-sm text-slate-500 leading-relaxed -mt-2">
-                Escolha o design visual exclusivo para todos os jogos da campanha. Você pode variar as cores em tempo real arrastando o controle deslizante abaixo sem precisar escolher cor por cor!
+                Escolha o design visual exclusivo e as cores para todos os elementos do totem. O mesmo estilo e paleta de cores são aplicados no: <strong>1) Botão de Toque para Jogar</strong>, <strong>2) Lista de Escolha de Jogos</strong> e <strong>3) Tela do Jogo</strong>!
               </p>
 
 
@@ -1908,11 +1752,16 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                       onClick={() => {
                         sound.playClick();
                         setGameLayout(layoutDef.id);
-                        setLayoutColorHue(getDefaultHueForLayout(layoutDef.id));
+                        const defHue = getDefaultHueForLayout(layoutDef.id);
+                        setLayoutColorHue(defHue);
+                        setSplashButtonStyle(getSplashButtonStyleForLayout(layoutDef.id));
+                        setSplashButtonHue(defHue);
                         setGamesConfig((prev) => {
                           const updated: Record<string, any> = {
                             ...prev,
                             game_layout: layoutDef.id,
+                            splash_button_style: getSplashButtonStyleForLayout(layoutDef.id),
+                            splash_button_hue: defHue,
                           };
                           GAMES_CATALOG.forEach((g) => {
                             updated[`${g.id}_layout`] = layoutDef.id;
@@ -1982,7 +1831,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                 })}
               </div>
 
-              {/* Painel de Variação de Cores com Slider e Mini Preview em Cima */}
+              {/* Painel de Variação de Cores com Previews dos 3 Locais e Sliders de Elementos e Fundo */}
               <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-black border-2 border-slate-800 text-white shadow-xl space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
                   <div className="flex items-center gap-3">
@@ -1994,13 +1843,13 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                     </div>
                     <div>
                       <h4 className="text-sm sm:text-base font-black flex items-center gap-2">
-                        <span>Variação de Cores do Estilo:</span>
+                        <span>Variação de Cores do Tema:</span>
                         <span style={{ color: activeLayoutPalette.primary }} className="transition-colors duration-300">
                           {GAME_LAYOUTS.find((l) => l.id === gameLayout)?.name}
                         </span>
                       </h4>
                       <p className="text-xs text-slate-400">
-                        Deslize a barra para mudar todas as cores de uma vez só (bordas, neon, botões e auras)
+                        Ajuste em tempo real as cores dos elementos e do fundo para os 3 locais (botão, lista de jogos e tela do jogo)
                       </p>
                     </div>
                   </div>
@@ -2009,7 +1858,9 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                     type="button"
                     onClick={() => {
                       sound.playClick();
-                      setLayoutColorHue(getDefaultHueForLayout(gameLayout));
+                      const defHue = getDefaultHueForLayout(gameLayout);
+                      setLayoutColorHue(defHue);
+                      setSplashButtonHue(defHue);
                     }}
                     className="self-start sm:self-auto px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 active:scale-95 text-xs font-bold text-slate-300 hover:text-white border border-white/15 flex items-center gap-1.5 transition-all"
                   >
@@ -2018,41 +1869,29 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                   </button>
                 </div>
 
-                {/* 1. Mini Preview em Cima Mostrando a Variação naquele Tema */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs text-slate-400 font-bold">
-                    <span>PRÉ-VISUALIZAÇÃO EM TEMPO REAL NO ESTILO ESCOLHIDO:</span>
-                    <div className="flex items-center gap-2 text-[11px] font-mono">
-                      <span className="flex items-center gap-1">
-                        <span style={{ backgroundColor: activeLayoutPalette.primary }} className="w-2.5 h-2.5 rounded-full" />
-                        {activeLayoutPalette.primary}
-                      </span>
-                      <span className="text-slate-600">•</span>
-                      <span className="flex items-center gap-1">
-                        <span style={{ backgroundColor: activeLayoutPalette.secondary }} className="w-2.5 h-2.5 rounded-full" />
-                        {activeLayoutPalette.secondary}
-                      </span>
-                    </div>
-                  </div>
+                {/* 1. PRÉ-VISUALIZAÇÃO EM TEMPO REAL NOS 3 LOCAIS */}
+                <UnifiedThemePreviewPanel
+                  layoutId={gameLayout}
+                  palette={activeLayoutPalette}
+                  isLight={themeMode === 'light'}
+                  campaignFont={campaignFont}
+                  clientName={clientName}
+                  campaignName={name}
+                  splashUrl={splashUrl}
+                  splashOverlayStyle={splashOverlayStyle}
+                />
 
-                  <RealtimeLayoutPreviewCard
-                    layoutId={gameLayout}
-                    palette={activeLayoutPalette}
-                    isLight={themeMode === 'light'}
-                    campaignFont={campaignFont}
-                  />
-                </div>
-
-                {/* 2. Barra de Arrastar (Slider Horizontal Esquerda <-> Direita) */}
-                <div className="space-y-3 pt-2">
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+                {/* 2. BARRA DE VARIAÇÃO DE CORES DOS ELEMENTOS (BORDAS, BOTÕES, NEON E AURAS) */}
+                <div className="space-y-3 pt-4 border-t border-white/10">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-300 flex-wrap gap-2">
                     <span className="flex items-center gap-2">
-                      <span>🎨 Barra de Arrastar para Variar Cores:</span>
+                      <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                      <span>🎨 Barra de Arrastar para Variar Cores dos Elementos (Botões, Bordas e Auras):</span>
                       <span
                         style={{ backgroundColor: activeLayoutPalette.primary }}
                         className="px-2 py-0.5 rounded-md text-[10px] font-black text-white shadow-xs font-mono"
                       >
-                        {layoutColorHue}° MATIZ
+                        {layoutColorHue}° MATIZ ({activeLayoutPalette.primary})
                       </span>
                     </span>
                     <span className="text-slate-400 text-[11px]">
@@ -2068,7 +1907,9 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                       step="1"
                       value={layoutColorHue}
                       onChange={(e) => {
-                        setLayoutColorHue(Number(e.target.value));
+                        const val = Number(e.target.value);
+                        setLayoutColorHue(val);
+                        setSplashButtonHue(val);
                       }}
                       className="w-full h-4 rounded-full appearance-none cursor-pointer focus:outline-none shadow-inner"
                       style={{
@@ -2078,11 +1919,11 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                     />
                   </div>
 
-                  {/* 3. Atalhos Rápidos de Cores em 1-Clique */}
+                  {/* Atalhos Rápidos de Cores em 1-Clique */}
                   <div className="flex items-center gap-2 flex-wrap pt-1">
                     <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1">
                       <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                      Tons Rápidos:
+                      Tons Rápidos dos Elementos:
                     </span>
                     {QUICK_HUE_PRESETS.map((preset) => (
                       <button
@@ -2091,6 +1932,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                         onClick={() => {
                           sound.playClick();
                           setLayoutColorHue(preset.hue);
+                          setSplashButtonHue(preset.hue);
                         }}
                         className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-2 transition-all active:scale-95 ${
                           Math.abs(layoutColorHue - preset.hue) <= 15
@@ -2105,6 +1947,168 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                         <span>{preset.name}</span>
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                {/* 3. SLIDER DE VARIAÇÃO DA COR DO FUNDO */}
+                <div className="space-y-4 pt-4 border-t border-white/10">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-300 flex-wrap gap-2">
+                    <span className="flex items-center gap-2">
+                      <Sliders className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>🖼️ Barra de Arrastar para Variar a Cor do Fundo:</span>
+                      <span
+                        style={{ backgroundColor: splashOverlayStyle.primaryColor }}
+                        className="px-2 py-0.5 rounded-md text-[10px] font-black text-white shadow-xs font-mono"
+                      >
+                        {splashOverlayHue}° ({splashOverlayStyle.primaryColor})
+                      </span>
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setSplashOverlayHue(layoutColorHue);
+                        setSplashOverlayMode('color');
+                        if (splashOverlayOpacity === 0) setSplashOverlayOpacity(35);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-xs text-amber-300 hover:text-white transition-all font-bold flex items-center gap-1.5 border border-white/15 active:scale-95"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Sincronizar com Cor dos Elementos</span>
+                    </button>
+                  </div>
+
+                  {/* Modos Rápidos de Fundo */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setSplashOverlayMode('original');
+                        setSplashOverlayOpacity(0);
+                      }}
+                      className={`p-2 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-0.5 ${
+                        splashOverlayMode === 'original' || splashOverlayOpacity === 0
+                          ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-md ring-2 ring-amber-400/50'
+                          : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      <span>🌟 100% Original</span>
+                      <span className="text-[10px] opacity-80">Sem mistura</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setSplashOverlayMode('color');
+                        if (splashOverlayOpacity === 0) setSplashOverlayOpacity(35);
+                      }}
+                      className={`p-2 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-0.5 ${
+                        splashOverlayMode === 'color' && splashOverlayOpacity > 0
+                          ? 'bg-emerald-500 text-white border-emerald-400 shadow-md ring-2 ring-emerald-400/50'
+                          : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      <span>🎨 Cor do Slider</span>
+                      <span className="text-[10px] opacity-80">Tonalidade ativa</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setSplashOverlayMode('black');
+                        if (splashOverlayOpacity === 0) setSplashOverlayOpacity(45);
+                      }}
+                      className={`p-2 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-0.5 ${
+                        splashOverlayMode === 'black'
+                          ? 'bg-slate-800 text-white border-slate-600 shadow-md ring-2 ring-white/20'
+                          : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      <span>🖤 Preto Neutro</span>
+                      <span className="text-[10px] opacity-80">Degradê dark</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setSplashOverlayMode('white');
+                        if (splashOverlayOpacity === 0) setSplashOverlayOpacity(35);
+                      }}
+                      className={`p-2 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-0.5 ${
+                        splashOverlayMode === 'white'
+                          ? 'bg-slate-100 text-slate-900 border-white shadow-md ring-2 ring-white/50'
+                          : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10'
+                      }`}
+                    >
+                      <span>🤍 Branco Clean</span>
+                      <span className="text-[10px] opacity-80">Véu claro</span>
+                    </button>
+                  </div>
+
+                  {/* Slider de Matiz do Fundo */}
+                  <div className="relative flex items-center py-1">
+                    <input
+                      type="range"
+                      min="0"
+                      max="360"
+                      step="1"
+                      value={splashOverlayHue}
+                      onChange={(e) => {
+                        setSplashOverlayHue(Number(e.target.value));
+                        if (splashOverlayMode !== 'color') setSplashOverlayMode('color');
+                        if (splashOverlayOpacity === 0) setSplashOverlayOpacity(35);
+                      }}
+                      className="w-full h-3 rounded-lg appearance-none cursor-pointer focus:outline-none transition-all shadow-inner"
+                      style={{
+                        background:
+                          'linear-gradient(to right, #ef4444 0%, #f97316 12%, #eab308 25%, #22c55e 38%, #06b6d4 50%, #3b82f6 65%, #8b5cf6 78%, #ec4899 90%, #ef4444 100%)',
+                      }}
+                    />
+                  </div>
+
+                  {/* Slider de Intensidade / Opacidade da Cor do Fundo */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs text-slate-300 font-bold">
+                        <span>💧 Intensidade da Cor no Fundo:</span>
+                        <span className="font-mono text-amber-300">{splashOverlayOpacity}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="90"
+                        step="5"
+                        value={splashOverlayOpacity}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setSplashOverlayOpacity(val);
+                          if (val === 0) setSplashOverlayMode('original');
+                          else if (splashOverlayMode === 'original') setSplashOverlayMode('color');
+                        }}
+                        className="w-full h-2.5 rounded-lg appearance-none cursor-pointer focus:outline-none accent-amber-400 bg-slate-800 shadow-inner"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs text-slate-300 font-bold">
+                        <span>☀️ Brilho da Imagem de Fundo:</span>
+                        <span className="font-mono text-amber-300">{splashOverlayBrightness}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="10"
+                        max="130"
+                        step="5"
+                        value={splashOverlayBrightness}
+                        onChange={(e) => setSplashOverlayBrightness(Number(e.target.value))}
+                        className="w-full h-2.5 rounded-lg appearance-none cursor-pointer focus:outline-none accent-amber-400 bg-slate-800 shadow-inner"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

@@ -1,3 +1,5 @@
+import { GameLayoutId } from './gameLayouts';
+
 export type SplashButtonStyleId =
   | 'default'
   | 'cartoon_3d'
@@ -16,6 +18,28 @@ export type SplashButtonStyleId =
   | 'cyber_matrix'
   | 'quantum_glow'
   | 'brutalist_bold';
+
+export const GAME_LAYOUT_TO_BUTTON_STYLE: Record<GameLayoutId, SplashButtonStyleId> = {
+  cartoon_pop: 'cartoon_3d',
+  cartoon_comic: 'comic_pop',
+  neon_arcade: 'neon_pulse',
+  bento_tech: 'cyber_tech',
+  neumorphic_luxe: 'luxury_gold',
+  modern_glass: 'glass_glow',
+  spatial_3d: 'quantum_glow',
+  pixel_retro: 'pixel_8bit',
+  cyber_matrix: 'cyber_matrix',
+  synthwave_grid: 'synthwave_neon',
+  golden_casino: 'royal_casino',
+  bubble_toon: 'candy_bubble',
+};
+
+export const getSplashButtonStyleForLayout = (layout?: GameLayoutId | string): SplashButtonStyleId => {
+  if (layout && layout in GAME_LAYOUT_TO_BUTTON_STYLE) {
+    return GAME_LAYOUT_TO_BUTTON_STYLE[layout as GameLayoutId];
+  }
+  return 'comic_pop';
+};
 
 export interface SplashButtonStyleDefinition {
   id: SplashButtonStyleId;

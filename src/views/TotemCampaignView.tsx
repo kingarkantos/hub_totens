@@ -13,6 +13,8 @@ import { GameLayoutId } from '../types/gameLayouts';
 import { generateLayoutPalette, getSplashOverlayStyle, LayoutColorPalette, getDefaultHueForLayout, hexToRgba } from '../lib/colorHarmony';
 import { getFontFamilyById } from '../lib/fonts';
 import { SplashButtonRenderer } from '../components/SplashButtonRenderer';
+import { ThemedGameCard } from '../components/ThemedGameCard';
+import { getSplashButtonStyleForLayout } from '../types/splashCustomization';
 
 // Games
 import { WheelGame } from '../games/WheelGame';
@@ -589,19 +591,23 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
 
   const gamesList = GAMES_CATALOG.filter((g) => campaign.selected_games.includes(g.id));
 
-  const splashButtonStyle: SplashButtonStyleId =
-    (campaign.games_config?.splash_button_style as SplashButtonStyleId) || 'default';
+  const campaignLayout: GameLayoutId =
+    (campaign.games_config?.game_layout as GameLayoutId) || 'cartoon_comic';
   const splashBgEffect: BackgroundEffectId =
     (campaign.games_config?.splash_bg_effect as BackgroundEffectId) || 'none';
-  const campaignLayout: GameLayoutId =
-    (campaign.games_config?.game_layout as GameLayoutId) || 'modern_glass';
 
-  // Splash Button color hue & palette
-  const splashButtonHue: number = campaign.games_config?.splash_button_hue !== undefined
-    ? Number(campaign.games_config.splash_button_hue)
-    : (layoutColorHue !== undefined ? layoutColorHue : 38);
+  // Splash Button style automatically synced to the unified campaignLayout
+  const splashButtonStyle: SplashButtonStyleId =
+    getSplashButtonStyleForLayout(campaignLayout);
 
-  const splashButtonPalette = generateLayoutPalette(splashButtonHue, isLight);
+  const effectiveLayoutHue = layoutColorHue !== undefined
+    ? layoutColorHue
+    : getDefaultHueForLayout(campaignLayout);
+
+  const activeLayoutPalette = sliderPalette || generateLayoutPalette(effectiveLayoutHue, isLight);
+
+  // Splash Button palette matches the unified layout palette
+  const splashButtonPalette = activeLayoutPalette;
 
   // Splash Background Color Blend & Overlay
   const splashOverlayMode: 'color' | 'original' | 'black' | 'white' =
@@ -1113,102 +1119,39 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
                 </button>
               </div>
             ) : (
-              displayedGames.map((game, index) => (
-                <div
+              displayedGames.map((game, index) => {
+              const cfgPerQuestion = campaign.games_config?.[`${game.id}_time_limit`];
+              const cfgTotal = campaign.games_config?.[`${game.id}_total_time_limit`];
+              const isQuestionGame = ['quiz', 'truefalse', 'speed_trivia', 'complete_phrase', 'math_blitz'].includes(game.id);
+
+              let timeDisplay = game.estimatedTime;
+              if (cfgPerQuestion !== undefined) {
+                if (cfgPerQuestion === 0) {
+                  timeDisplay = cfgTotal ? `${cfgTotal} seg total` : 'Sem tempo';
+                } else {
+                  timeDisplay = isQuestionGame ? `${cfgPerQuestion} seg` : `${cfgPerQuestion} seg`;
+                }
+              } else if (cfgTotal !== undefined) {
+                timeDisplay = `${cfgTotal} seg total`;
+              }
+
+              return (
+                <ThemedGameCard
                   key={game.id}
-                  onClick={() => {
+                  layoutId={campaignLayout}
+                  palette={activeLayoutPalette}
+                  game={game}
+                  index={index}
+                  isLight={isLight}
+                  campaignFont={campaign.games_config?.campaign_font}
+                  timeDisplay={timeDisplay}
+                  onPlay={() => {
                     sound.playClick();
                     setActiveGame(game);
                   }}
-                  className={`relative group rounded-[32px] sm:rounded-[36px] border-2 p-6 sm:p-8 lg:p-9 cursor-pointer transition-all duration-300 hover:scale-[1.015] hover:-translate-y-1 active:scale-98 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8 overflow-hidden ${theme.cardBg} ${theme.cardBorder}`}
-                  style={{
-                    boxShadow: `0 20px 50px -15px ${theme.glowColor}30`,
-                  }}
-                >
-                  {/* Background decorative glow on hover */}
-                  <div
-                    style={{ backgroundColor: theme.primary }}
-                    className="absolute -right-20 -top-20 w-64 h-64 rounded-full blur-3xl opacity-20 group-hover:opacity-45 transition-opacity duration-500 pointer-events-none"
-                  />
-
-                  {/* Left Side: Game Number, Badge, Title & Description */}
-                  <div className="flex items-start gap-5 sm:gap-7 z-10 w-full lg:flex-1">
-                    <div
-                      style={{ color: theme.primary }}
-                      className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl ${
-                        isLight 
-                          ? 'bg-slate-100 border-2 border-slate-200 shadow-sm' 
-                          : 'bg-gradient-to-br from-white/15 to-white/5 border-2 border-white/20 text-amber-400 shadow-inner'
-                      } flex items-center justify-center font-black text-3xl sm:text-4xl flex-shrink-0 group-hover:scale-105 transition-transform`}
-                    >
-                      {index + 1}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <span className={`text-[11px] sm:text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full border ${theme.badgeBg}`}>
-                          {game.category}
-                        </span>
-                        {(() => {
-                          const cfgPerQuestion = campaign.games_config?.[`${game.id}_time_limit`];
-                          const cfgTotal = campaign.games_config?.[`${game.id}_total_time_limit`];
-                          const isQuestionGame = ['quiz', 'truefalse', 'speed_trivia', 'complete_phrase', 'math_blitz'].includes(game.id);
-
-                          let timeDisplay = game.estimatedTime;
-                          if (cfgPerQuestion !== undefined) {
-                            if (cfgPerQuestion === 0) {
-                              timeDisplay = cfgTotal ? `${cfgTotal} seg total` : 'Sem tempo';
-                            } else {
-                              timeDisplay = isQuestionGame ? `${cfgPerQuestion} seg` : `${cfgPerQuestion} seg`;
-                            }
-                          } else if (cfgTotal !== undefined) {
-                            timeDisplay = `${cfgTotal} seg total`;
-                          }
-
-                          return (
-                            <span className={`text-[11px] font-mono px-2.5 py-0.5 rounded-md border ${isLight ? 'text-slate-700 bg-slate-100 border-slate-200' : 'text-slate-300 bg-black/40 border-white/10'}`}>
-                              ⏱️ {timeDisplay}
-                            </span>
-                          );
-                        })()}
-                        <span className={`text-[11px] font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                          Dificuldade: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{game.difficulty}</strong>
-                        </span>
-                      </div>
-
-                      <h3 className={`text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight group-hover:opacity-95 transition-colors ${theme.textColor} mb-2`}>
-                        {game.name}
-                      </h3>
-
-                      <p className={`text-sm sm:text-base leading-relaxed ${isLight ? 'text-slate-600' : 'text-slate-300'} line-clamp-2 sm:line-clamp-3 font-medium max-w-2xl`}>
-                        {game.description}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Right Side: Game Miniature + Big Highlighted Play Button */}
-                  <div className="z-10 w-full lg:w-auto flex flex-col sm:flex-row items-center gap-4 sm:gap-6 flex-shrink-0 justify-end">
-                    {/* Miniature Game Preview Art */}
-                    <GameCardThumbnail 
-                      game={game} 
-                      themePrimary={theme.primary} 
-                      isLight={isLight} 
-                    />
-
-                    {/* Play Action Button */}
-                    <button
-                      style={{
-                        backgroundColor: theme.primary,
-                        boxShadow: `0 12px 35px -5px ${theme.glowColor}80`,
-                      }}
-                      className="w-full sm:w-auto py-4 sm:py-5 px-8 sm:px-10 rounded-2xl sm:rounded-3xl text-white font-black text-lg sm:text-xl tracking-wider uppercase shadow-xl flex items-center justify-center gap-3 transition-transform group-hover:scale-105 group-hover:brightness-110 active:scale-95 flex-shrink-0"
-                    >
-                      <Play className="w-6 h-6 fill-current" />
-                      <span>JOGAR AGORA</span>
-                    </button>
-                  </div>
-                </div>
-              ))
+                />
+              );
+            })
             )}
           </div>
         </div>
