@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
-import { CheckCircle2, XCircle, ArrowRight, HelpCircle, Award } from 'lucide-react';
+import { CheckCircle2, XCircle, ArrowRight, HelpCircle, Award, Clock } from 'lucide-react';
 import { BaseGameProps } from '../types';
 import { CompletePhraseCustomItem } from '../types/gameContent';
 import { useActiveGamePalette } from '../context/GameLayoutContext';
@@ -130,8 +130,16 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = (props) => 
     }
   };
 
-  const handleNext = () => {
+  // Auto-advance states (wait 5s, then show 5s countdown slider)
+  const [showAutoSlider, setShowAutoSlider] = useState(false);
+  const [autoSliderProgress, setAutoSliderProgress] = useState(0);
+  const [autoSliderSecondsLeft, setAutoSliderSecondsLeft] = useState(5);
+
+  const handleNext = useCallback(() => {
     sound.playTap();
+    setShowAutoSlider(false);
+    setAutoSliderProgress(0);
+    setAutoSliderSecondsLeft(5);
     if (currentIdx + 1 < phrases.length) {
       setCurrentIdx((prev) => prev + 1);
       setSelectedOpt(null);
@@ -141,7 +149,56 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = (props) => 
       setGameOver(true);
       setGameWon(score >= 500);
     }
-  };
+  }, [currentIdx, phrases.length, score]);
+
+  const handleNextRef = useRef(handleNext);
+  handleNextRef.current = handleNext;
+
+  // Phase 1: Wait 5 seconds after answering before showing the auto-advance slider
+  useEffect(() => {
+    if (!answered || gameOver) {
+      setShowAutoSlider(false);
+      setAutoSliderProgress(0);
+      setAutoSliderSecondsLeft(5);
+      return;
+    }
+
+    const initialWaitTimer = setTimeout(() => {
+      setShowAutoSlider(true);
+      setAutoSliderProgress(0);
+      setAutoSliderSecondsLeft(5);
+    }, 5000);
+
+    return () => {
+      clearTimeout(initialWaitTimer);
+    };
+  }, [answered, gameOver, currentIdx]);
+
+  // Phase 2: Animate 5-second countdown slider and auto-advance when complete
+  useEffect(() => {
+    if (!showAutoSlider || !answered || gameOver) return;
+
+    const durationMs = 5000;
+    const startTime = Date.now();
+
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(100, (elapsed / durationMs) * 100);
+      const remainingSec = Math.max(1, Math.ceil((durationMs - elapsed) / 1000));
+
+      setAutoSliderProgress(progress);
+      setAutoSliderSecondsLeft(remainingSec);
+
+      if (elapsed >= durationMs) {
+        clearInterval(interval);
+        handleNextRef.current();
+      }
+    }, 40);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [showAutoSlider, answered, gameOver]);
 
   // Replace ___ with highlighted word or placeholder
   const parts = activePhrase.sentence.split('___');
@@ -157,6 +214,9 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = (props) => 
       gameOver={gameOver}
       gameWon={correctCount === phrases.length}
       onRestart={() => {
+        setShowAutoSlider(false);
+        setAutoSliderProgress(0);
+        setAutoSliderSecondsLeft(5);
         setPhrases(preparePhrases());
         setCurrentIdx(0);
         setScore(0);
@@ -484,7 +544,7 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = (props) => 
 
         {/* Next Button after answering */}
         {answered && (
-          <div className="pt-2">
+          <div className="pt-2 flex flex-col gap-3">
             <button
               type="button"
               onClick={handleNext}
@@ -522,9 +582,55 @@ export const CompletePhraseGame: React.FC<CompletePhraseGameProps> = (props) => 
                   : 'text-white rounded-3xl shadow-xl border-b-4 active:scale-95'
               }`}
             >
-              <span>Continuar</span>
+              <span>
+                {currentIdx + 1 < phrases.length
+                  ? showAutoSlider
+                    ? `Continuar (${autoSliderSecondsLeft}s)`
+                    : 'Continuar'
+                  : showAutoSlider
+                  ? `Finalizar Desafio (${autoSliderSecondsLeft}s)`
+                  : 'Finalizar Desafio'}
+              </span>
               <ArrowRight className="w-7 h-7 stroke-[3]" />
             </button>
+
+            {/* Slider de 5 segundos para passar automaticamente */}
+            {showAutoSlider && (
+              <div
+                onClick={handleNext}
+                role="button"
+                tabIndex={0}
+                className="w-full flex flex-col gap-2.5 p-3.5 sm:p-4 rounded-2xl bg-black/60 border border-white/20 backdrop-blur-md shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300 cursor-pointer hover:bg-black/70 active:scale-[0.99] transition-all select-none"
+              >
+                <div className="flex items-center justify-between text-xs sm:text-sm font-black tracking-wide text-slate-200">
+                  <span className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-amber-400 animate-spin" style={{ animationDuration: '4s' }} />
+                    <span>Passando automaticamente</span>
+                  </span>
+                  <span className="font-mono text-amber-300 font-black bg-amber-400/20 px-2.5 py-0.5 rounded-full border border-amber-400/40 text-xs sm:text-sm">
+                    {autoSliderSecondsLeft}s
+                  </span>
+                </div>
+
+                {/* Barra do slider com preenchimento contínuo e thumb brilhante */}
+                <div className="relative w-full h-4 bg-slate-900/90 rounded-full p-0.5 border border-white/20 shadow-inner overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-75 ease-linear relative flex items-center justify-end"
+                    style={{
+                      width: `${autoSliderProgress}%`,
+                      background: `linear-gradient(90deg, ${layoutPrimary}, ${layoutSecondary})`,
+                      boxShadow: `0 0 14px ${layoutGlow || layoutPrimary}`,
+                    }}
+                  >
+                    <div className="w-3.5 h-3.5 rounded-full bg-white border-2 border-amber-300 shadow-md shrink-0 mr-0.5 animate-pulse" />
+                  </div>
+                </div>
+
+                <div className="text-[11px] sm:text-xs text-center text-slate-400 font-semibold">
+                  Toque na tela ou no botão para avançar agora
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
