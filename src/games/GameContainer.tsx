@@ -544,7 +544,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
             ...(currentLayout === 'golden_casino' ? { borderBottomColor: activePrimary, boxShadow: `0 4px 20px ${activeGlow}` } : {}),
             ...(currentLayout === 'synthwave_grid' ? { borderBottomColor: activePrimary, boxShadow: `0 4px 25px ${activeGlow}` } : {}),
           }}
-          className={`flex-shrink-0 flex items-center justify-between px-4 sm:px-8 py-3 sm:py-4 z-30 transition-all ${
+          className={`relative flex-shrink-0 flex items-center justify-between px-4 sm:px-8 py-3 sm:py-4 z-30 transition-all ${
           currentLayout === 'cartoon_pop'
             ? 'bg-slate-900/95 border-b-4'
             : currentLayout === 'cartoon_comic'
@@ -780,25 +780,30 @@ export const GameContainer: React.FC<GameContainerProps> = ({
               {soundOn ? <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" /> : <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />}
             </button>
           </div>
-
-          {/* Synchronized Ambient Full-Width Slider Line at bottom of header */}
-          {timeRemaining !== undefined && timeRemaining > 0 && (
-            <div className="absolute bottom-0 inset-x-0 h-1 sm:h-1.5 bg-black/40 overflow-hidden pointer-events-none">
-              <div
-                style={{ width: `${timePercent}%` }}
-                className={`h-full transition-[width] duration-1000 ease-linear shadow-xs ${
-                  isUrgentTime
-                    ? 'bg-gradient-to-r from-orange-500 via-rose-500 to-rose-600'
-                    : currentLayout === 'neon_arcade'
-                    ? 'bg-gradient-to-r from-blue-500 via-cyan-400 to-teal-300'
-                    : currentLayout === 'bento_tech'
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
-                    : 'bg-gradient-to-r from-amber-400 to-yellow-300'
-                }`}
-              />
-            </div>
-          )}
         </header>
+
+        {/* Barra de Tempo em Cima (Full-Width Countdown Timer Bar) */}
+        {timeRemaining !== undefined && timeRemaining > 0 && (
+          <div className="relative w-full h-1.5 sm:h-2 bg-black/60 overflow-hidden pointer-events-none z-30 flex-shrink-0 border-b border-white/10 shadow-sm">
+            <div
+              style={{
+                width: `${timePercent}%`,
+                background: isUrgentTime
+                  ? 'linear-gradient(to right, #ea580c, #e11d48, #f43f5e)'
+                  : `linear-gradient(to right, ${activeSecondary}, ${activePrimary})`,
+                boxShadow: isUrgentTime
+                  ? '0 0 15px rgba(244,63,94,0.8)'
+                  : `0 0 14px ${activeGlow || activePrimary}`,
+              }}
+              className={`h-full transition-[width] duration-1000 ease-linear relative flex items-center justify-end ${
+                isUrgentTime ? 'shadow-[0_0_15px_rgba(244,63,94,0.8)]' : ''
+              }`}
+            >
+              {/* Ponta brilhante do indicador de tempo */}
+              <div className="w-2.5 h-full bg-white/90 shadow-[0_0_8px_#ffffff]" />
+            </div>
+          </div>
+        )}
 
         {/* Main Game Play Area - Styled dynamically per layout */}
         <main className={`relative flex-1 w-full min-h-0 flex flex-col items-center justify-center p-3 sm:p-8 overflow-y-auto no-scrollbar z-20`}>
