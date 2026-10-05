@@ -9,7 +9,8 @@ import { ThemeDefinition } from '../types';
 import { GameLayoutId, GAME_LAYOUTS, GameLayoutDefinition } from '../types/gameLayouts';
 import { GameLayoutProvider, useGameLayout } from '../context/GameLayoutContext';
 import { getFontFamilyById } from '../lib/fonts';
-import { LayoutColorPalette, generateLayoutPalette, getDefaultHueForLayout } from '../lib/colorHarmony';
+import { LayoutColorPalette, generateLayoutPalette, getDefaultHueForLayout, getThemeBackgroundGradient } from '../lib/colorHarmony';
+import { BackgroundEffectOverlay, BackgroundEffectId } from '../components/BackgroundEffectOverlay';
 
 const FEEDBACK_POOLS = {
   // 100% de acertos (Acertou tudo - SOMENTE AQUI dá parabéns!)
@@ -81,6 +82,8 @@ interface GameContainerProps {
   hideScore?: boolean;
   prizeWon?: { label: string; color?: string; icon?: string } | string;
   gameOverCustomContent?: React.ReactNode;
+  themeBgGradient?: string;
+  splashBgEffect?: string;
 }
 
 export const GameContainer: React.FC<GameContainerProps> = ({
@@ -101,11 +104,12 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   prizeWon,
   gameOverCustomContent,
   correctAnswers,
-
   totalQuestions,
   themePrimary = '#DC2626',
   theme,
   customBgStyle,
+  themeBgGradient,
+  splashBgEffect,
   campaignName,
   clientName,
   splashImageUrl,
@@ -266,11 +270,27 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
   const activeFontFamily = fontFamily || (fontId ? getFontFamilyById(fontId) : undefined);
 
+  const effectiveBgGradient =
+    themeBgGradient ||
+    (customBgStyle?.background as string) ||
+    contextLayout?.themeBgGradient ||
+    getThemeBackgroundGradient(
+      currentLayout,
+      effectiveHue !== undefined ? effectiveHue : getDefaultHueForLayout(currentLayout),
+      'color',
+      35,
+      isLightMode
+    );
+
+  const activeBgEffect = splashBgEffect || contextLayout?.splashBgEffect;
+
   return (
     <GameLayoutProvider
       layout={currentLayout}
       hue={effectiveHue}
       isLight={isLightMode}
+      themeBgGradient={effectiveBgGradient}
+      splashBgEffect={activeBgEffect}
       onLayoutChange={setCurrentLayout}
     >
       <div
@@ -280,26 +300,34 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           '--layout-secondary': activeSecondary,
           '--layout-glow': activeGlow,
           fontFamily: activeFontFamily,
+          background: effectiveBgGradient,
           ...customBgStyle,
         } as React.CSSProperties}
-        className={`absolute inset-0 w-full h-full flex flex-col bg-gradient-to-b ${
-          theme?.bgGradient || (isLightMode ? 'from-slate-100 via-slate-50 to-slate-200' : 'from-slate-950 via-slate-900 to-black')
-        } ${theme?.textColor || (isLightMode ? 'text-slate-900' : 'text-white')} ${theme?.fontClass || ''} select-none overflow-hidden z-40 transition-colors duration-500`}
+        className={`absolute inset-0 w-full h-full flex flex-col ${
+          theme?.textColor || (isLightMode ? 'text-slate-900' : 'text-white')
+        } ${theme?.fontClass || ''} select-none overflow-hidden z-40 transition-colors duration-500`}
       >
+        {/* Background Overlay Animation Effect (Leaves, matrix, stars, etc.) */}
+        {activeBgEffect && activeBgEffect !== 'none' && (
+          <div className="absolute inset-0 pointer-events-none opacity-40 z-0">
+            <BackgroundEffectOverlay effect={activeBgEffect as BackgroundEffectId} />
+          </div>
+        )}
+
         {/* Dynamic Backgrounds According to Layouts */}
         {currentLayout === 'modern_glass' && (
           <>
             <div
-              className={`absolute -top-32 -left-32 w-80 h-80 sm:w-96 sm:h-96 rounded-full blur-3xl ${isLightMode ? 'opacity-15' : 'opacity-30'} pointer-events-none transition-all duration-700`}
-              style={{ background: themePrimary || theme?.primary || '#DC2626' }}
+              className={`absolute -top-32 -left-32 w-80 h-80 sm:w-96 sm:h-96 rounded-full blur-3xl ${isLightMode ? 'opacity-15' : 'opacity-25'} pointer-events-none transition-all duration-700`}
+              style={{ backgroundColor: activePrimary }}
             />
             <div
-              className={`absolute -bottom-32 -right-32 w-80 h-80 sm:w-96 sm:h-96 rounded-full blur-3xl ${isLightMode ? 'opacity-15' : 'opacity-25'} pointer-events-none transition-all duration-700`}
-              style={{ background: theme?.secondary || '#F59E0B' }}
+              className={`absolute -bottom-32 -right-32 w-80 h-80 sm:w-96 sm:h-96 rounded-full blur-3xl ${isLightMode ? 'opacity-15' : 'opacity-20'} pointer-events-none transition-all duration-700`}
+              style={{ backgroundColor: activeSecondary }}
             />
             <div
               className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[120px] ${isLightMode ? 'opacity-5' : 'opacity-10'} pointer-events-none`}
-              style={{ background: theme?.glowColor || themePrimary || '#DC2626' }}
+              style={{ backgroundColor: activeGlow }}
             />
           </>
         )}
@@ -307,21 +335,35 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         {currentLayout === 'cartoon_pop' && (
           <>
             {/* Playful cartoon energy radiant background */}
-            <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gradient-to-b from-amber-500/25 via-orange-500/15 to-transparent blur-[110px] pointer-events-none" />
-            <div className="absolute -bottom-32 right-12 w-96 h-96 bg-amber-600/20 blur-[120px] pointer-events-none" />
+            <div
+              className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[400px] blur-[110px] pointer-events-none"
+              style={{
+                background: `linear-gradient(to bottom, ${activePrimary}35, ${activeSecondary}15, transparent)`
+              }}
+            />
+            <div
+              className="absolute -bottom-32 right-12 w-96 h-96 blur-[120px] pointer-events-none"
+              style={{ backgroundColor: `${activePrimary}25` }}
+            />
             {/* Floating comic star accents */}
-            <div className="absolute top-24 left-10 text-amber-400/40 text-2xl font-black pointer-events-none animate-bounce hidden sm:block">★</div>
-            <div className="absolute top-48 right-16 text-yellow-300/40 text-xl font-black pointer-events-none animate-bounce delay-300 hidden sm:block">✦</div>
-            <div className="absolute bottom-28 left-20 text-orange-400/35 text-2xl font-black pointer-events-none animate-pulse hidden sm:block">★</div>
+            <div style={{ color: activePrimary }} className="absolute top-24 left-10 text-2xl font-black pointer-events-none animate-bounce hidden sm:block opacity-40">★</div>
+            <div style={{ color: activeSecondary }} className="absolute top-48 right-16 text-xl font-black pointer-events-none animate-bounce delay-300 hidden sm:block opacity-40">✦</div>
+            <div style={{ color: activePrimary }} className="absolute bottom-28 left-20 text-2xl font-black pointer-events-none animate-pulse hidden sm:block opacity-35">★</div>
           </>
         )}
 
         {currentLayout === 'cartoon_comic' && (
           <>
             {/* Comic book halftone dots pattern */}
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#38bdf8_2px,transparent_2px)] [background-size:22px_22px] opacity-15" />
-            <div className="absolute -top-24 -left-24 w-80 h-80 bg-sky-500/20 rounded-full blur-[100px] pointer-events-none" />
-            <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-emerald-500/20 rounded-full blur-[100px] pointer-events-none" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#ffffff_2px,transparent_2px)] [background-size:22px_22px] opacity-10" />
+            <div
+              className="absolute -top-24 -left-24 w-80 h-80 rounded-full blur-[100px] pointer-events-none"
+              style={{ backgroundColor: `${activePrimary}25` }}
+            />
+            <div
+              className="absolute -bottom-24 -right-24 w-80 h-80 rounded-full blur-[100px] pointer-events-none"
+              style={{ backgroundColor: `${activeSecondary}25` }}
+            />
           </>
         )}
 
@@ -358,27 +400,42 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         {currentLayout === 'neumorphic_luxe' && (
           <>
             {/* Warm Velvet Luxury Lighting */}
-            <div className="absolute -top-40 left-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-amber-500/15 via-orange-600/10 to-transparent blur-[140px] pointer-events-none" />
-            <div className="absolute -bottom-40 right-1/4 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-amber-700/15 via-yellow-600/10 to-transparent blur-[130px] pointer-events-none" />
+            <div
+              className="absolute -top-40 left-1/4 w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none"
+              style={{
+                background: `radial-gradient(circle, ${activePrimary}25 0%, ${activeSecondary}15 50%, transparent 70%)`
+              }}
+            />
+            <div
+              className="absolute -bottom-40 right-1/4 w-[500px] h-[500px] rounded-full blur-[130px] pointer-events-none"
+              style={{
+                background: `radial-gradient(circle, ${activeSecondary}20 0%, transparent 70%)`
+              }}
+            />
           </>
         )}
 
         {currentLayout === 'spatial_3d' && (
           <>
             {/* Holographic Stardust Floating Particles */}
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-slate-950/60 to-black" />
-            <div className="absolute top-1/4 left-1/3 w-3 h-3 bg-purple-400 rounded-full blur-xs animate-ping opacity-30 pointer-events-none" />
-            <div className="absolute bottom-1/3 right-1/4 w-2 h-2 bg-indigo-400 rounded-full blur-xs animate-ping opacity-40 delay-500 pointer-events-none" />
-            <div className="absolute -top-24 right-1/3 w-96 h-96 bg-purple-600/20 blur-[140px] pointer-events-none" />
+            <div
+              className="absolute -top-24 right-1/3 w-96 h-96 rounded-full blur-[140px] pointer-events-none"
+              style={{ backgroundColor: `${activePrimary}25` }}
+            />
+            <div style={{ backgroundColor: activePrimary }} className="absolute top-1/4 left-1/3 w-3 h-3 rounded-full blur-xs animate-ping opacity-30 pointer-events-none" />
+            <div style={{ backgroundColor: activeSecondary }} className="absolute bottom-1/3 right-1/4 w-2 h-2 rounded-full blur-xs animate-ping opacity-40 delay-500 pointer-events-none" />
           </>
         )}
 
         {currentLayout === 'pixel_retro' && (
           <>
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0)_50%,rgba(0,0,0,0.5)_50%)] bg-[length:100%_4px] opacity-40 z-10" />
-            <div className="absolute top-4 left-6 text-yellow-400 font-mono text-xs font-black tracking-widest opacity-40 pointer-events-none">1UP: 009900</div>
-            <div className="absolute top-4 right-6 text-yellow-400 font-mono text-xs font-black tracking-widest opacity-40 pointer-events-none">HIGH: 999990</div>
-            <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-96 h-96 bg-yellow-500/15 rounded-full blur-[120px] pointer-events-none" />
+            <div style={{ color: activePrimary }} className="absolute top-4 left-6 font-mono text-xs font-black tracking-widest opacity-40 pointer-events-none">1UP: 009900</div>
+            <div style={{ color: activeSecondary }} className="absolute top-4 right-6 font-mono text-xs font-black tracking-widest opacity-40 pointer-events-none">HIGH: 999990</div>
+            <div
+              className="absolute -top-20 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full blur-[120px] pointer-events-none"
+              style={{ backgroundColor: `${activePrimary}20` }}
+            />
           </>
         )}
 
@@ -396,7 +453,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
             {/* Retro 80s Sun Glow */}
             <div 
               className="absolute -top-16 left-1/2 -translate-x-1/2 w-80 h-80 sm:w-[480px] sm:h-[480px] rounded-full blur-[100px] opacity-35 pointer-events-none"
-              style={{ background: 'radial-gradient(circle, #f43f5e 0%, #a855f7 50%, transparent 75%)' }}
+              style={{ background: `radial-gradient(circle, ${activePrimary} 0%, ${activeSecondary} 50%, transparent 75%)` }}
             />
             {/* 3D Perspective Grid */}
             <div 
@@ -424,14 +481,23 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         {currentLayout === 'golden_casino' && (
           <>
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-600/15 via-stone-950/60 to-black" />
-            <div className="absolute -top-20 left-1/3 w-96 h-96 bg-amber-500/20 rounded-full blur-[140px] pointer-events-none" />
+            <div
+              className="absolute -top-20 left-1/3 w-96 h-96 rounded-full blur-[140px] pointer-events-none"
+              style={{ backgroundColor: `${activePrimary}25` }}
+            />
           </>
         )}
 
         {currentLayout === 'bubble_toon' && (
           <>
-            <div className="absolute -top-16 -left-16 w-80 h-80 bg-pink-400/25 rounded-full blur-[90px] pointer-events-none" />
-            <div className="absolute -bottom-16 -right-16 w-80 h-80 bg-sky-400/25 rounded-full blur-[90px] pointer-events-none" />
+            <div
+              className="absolute -top-16 -left-16 w-80 h-80 rounded-full blur-[90px] pointer-events-none"
+              style={{ backgroundColor: `${activePrimary}30` }}
+            />
+            <div
+              className="absolute -bottom-16 -right-16 w-80 h-80 rounded-full blur-[90px] pointer-events-none"
+              style={{ backgroundColor: `${activeSecondary}30` }}
+            />
           </>
         )}
 

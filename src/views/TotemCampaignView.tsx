@@ -706,7 +706,12 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
       questionsCount,
       timeLimit: gameTimer !== undefined ? Number(gameTimer) : undefined,
       totalTimeLimit: gameTotalTimer !== undefined ? Number(gameTotalTimer) : undefined,
-      customBgStyle,
+      customBgStyle: {
+        background: themeBgGradient,
+        ...customBgStyle,
+      },
+      themeBgGradient,
+      splashBgEffect,
       campaignName: campaign.name,
       clientName: campaign.client_name,
       splashImageUrl: campaign.splash_image_url,
@@ -776,7 +781,14 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
     };
 
     return (
-      <GameLayoutProvider layout={commonProps.gameLayout} hue={activeGameHue} isLight={isLight} onLayoutChange={() => {}}>
+      <GameLayoutProvider
+        layout={commonProps.gameLayout}
+        hue={activeGameHue}
+        isLight={isLight}
+        themeBgGradient={themeBgGradient}
+        splashBgEffect={splashBgEffect}
+        onLayoutChange={() => {}}
+      >
         {renderActiveGame()}
       </GameLayoutProvider>
     );

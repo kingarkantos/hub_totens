@@ -113,6 +113,8 @@ export interface BaseGameProps {
   fontId?: string;
   palette?: import('../lib/colorHarmony').LayoutColorPalette;
   layoutColorHue?: number;
+  themeBgGradient?: string;
+  splashBgEffect?: string;
 }
 
 export interface CampaignStylePackage {

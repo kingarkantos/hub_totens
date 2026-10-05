@@ -7,6 +7,8 @@ interface GameLayoutContextValue {
   layoutDef: GameLayoutDefinition;
   palette: LayoutColorPalette;
   setLayout: (layout: GameLayoutId) => void;
+  themeBgGradient?: string;
+  splashBgEffect?: string;
 }
 
 const defaultPalette = generateLayoutPalette(185);
@@ -96,16 +98,18 @@ export const GameLayoutProvider: React.FC<{
   layout: GameLayoutId;
   hue?: number;
   isLight?: boolean;
+  themeBgGradient?: string;
+  splashBgEffect?: string;
   onLayoutChange: (layout: GameLayoutId) => void;
   children: React.ReactNode;
-}> = ({ layout, hue, isLight = false, onLayoutChange, children }) => {
+}> = ({ layout, hue, isLight = false, themeBgGradient, splashBgEffect, onLayoutChange, children }) => {
   const layoutDef = GAME_LAYOUTS.find((l) => l.id === layout) || GAME_LAYOUTS[0];
 
   const activeHue = hue !== undefined ? hue : getDefaultHueForLayout(layout);
   const palette = useMemo(() => generateLayoutPalette(activeHue, isLight), [activeHue, isLight]);
 
   return (
-    <GameLayoutContext.Provider value={{ layout, layoutDef, palette, setLayout: onLayoutChange }}>
+    <GameLayoutContext.Provider value={{ layout, layoutDef, palette, themeBgGradient, splashBgEffect, setLayout: onLayoutChange }}>
       {children}
     </GameLayoutContext.Provider>
   );
