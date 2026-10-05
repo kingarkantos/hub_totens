@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Maximize, Minimize, Trophy, Play, ArrowLeft, Volume2, VolumeX, Flame, ShieldAlert, Home, ChevronDown } from 'lucide-react';
+import { Maximize, Minimize, Trophy, Play, ArrowLeft, Volume2, VolumeX, Flame, ShieldAlert, Home, ChevronDown, ZoomIn, ZoomOut } from 'lucide-react';
 import { Campaign, GameDefinition, ThemeDefinition, CustomColorsConfig, SplashButtonStyleId } from '../types';
 import { supabase, TABLES } from '../lib/supabase';
 import { THEMES } from '../lib/themes';
@@ -441,6 +441,48 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
     return () => document.removeEventListener('fullscreenchange', handler);
   }, []);
 
+  // Zoom Controls: persisted in localStorage so each totem device maintains its optimal scale
+  const [zoomLevel, setZoomLevel] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('totem_zoom_scale');
+      if (saved) {
+        const parsed = parseFloat(saved);
+        if (!isNaN(parsed) && parsed >= 0.5 && parsed <= 2.0) {
+          return parsed;
+        }
+      }
+    } catch (e) {}
+    return 1.0;
+  });
+
+  // Apply zoom dynamically to document.documentElement
+  useEffect(() => {
+    try {
+      (document.documentElement.style as any).zoom = `${zoomLevel}`;
+      localStorage.setItem('totem_zoom_scale', String(zoomLevel));
+    } catch (e) {}
+    return () => {
+      try {
+        (document.documentElement.style as any).zoom = '1';
+      } catch (e) {}
+    };
+  }, [zoomLevel]);
+
+  const handleZoomIn = () => {
+    sound.playTap();
+    setZoomLevel((prev) => Math.min(1.5, Math.round((prev + 0.05) * 100) / 100));
+  };
+
+  const handleZoomOut = () => {
+    sound.playTap();
+    setZoomLevel((prev) => Math.max(0.6, Math.round((prev - 0.05) * 100) / 100));
+  };
+
+  const handleResetZoom = () => {
+    sound.playTap();
+    setZoomLevel(1.0);
+  };
+
   // Idle Timer Reset (returns to Splash on touch inactivity)
   const resetIdleTimer = () => {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
@@ -803,8 +845,38 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
       } as React.CSSProperties}
       className={`fixed inset-0 w-full h-full overflow-hidden select-none ${theme.textColor} ${theme.fontClass}`}
     >
-      {/* Floating Top Control Bar (Fullscreen Button only) */}
+      {/* Floating Top Control Bar (Zoom Controls + Fullscreen Button) */}
       <div className="absolute top-4 right-4 z-40 flex items-center gap-2">
+        {/* Controles de Zoom */}
+        <div className="flex items-center bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-1 shadow-lg transition-all">
+          <button
+            onClick={handleZoomOut}
+            disabled={zoomLevel <= 0.6}
+            className="p-2 rounded-lg text-slate-200 hover:text-white hover:bg-white/15 active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none"
+            title="Diminuir Zoom"
+          >
+            <ZoomOut className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={handleResetZoom}
+            className="px-2.5 py-1 text-[11px] font-black tracking-tight text-slate-200 hover:text-amber-400 hover:bg-white/15 rounded-lg active:scale-95 transition-all min-w-[44px] text-center"
+            title="Clique para redefinir o zoom para 100%"
+          >
+            {Math.round(zoomLevel * 100)}%
+          </button>
+
+          <button
+            onClick={handleZoomIn}
+            disabled={zoomLevel >= 1.5}
+            className="p-2 rounded-lg text-slate-200 hover:text-white hover:bg-white/15 active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none"
+            title="Aumentar Zoom"
+          >
+            <ZoomIn className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Botão de Tela Cheia */}
         <button
           onClick={toggleFullscreen}
           className="p-2.5 rounded-xl bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/10 text-slate-200 active:scale-95 transition-all shadow-lg"
