@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw, Image as ImageIcon, Loader2, Wand2, Eye, ZoomIn, ExternalLink, Shuffle, Type, Palette, FileSpreadsheet, Zap, Car, Gauge, Flag, Flame, CircleDot } from 'lucide-react';
+import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw, Image as ImageIcon, Loader2, Wand2, Eye, ZoomIn, ExternalLink, Shuffle, Type, Palette, FileSpreadsheet, Zap, Car, Gauge, Flag, Flame, CircleDot, MousePointerClick } from 'lucide-react';
 import { supabase, BUCKETS } from '../lib/supabase';
 import { GameDefinition } from '../types';
 import { GameLayoutId, GAME_LAYOUTS } from '../types/gameLayouts';
@@ -11,6 +11,8 @@ import {
   CompletePhraseCustomItem,
   HangmanCustomItem,
   ConnectPairCustomItem,
+  ConnectPairsInteractionMode,
+  ConnectPairsCustomConfig,
   CorrectOrderCustomItem,
   MemoryCustomPair,
   WheelItem,
@@ -272,6 +274,7 @@ export const getContentCount = (data: any): number => {
   if (!data) return 0;
   if (Array.isArray(data)) return data.length;
   if (typeof data === 'object') {
+    if (Array.isArray(data.pairs)) return data.pairs.length;
     if (data.gridMax !== undefined) return 1;
     if (data.ballsCount !== undefined || Array.isArray(data.slots)) return data.slots ? data.slots.length : 1;
     if (data.trackName !== undefined || data.carColor !== undefined) return 1;
@@ -463,7 +466,20 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
         const parsed = parseGameCSV(game.id, text);
 
         if (Array.isArray(parsed)) {
-          if (csvImportMode === 'append' && Array.isArray(content) && content.length > 0 && hasCustomEdits) {
+          if (game.id === 'connect_pairs') {
+            const currentPairs = Array.isArray(content) ? content : (content?.pairs || []);
+            const currentMode = (!Array.isArray(content) && content?.mode) ? content.mode : 'tap';
+            if (csvImportMode === 'append' && currentPairs.length > 0 && hasCustomEdits) {
+              const merged = [...currentPairs, ...parsed];
+              setContent({ mode: currentMode, pairs: merged });
+              setHasCustomEdits(true);
+              setSuccessMsg(`+${parsed.length} novos pares adicionados do CSV! Total: ${merged.length} pares.`);
+            } else {
+              setContent({ mode: currentMode, pairs: parsed });
+              setHasCustomEdits(true);
+              setSuccessMsg(`CSV importado com sucesso! (${parsed.length} pares carregados).`);
+            }
+          } else if (csvImportMode === 'append' && Array.isArray(content) && content.length > 0 && hasCustomEdits) {
             const merged = [...content, ...parsed];
             setContent(merged);
             setHasCustomEdits(true);
@@ -510,7 +526,19 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
       });
 
       if (Array.isArray(generated)) {
-        if (Array.isArray(content) && content.length > 0 && hasCustomEdits) {
+        if (game.id === 'connect_pairs') {
+          const currentPairs = Array.isArray(content) ? content : (content?.pairs || []);
+          const currentMode = (!Array.isArray(content) && content?.mode) ? content.mode : 'tap';
+          if (currentPairs.length > 0 && hasCustomEdits) {
+            const merged = [...currentPairs, ...generated];
+            setContent({ mode: currentMode, pairs: merged });
+            setSuccessMsg(`+${generated.length} novos pares gerados com IA e acrescentados! Total: ${merged.length} pares.`);
+          } else {
+            setContent({ mode: currentMode, pairs: generated });
+            setHasCustomEdits(true);
+            setSuccessMsg(`Conteúdo temático gerado com Inteligência Artificial! (${generated.length} pares - exemplos iniciais substituídos).`);
+          }
+        } else if (Array.isArray(content) && content.length > 0 && hasCustomEdits) {
           const merged = [...content, ...generated];
           setContent(merged);
           setSuccessMsg(`+${generated.length} novos itens gerados com IA e acrescentados! Total: ${merged.length} itens.`);
@@ -1527,10 +1555,189 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
 
       // 5. CONECTE OS PARES
       case 'connect_pairs': {
-        const pairs: ConnectPairCustomItem[] = Array.isArray(content) ? content : [];
+        const pairs: ConnectPairCustomItem[] = Array.isArray(content)
+          ? content
+          : (content && Array.isArray(content.pairs) ? content.pairs : []);
+        const currentInteractionMode: ConnectPairsInteractionMode =
+          (!Array.isArray(content) && content?.mode) ? content.mode : 'tap';
+
+        const updatePairs = (newPairs: ConnectPairCustomItem[]) => {
+          setContent({ mode: currentInteractionMode, pairs: newPairs });
+          setHasCustomEdits(true);
+        };
+
+        const updateMode = (newMode: ConnectPairsInteractionMode) => {
+          sound.playClick();
+          setContent({ mode: newMode, pairs });
+          setHasCustomEdits(true);
+        };
+
         return (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="space-y-5">
+            {/* Seletor de Modo de Interação (3 Modos de Jogo) */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100/70 border border-slate-200 shadow-xs">
+              <div className="flex items-center justify-between mb-3.5 flex-wrap gap-2">
+                <div>
+                  <span className="text-xs font-black text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    Modo de Interação do Jogo (3 Modos Disponíveis)
+                  </span>
+                  <p className="text-[11px] text-slate-500">
+                    Defina como os participantes no totem irão interagir para ligar os pares:
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 shadow-xs">
+                  <span className="text-[11px] font-bold text-slate-500">Modo Ativo:</span>
+                  <span className="text-[11px] font-black text-red-600">
+                    {currentInteractionMode === 'tap'
+                      ? '1. Toque Sequencial'
+                      : currentInteractionMode === 'drag_line'
+                      ? '2. Fio Conector (Linha)'
+                      : '3. Arrastar & Encaixar Card'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* MODO 1: Toque Sequencial (Padrão) */}
+                <button
+                  type="button"
+                  onClick={() => updateMode('tap')}
+                  className={`p-4 rounded-2xl border text-left transition-all duration-200 relative flex flex-col justify-between group active:scale-[0.98] ${
+                    currentInteractionMode === 'tap'
+                      ? 'bg-red-50/80 border-red-500 ring-2 ring-red-500/20 shadow-md'
+                      : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/60 shadow-xs'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
+                            currentInteractionMode === 'tap'
+                              ? 'bg-red-600 text-white shadow-sm'
+                              : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
+                          }`}
+                        >
+                          <MousePointerClick className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-black text-slate-900 block">1. Toque Sequencial</span>
+                          <span className="text-[10px] font-bold text-slate-500">Modo Clássico Padrão</span>
+                        </div>
+                      </div>
+                      {currentInteractionMode === 'tap' ? (
+                        <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-red-600 text-white shadow-xs">
+                          Selecionado
+                        </span>
+                      ) : (
+                        <span className="w-3.5 h-3.5 rounded-full border-2 border-slate-300" />
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed mt-1">
+                      Clica/toca em um card da esquerda e depois clica no par correspondente da direita para conectá-los.
+                    </p>
+                  </div>
+                  <div className="mt-3 pt-2.5 border-t border-slate-200/80 flex items-center justify-between text-[10px]">
+                    <span className="font-bold text-slate-500">👆 Ideal p/ Todos os Públicos</span>
+                    <span className="font-extrabold text-red-600">Simples</span>
+                  </div>
+                </button>
+
+                {/* MODO 2: Fio Conector (Linha Dinâmica) */}
+                <button
+                  type="button"
+                  onClick={() => updateMode('drag_line')}
+                  className={`p-4 rounded-2xl border text-left transition-all duration-200 relative flex flex-col justify-between group active:scale-[0.98] ${
+                    currentInteractionMode === 'drag_line'
+                      ? 'bg-amber-50/80 border-amber-500 ring-2 ring-amber-500/20 shadow-md'
+                      : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/60 shadow-xs'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
+                            currentInteractionMode === 'drag_line'
+                              ? 'bg-amber-500 text-white shadow-sm'
+                              : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
+                          }`}
+                        >
+                          <Zap className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-black text-slate-900 block">2. Fio Conector</span>
+                          <span className="text-[10px] font-bold text-amber-700">Linha / Cabo Contínuo</span>
+                        </div>
+                      </div>
+                      {currentInteractionMode === 'drag_line' ? (
+                        <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500 text-white shadow-xs">
+                          Selecionado
+                        </span>
+                      ) : (
+                        <span className="w-3.5 h-3.5 rounded-full border-2 border-slate-300" />
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed mt-1">
+                      Clica no pino/card da esquerda e arrasta puxando um fio brilhante dinâmico em tempo real até a direita.
+                    </p>
+                  </div>
+                  <div className="mt-3 pt-2.5 border-t border-slate-200/80 flex items-center justify-between text-[10px]">
+                    <span className="font-bold text-amber-800">⚡ Cabo Elétrico Neon</span>
+                    <span className="font-extrabold text-amber-600">Visual</span>
+                  </div>
+                </button>
+
+                {/* MODO 3: Arrastar & Encaixar Card */}
+                <button
+                  type="button"
+                  onClick={() => updateMode('drag_card')}
+                  className={`p-4 rounded-2xl border text-left transition-all duration-200 relative flex flex-col justify-between group active:scale-[0.98] ${
+                    currentInteractionMode === 'drag_card'
+                      ? 'bg-emerald-50/80 border-emerald-500 ring-2 ring-emerald-500/20 shadow-md'
+                      : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/60 shadow-xs'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
+                            currentInteractionMode === 'drag_card'
+                              ? 'bg-emerald-600 text-white shadow-sm'
+                              : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
+                          }`}
+                        >
+                          <Layers className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-black text-slate-900 block">3. Arrastar Card</span>
+                          <span className="text-[10px] font-bold text-emerald-700">Encaixe &amp; Absorção</span>
+                        </div>
+                      </div>
+                      {currentInteractionMode === 'drag_card' ? (
+                        <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-600 text-white shadow-xs">
+                          Selecionado
+                        </span>
+                      ) : (
+                        <span className="w-3.5 h-3.5 rounded-full border-2 border-slate-300" />
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed mt-1">
+                      Puxa fisicamente o card para dentro do par na direita: se correto, entra e some; se não, volta animado.
+                    </p>
+                  </div>
+                  <div className="mt-3 pt-2.5 border-t border-slate-200/80 flex items-center justify-between text-[10px]">
+                    <span className="font-bold text-emerald-800">🧲 Absorção &amp; Retorno Suave</span>
+                    <span className="font-extrabold text-emerald-600">Imersivo</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Cabeçalho dos Pares */}
+            <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
               <div>
                 <span className="text-xs font-black text-slate-800 uppercase tracking-wide">
                   Pares Correspondentes ({pairs.length})
@@ -1546,8 +1753,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                     onClick={() => {
                       sound.playClick();
                       if (window.confirm('Deseja limpar todos os pares da lista?')) {
-                        setContent([]);
-                        setHasCustomEdits(true);
+                        updatePairs([]);
                       }
                     }}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 text-xs font-bold border border-slate-200 active:scale-95 transition-all"
@@ -1561,8 +1767,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                   type="button"
                   onClick={() => {
                     sound.playClick();
-                    setContent([...pairs, { left: '', right: '' }]);
-                    setHasCustomEdits(true);
+                    updatePairs([...pairs, { left: '', right: '' }]);
                   }}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
                 >
@@ -1580,7 +1785,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                     type="button"
                     onClick={() => {
                       sound.playClick();
-                      setContent(getStarterContentForGame(game.id));
+                      setContent({ mode: currentInteractionMode, pairs: getStarterContentForGame(game.id) });
                       setHasCustomEdits(false);
                     }}
                     className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-slate-300 shadow-xs flex items-center gap-1.5"
@@ -1592,8 +1797,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                     type="button"
                     onClick={() => {
                       sound.playClick();
-                      setContent([{ left: 'Ruído', right: 'Protetor Auricular' }]);
-                      setHasCustomEdits(true);
+                      updatePairs([{ left: 'Ruído', right: 'Protetor Auricular' }]);
                     }}
                     className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase shadow-xs flex items-center gap-1.5"
                   >
@@ -1614,8 +1818,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                         placeholder="Ex: Óculos de Proteção"
                         onChange={(e) => {
                           const val = e.target.value;
-                          setContent(pairs.map((it, i) => i === idx ? { ...it, left: val } : it));
-                          setHasCustomEdits(true);
+                          updatePairs(pairs.map((it, i) => i === idx ? { ...it, left: val } : it));
                         }}
                         className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-bold focus:outline-none focus:border-red-500"
                       />
@@ -1628,8 +1831,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                         placeholder="Ex: Proteção contra fagulhas"
                         onChange={(e) => {
                           const val = e.target.value;
-                          setContent(pairs.map((it, i) => i === idx ? { ...it, right: val } : it));
-                          setHasCustomEdits(true);
+                          updatePairs(pairs.map((it, i) => i === idx ? { ...it, right: val } : it));
                         }}
                         className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-bold focus:outline-none focus:border-red-500"
                       />
@@ -1639,8 +1841,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                         type="button"
                         onClick={() => {
                           sound.playClick();
-                          setContent(pairs.filter((_, i) => i !== idx));
-                          setHasCustomEdits(true);
+                          updatePairs(pairs.filter((_, i) => i !== idx));
                         }}
                         className="p-2 rounded-xl text-rose-600 hover:bg-rose-50"
                       >

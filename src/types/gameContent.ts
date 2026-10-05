@@ -130,9 +130,16 @@ export interface CorrectOrderCustomItem {
   steps: string[]; // Steps in correct order (0 to N)
 }
 
+export type ConnectPairsInteractionMode = 'tap' | 'drag_line' | 'drag_card';
+
 export interface ConnectPairCustomItem {
   left: string;
   right: string;
+}
+
+export interface ConnectPairsCustomConfig {
+  mode?: ConnectPairsInteractionMode;
+  pairs: ConnectPairCustomItem[];
 }
 
 export interface SpeedTriviaCustomItem {
