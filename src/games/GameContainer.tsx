@@ -12,8 +12,8 @@ import { getFontFamilyById } from '../lib/fonts';
 import { LayoutColorPalette, generateLayoutPalette, getDefaultHueForLayout, getThemeBackgroundGradient } from '../lib/colorHarmony';
 import { BackgroundEffectOverlay, BackgroundEffectId } from '../components/BackgroundEffectOverlay';
 
-const FEEDBACK_POOLS = {
-  // 100% de acertos (Acertou tudo - SOMENTE AQUI dá parabéns!)
+const QUIZ_FEEDBACK_POOLS = {
+  // 100% de acertos (Acertou tudo - SOMENTE AQUI dá parabéns em quiz!)
   perfect: [
     { title: 'Parabéns!', subtitle: 'Incrível! Você acertou tudo e completou o desafio com maestria.' },
     { title: 'Parabéns!', subtitle: 'Desempenho perfeito! Você gabaritou todas as etapas do desafio.' },
@@ -47,6 +47,62 @@ const FEEDBACK_POOLS = {
     { title: 'Quem sabe na próxima!', subtitle: 'Zero acertos por enquanto! Quem sabe na próxima você acerta tudo?' },
     { title: 'Melhore mais!', subtitle: 'Não desanime! Toda grande vitória começa com uma tentativa. Jogue de novo!' },
     { title: 'Não foi dessa vez!', subtitle: 'Essa foi puxada! Tente novamente com mais calma para pontuar.' },
+  ],
+};
+
+const ACTION_FEEDBACK_POOLS = {
+  // Pontuações excelentes / altas em jogos de ação, tiro, reflexo e agilidade
+  high: [
+    { title: 'Parabéns!', subtitle: 'Incrível! Você mostrou agilidade impressionante e conquistou uma grande pontuação.' },
+    { title: 'Excelente!', subtitle: 'Desempenho espetacular! Seus reflexos e velocidade foram fora de série.' },
+    { title: 'Show de Habilidade!', subtitle: 'Sensacional! Você dominou o desafio e alcançou um placar formidável.' },
+    { title: 'Parabéns!', subtitle: 'Ótima pontuação! Você manteve o ritmo e a precisão do início ao fim.' },
+  ],
+  // Pontuação muito boa
+  great: [
+    { title: 'Muito bem!', subtitle: 'Excelente partida! Seus reflexos foram rápidos e você pontuou muito bem.' },
+    { title: 'Bom Desempenho!', subtitle: 'Ótimo resultado! Mais um pouco de treino e você supera qualquer marca.' },
+    { title: 'Quase lá!', subtitle: 'Boa rodada! Que tal jogar novamente para buscar um novo recorde?' },
+    { title: 'Muito bem!', subtitle: 'Ótimo ritmo de jogo! Seus reflexos estão cada vez mais afinados.' },
+  ],
+  // Pontuação mediana
+  average: [
+    { title: 'Valeu a tentativa!', subtitle: 'Você teve bons momentos! Com mais uma partida você vai bem mais longe.' },
+    { title: 'Bom esforço!', subtitle: 'Você está no caminho certo! Treine seus reflexos para subir o placar.' },
+    { title: 'Melhore mais!', subtitle: 'Um bom começo! Jogue novamente para aprimorar sua velocidade.' },
+    { title: 'Valeu a tentativa!', subtitle: 'O ritmo foi desafiador! Pratique mais um pouco para avançar.' },
+  ],
+  // Pontuação baixa
+  low: [
+    { title: 'Valeu a tentativa!', subtitle: 'Os reflexos foram colocados à prova! Jogue novamente para aumentar sua pontuação.' },
+    { title: 'Não desanime!', subtitle: 'A prática leva à perfeição! Tente mais uma rodada para marcar mais pontos.' },
+    { title: 'Quem sabe na próxima!', subtitle: 'Aqueça os dedos e tente outra vez para conquistar mais pontos.' },
+    { title: 'Não desista!', subtitle: 'Com mais foco e rapidez você supera essa marca com facilidade.' },
+  ],
+  // Zerou
+  zero: [
+    { title: 'Não foi dessa vez!', subtitle: 'Essa rodada foi veloz! Tente novamente com mais calma para pontuar.' },
+    { title: 'Tente de novo!', subtitle: 'Todo grande jogador começa com uma tentativa. Jogue mais uma vez!' },
+    { title: 'Não desanime!', subtitle: 'Respire fundo e tente novamente para marcar seus primeiros pontos.' },
+  ],
+};
+
+const MEMORY_FEEDBACK_POOLS = {
+  high: [
+    { title: 'Parabéns!', subtitle: 'Excelente raciocínio e memória! Você completou todas as combinações.' },
+    { title: 'Sensacional!', subtitle: 'Memória afiada! Você resolveu o desafio com extrema rapidez.' },
+  ],
+  great: [
+    { title: 'Muito bem!', subtitle: 'Ótimo raciocínio! Você encontrou os pares com muita atenção.' },
+  ],
+  average: [
+    { title: 'Bom raciocínio!', subtitle: 'Você foi bem! Que tal jogar mais uma vez para bater o tempo?' },
+  ],
+  low: [
+    { title: 'Valeu a tentativa!', subtitle: 'Desafio instigante! Continue treinando sua memória para ir mais longe.' },
+  ],
+  zero: [
+    { title: 'Não foi dessa vez!', subtitle: 'Respire fundo e tente novamente com calma para memorizar as posições.' },
   ],
 };
 
@@ -84,6 +140,11 @@ interface GameContainerProps {
   gameOverCustomContent?: React.ReactNode;
   themeBgGradient?: string;
   splashBgEffect?: string;
+  gameType?: 'quiz' | 'action' | 'arcade' | 'puzzle' | 'memory' | 'reflex';
+  correctAnswersLabel?: string;
+  totalMetricLabel?: string;
+  customFeedbackTitle?: string;
+  customFeedbackSubtitle?: string;
 }
 
 export const GameContainer: React.FC<GameContainerProps> = ({
@@ -110,6 +171,11 @@ export const GameContainer: React.FC<GameContainerProps> = ({
   customBgStyle,
   themeBgGradient,
   splashBgEffect,
+  gameType,
+  correctAnswersLabel,
+  totalMetricLabel,
+  customFeedbackTitle,
+  customFeedbackSubtitle,
   campaignName,
   clientName,
   splashImageUrl,
@@ -189,6 +255,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
   // Determina se o jogo possui métricas numéricas de perguntas e respostas
   const hasQuestionMetrics = totalQuestions !== undefined && totalQuestions > 0;
+  const isQuestionGame = gameType === 'quiz' || (gameType === undefined && hasQuestionMetrics);
 
   // Porcentagem calculada de acertos (0 a 100)
   const accuracyPercent = useMemo(() => {
@@ -202,40 +269,77 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     return score > 0 ? 100 : 0;
   }, [hasQuestionMetrics, totalQuestions, correctAnswers, gameWon, score]);
 
-  // É 100% perfeito (acertou tudo)? Somente se acertar tudo dá os parabéns!
+  // É 100% perfeito (acertou tudo)? Aplicável em quizzes para celebrar gabarito
   const isPerfect = useMemo(() => {
-    if (hasQuestionMetrics) {
+    if (isQuestionGame && hasQuestionMetrics) {
       return (correctAnswers ?? 0) >= totalQuestions! && totalQuestions! > 0;
     }
-    if (typeof gameWon === 'boolean') {
+    if (isQuestionGame && typeof gameWon === 'boolean') {
       return gameWon && score > 0;
     }
-    return score > 0;
-  }, [hasQuestionMetrics, correctAnswers, totalQuestions, gameWon, score]);
+    return false;
+  }, [isQuestionGame, hasQuestionMetrics, correctAnswers, totalQuestions, gameWon, score]);
 
   // Feedback dinâmico selecionado aleatoriamente a cada partida finalizada
   const [feedback, setFeedback] = useState<{ title: string; subtitle: string } | null>(null);
 
   useEffect(() => {
     if (gameOver) {
-      let pool = FEEDBACK_POOLS.zero;
-      if (isPerfect) {
-        pool = FEEDBACK_POOLS.perfect;
-      } else if (accuracyPercent >= 70) {
-        pool = FEEDBACK_POOLS.great;
-      } else if (accuracyPercent >= 40) {
-        pool = FEEDBACK_POOLS.average;
-      } else if (accuracyPercent > 0) {
-        pool = FEEDBACK_POOLS.low;
+      if (customFeedbackTitle || customFeedbackSubtitle) {
+        setFeedback({
+          title: customFeedbackTitle || (score > 0 ? 'Parabéns!' : 'Não foi dessa vez!'),
+          subtitle: customFeedbackSubtitle || `Você concluiu o desafio com ${score} pontos.`,
+        });
+      } else if (isQuestionGame) {
+        let pool = QUIZ_FEEDBACK_POOLS.zero;
+        if (isPerfect) {
+          pool = QUIZ_FEEDBACK_POOLS.perfect;
+        } else if (accuracyPercent >= 70) {
+          pool = QUIZ_FEEDBACK_POOLS.great;
+        } else if (accuracyPercent >= 40) {
+          pool = QUIZ_FEEDBACK_POOLS.average;
+        } else if (accuracyPercent > 0) {
+          pool = QUIZ_FEEDBACK_POOLS.low;
+        } else {
+          pool = QUIZ_FEEDBACK_POOLS.zero;
+        }
+
+        const randomItem = pool[Math.floor(Math.random() * pool.length)];
+        setFeedback(randomItem);
+      } else if (gameType === 'memory' || gameType === 'puzzle') {
+        let pool = MEMORY_FEEDBACK_POOLS.zero;
+        if (gameWon) {
+          pool = MEMORY_FEEDBACK_POOLS.high;
+        } else if (score >= 600) {
+          pool = MEMORY_FEEDBACK_POOLS.great;
+        } else if (score > 0) {
+          pool = MEMORY_FEEDBACK_POOLS.average;
+        } else {
+          pool = MEMORY_FEEDBACK_POOLS.zero;
+        }
+        const randomItem = pool[Math.floor(Math.random() * pool.length)];
+        setFeedback(randomItem);
       } else {
-        pool = FEEDBACK_POOLS.zero;
+        // Jogos de Ação, Reflexo, Tiro, Agilidade ou Interação
+        let pool = ACTION_FEEDBACK_POOLS.zero;
+        if (score >= 3500 || (gameWon && score >= 2000)) {
+          pool = ACTION_FEEDBACK_POOLS.high;
+        } else if (score >= 1500) {
+          pool = ACTION_FEEDBACK_POOLS.great;
+        } else if (score >= 500) {
+          pool = ACTION_FEEDBACK_POOLS.average;
+        } else if (score > 0) {
+          pool = ACTION_FEEDBACK_POOLS.low;
+        } else {
+          pool = ACTION_FEEDBACK_POOLS.zero;
+        }
+        const randomItem = pool[Math.floor(Math.random() * pool.length)];
+        setFeedback(randomItem);
       }
 
-      const randomItem = pool[Math.floor(Math.random() * pool.length)];
-      setFeedback(randomItem);
-
       // Disparo de efeitos sonoros e visuais conforme o aproveitamento
-      if (isPerfect) {
+      const isTopPerformance = isQuestionGame ? isPerfect : (gameWon || score >= 2500);
+      if (isTopPerformance) {
         sound.playFanfare();
         confetti({
           particleCount: 100,
@@ -243,9 +347,9 @@ export const GameContainer: React.FC<GameContainerProps> = ({
           origin: { y: 0.6 },
           colors: ['#DC2626', '#F59E0B', '#10B981', '#38BDF8', '#EC4899'],
         });
-      } else if (accuracyPercent >= 70) {
+      } else if ((isQuestionGame && accuracyPercent >= 70) || score >= 1200) {
         sound.playSuccess();
-      } else if (accuracyPercent >= 40) {
+      } else if ((isQuestionGame && accuracyPercent >= 40) || score > 0) {
         sound.playClick();
       } else {
         sound.playError();
@@ -253,7 +357,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     } else {
       setFeedback(null);
     }
-  }, [gameOver, accuracyPercent, isPerfect]);
+  }, [gameOver, accuracyPercent, isPerfect, isQuestionGame, gameType, score, gameWon, customFeedbackTitle, customFeedbackSubtitle]);
 
   const toggleSound = () => {
     sound.enabled = !sound.enabled;
@@ -851,36 +955,36 @@ export const GameContainer: React.FC<GameContainerProps> = ({
             <div className={`w-full max-w-md sm:max-w-xl my-auto ${
               isLightMode ? 'bg-white border-4 border-slate-200 text-slate-900 shadow-2xl' : 'bg-slate-900 border-4 border-white/20 text-white shadow-2xl'
             } ${currentLayoutDef.containerClass} p-6 sm:p-10 flex flex-col items-center text-center max-h-[94vh] max-h-[94dvh] overflow-y-auto no-scrollbar`}>
-              {/* Ícone contextual de acordo com a porcentagem de acertos */}
+              {/* Ícone contextual de acordo com o tipo de jogo e aproveitamento */}
               <div className={`w-16 h-16 sm:w-22 sm:h-22 rounded-3xl flex items-center justify-center mb-3 shadow-xl flex-shrink-0 animate-bounce-subtle ${
-                isPerfect
+                (isQuestionGame ? isPerfect : (gameWon || score >= 2500))
                   ? 'bg-gradient-to-tr from-amber-500 to-yellow-300 shadow-amber-500/40 text-slate-950'
-                  : accuracyPercent >= 70
+                  : (isQuestionGame ? accuracyPercent >= 70 : score >= 1200)
                   ? 'bg-gradient-to-tr from-emerald-500 to-teal-400 shadow-emerald-500/30 text-white'
-                  : accuracyPercent >= 40
+                  : (isQuestionGame ? accuracyPercent >= 40 : score > 0)
                   ? 'bg-gradient-to-tr from-blue-500 to-indigo-400 shadow-blue-500/30 text-white'
                   : 'bg-gradient-to-tr from-slate-700 to-slate-800 shadow-slate-900/40 text-amber-400 border border-white/10'
               }`}>
-                {isPerfect ? (
+                {(isQuestionGame ? isPerfect : (gameWon || score >= 2500)) ? (
                   <Trophy className="w-8 h-8 sm:w-11 sm:h-11" />
-                ) : accuracyPercent >= 70 ? (
+                ) : (isQuestionGame ? accuracyPercent >= 70 : score >= 1200) ? (
                   <Award className="w-8 h-8 sm:w-11 sm:h-11" />
-                ) : accuracyPercent >= 40 ? (
+                ) : (isQuestionGame ? accuracyPercent >= 40 : score > 0) ? (
                   <Target className="w-8 h-8 sm:w-11 sm:h-11" />
                 ) : (
                   <RotateCcw className="w-8 h-8 sm:w-11 sm:h-11" />
                 )}
               </div>
 
-              {/* Título dinâmico (somente dá parabéns se acertar tudo ou se ganhou prêmio!) */}
+              {/* Título dinâmico */}
               <h3 className={`text-2xl sm:text-4xl font-black tracking-tight mb-1.5 ${
-                isPerfect || prizeWon
+                (isQuestionGame ? isPerfect : (gameWon || score >= 2000)) || prizeWon
                   ? 'text-amber-400 drop-shadow-sm'
                   : isLightMode
                   ? 'text-slate-900'
                   : 'text-white'
               }`}>
-                {prizeWon ? 'Parabéns!' : feedback?.title || (isPerfect ? 'Parabéns!' : 'Não foi dessa vez!')}
+                {prizeWon ? 'Parabéns!' : feedback?.title || 'Fim de Jogo!'}
               </h3>
               
               {/* Frase contextual de acordo com o aproveitamento ou prêmio */}
@@ -949,15 +1053,15 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                       ) : (
                         <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
                       )}
-                      <span>Respostas Corretas</span>
+                      <span>{correctAnswersLabel || 'Respostas Corretas'}</span>
                     </span>
                     <p className={`text-[11px] sm:text-xs mt-0.5 ${isLightMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                      {isPerfect ? 'Gabaritou 100% do desafio!' : accuracyPercent >= 70 ? 'Excelente aproveitamento' : accuracyPercent >= 40 ? 'Aproveitamento mediano' : 'Tente de novo para pontuar'}
+                      {isPerfect ? 'Desempenho 100% perfeito!' : accuracyPercent >= 70 ? 'Excelente aproveitamento' : accuracyPercent >= 40 ? 'Aproveitamento mediano' : 'Tente de novo para pontuar'}
                     </p>
                   </div>
                   <div className="text-right">
                     <div className="text-2xl sm:text-4xl font-black font-mono tracking-tight text-inherit">
-                      {Math.max(0, correctAnswers ?? 0)} <span className={`text-sm sm:text-xl ${isLightMode ? 'text-slate-600' : 'text-slate-400'} font-normal`}>de {totalQuestions}</span>
+                      {Math.max(0, correctAnswers ?? 0)} <span className={`text-sm sm:text-xl ${isLightMode ? 'text-slate-600' : 'text-slate-400'} font-normal`}>de {totalQuestions} {totalMetricLabel || ''}</span>
                     </div>
                     <span className={`text-[11px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full font-mono inline-block mt-0.5 ${
                       isPerfect

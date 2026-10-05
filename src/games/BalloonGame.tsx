@@ -196,17 +196,41 @@ export const BalloonGame: React.FC<BalloonGameProps> = (props) => {
     return () => cancelAnimationFrame(animId);
   }, [gameOver, balloonTypes]);
 
+  const [popStats, setPopStats] = useState<{ [name: string]: { count: number; points: number; isGold: boolean; isHazard: boolean; symbol?: string; color: string } }>({});
+  const [totalPopped, setTotalPopped] = useState(0);
+  const [totalHazards, setTotalHazards] = useState(0);
+
   const popBalloon = (balloon: Balloon) => {
+    setPopStats((prev) => {
+      const existing = prev[balloon.name] || {
+        count: 0,
+        points: balloon.points,
+        isGold: balloon.isGold,
+        isHazard: balloon.isHazard,
+        symbol: balloon.symbol,
+        color: balloon.color,
+      };
+      return {
+        ...prev,
+        [balloon.name]: {
+          ...existing,
+          count: existing.count + 1,
+        },
+      };
+    });
+
     if (balloon.isHazard || balloon.points < 0) {
       sound.playError();
       const penalty = Math.abs(balloon.points || 150);
       setScore((s) => Math.max(0, s - penalty));
+      setTotalHazards((h) => h + 1);
     } else {
       sound.playClick();
       if (balloon.isGold) {
         sound.playSuccess();
       }
       setScore((s) => s + (balloon.points || (balloon.isGold ? 250 : 100)));
+      setTotalPopped((p) => p + 1);
     }
     balloonsRef.current = balloonsRef.current.filter((b) => b.id !== balloon.id);
   };
@@ -214,10 +238,103 @@ export const BalloonGame: React.FC<BalloonGameProps> = (props) => {
   const restart = () => {
     balloonsRef.current = [];
     spawnBagRef.current = [];
+    setPopStats({});
+    setTotalPopped(0);
+    setTotalHazards(0);
     setScore(0);
     setTimeLeft(30);
     setGameOver(false);
   };
+
+  const feedbackTitle = useMemo(() => {
+    if (score >= 3500) return 'Parabéns!';
+    if (score >= 1800) return 'Muito bem!';
+    if (score >= 800) return 'Bom resultado!';
+    if (score > 0) return 'Valeu a tentativa!';
+    return 'Não foi dessa vez!';
+  }, [score]);
+
+  const feedbackSubtitle = useMemo(() => {
+    if (score >= 3500) {
+      return `Dedos supersônicos! Você estourou ${totalPopped} balões e marcou ${score} pontos.`;
+    }
+    if (score >= 1800) {
+      return `Excelente agilidade! Você estourou ${totalPopped} balões e garantiu ${score} pontos.`;
+    }
+    if (score >= 800) {
+      return `Boa rodada! Você estourou ${totalPopped} balões. Que tal jogar mais uma vez para bater sua pontuação?`;
+    }
+    if (score > 0) {
+      return `Você estourou ${totalPopped} balões e somou ${score} pontos. Pratique mais para acelerar seu ritmo!`;
+    }
+    return 'Nenhum balão estourado desta vez. Jogue novamente e mostre seus reflexos!';
+  }, [score, totalPopped]);
+
+  const balloonReportContent = (
+    <div className={`w-full rounded-2xl border-2 p-3.5 sm:p-5 shadow-lg ${
+      isLightMode ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-800/90 border-white/15 text-white'
+    }`}>
+      <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10 text-xs sm:text-sm font-black uppercase tracking-wider">
+        <span className="flex items-center gap-1.5 text-amber-400">
+          <span>🎈</span>
+          <span>Balões Estourados</span>
+        </span>
+        <span className="font-mono text-emerald-400">
+          Total: {totalPopped} {totalPopped === 1 ? 'balão' : 'balões'}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left">
+        {balloonTypes.map((type, idx) => {
+          const stats = popStats[type.name] || { count: 0, points: type.points };
+          const isNegative = type.isHazard || type.points < 0;
+
+          return (
+            <div
+              key={idx}
+              className={`flex items-center justify-between p-2 sm:p-2.5 rounded-xl border transition-all ${
+                stats.count > 0
+                  ? isNegative
+                    ? 'bg-rose-950/40 border-rose-500/40'
+                    : type.isGold
+                    ? 'bg-amber-950/40 border-amber-500/40'
+                    : 'bg-white/5 border-white/10'
+                  : 'opacity-40 border-dashed border-white/10'
+              }`}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <div 
+                  style={{ backgroundColor: type.color || '#3B82F6' }}
+                  className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 border border-white/40 shadow-sm text-xs"
+                >
+                  {type.symbol || '🎈'}
+                </div>
+                <div className="truncate">
+                  <span className="font-bold text-xs sm:text-sm block truncate">{type.name}</span>
+                  <span className="text-[10px] text-slate-400">
+                    {type.points > 0 ? `+${type.points} pts` : `${type.points} pts`}
+                  </span>
+                </div>
+              </div>
+              <div className="text-right shrink-0 ml-2">
+                <span className={`font-mono font-black text-sm sm:text-base ${
+                  stats.count > 0 ? (isNegative ? 'text-rose-400' : 'text-emerald-400') : 'text-slate-500'
+                }`}>
+                  {stats.count}x
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {totalHazards > 0 && (
+        <div className="mt-2.5 pt-2 border-t border-rose-500/20 text-rose-300 text-xs font-bold text-center">
+          ⚠️ Penalidade: {totalHazards} {totalHazards === 1 ? 'balão bomba atingido' : 'balões bomba atingidos'} ({totalHazards * 150} pts perdidos)
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <GameContainer
@@ -231,6 +348,10 @@ export const BalloonGame: React.FC<BalloonGameProps> = (props) => {
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
+      gameType="action"
+      customFeedbackTitle={feedbackTitle}
+      customFeedbackSubtitle={feedbackSubtitle}
+      gameOverCustomContent={balloonReportContent}
       themePrimary={layoutPrimary}
       theme={theme}
       customBgStyle={customBgStyle}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { GameContainer } from './GameContainer';
 import { sound } from '../lib/audio';
 
@@ -113,6 +113,43 @@ export const CatcherGame: React.FC<CatcherGameProps> = (props) => {
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(40);
   const [gameOver, setGameOver] = useState(false);
+  const [caughtStats, setCaughtStats] = useState<{ [name: string]: { count: number; points: number; symbol: string; type: string } }>({});
+  const [totalCaught, setTotalCaught] = useState(0);
+  const [totalHazards, setTotalHazards] = useState(0);
+
+  const registerCatch = (item: FallingItem) => {
+    setCaughtStats((prev) => {
+      const existing = prev[item.name] || {
+        count: 0,
+        points: item.points,
+        symbol: item.symbol,
+        type: item.type,
+      };
+      return {
+        ...prev,
+        [item.name]: {
+          ...existing,
+          count: existing.count + 1,
+        },
+      };
+    });
+
+    if (item.type === 'hazard' || item.points < 0) {
+      sound.playError();
+      const penalty = Math.abs(item.points || 200);
+      setScore((s) => Math.max(0, s - penalty));
+      setTotalHazards((h) => h + 1);
+    } else if (item.type === 'star') {
+      sound.playSuccess();
+      setScore((s) => s + (item.points || 300));
+      setTotalCaught((c) => c + 1);
+    } else {
+      sound.playClick();
+      setScore((s) => s + (item.points || 150));
+      setTotalCaught((c) => c + 1);
+    }
+  };
+
   const itemsRef = useRef<FallingItem[]>([]);
   const nextId = useRef(1);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -190,18 +227,7 @@ export const CatcherGame: React.FC<CatcherGameProps> = (props) => {
         if (newY >= targetY - 25 && newY <= targetY + 25) {
           const distance = Math.abs(item.x - basketX);
           if (distance < 13) {
-            // Collision!
-            if (item.type === 'hazard' || item.points < 0) {
-              sound.playError();
-              const penalty = Math.abs(item.points || 200);
-              setScore((s) => Math.max(0, s - penalty));
-            } else if (item.type === 'star') {
-              sound.playSuccess();
-              setScore((s) => s + (item.points || 300));
-            } else {
-              sound.playClick();
-              setScore((s) => s + (item.points || 150));
-            }
+            registerCatch(item);
             return; // item caught
           }
         }
@@ -222,11 +248,106 @@ export const CatcherGame: React.FC<CatcherGameProps> = (props) => {
 
   const restart = () => {
     itemsRef.current = [];
+    setCaughtStats({});
+    setTotalCaught(0);
+    setTotalHazards(0);
     setScore(0);
     setTimeLeft(40);
     setBasketX(50);
     setGameOver(false);
   };
+
+  const feedbackTitle = useMemo(() => {
+    if (score >= 4000) return 'Parabéns!';
+    if (score >= 2000) return 'Muito bem!';
+    if (score >= 800) return 'Bom resultado!';
+    if (score > 0) return 'Valeu a tentativa!';
+    return 'Não foi dessa vez!';
+  }, [score]);
+
+  const feedbackSubtitle = useMemo(() => {
+    if (score >= 4000) {
+      return `Excelente agilidade com a cesta! Você coletou ${totalCaught} itens e alcançou ${score} pontos.`;
+    }
+    if (score >= 2000) {
+      return `Ótima coordenação! Você pegou ${totalCaught} itens e marcou ${score} pontos.`;
+    }
+    if (score >= 800) {
+      return `Boa partida! Você capturou ${totalCaught} itens. Que tal tentar bater sua pontuação?`;
+    }
+    if (score > 0) {
+      return `Você pegou ${totalCaught} itens e acumulou ${score} pontos. Jogue de novo para melhorar!`;
+    }
+    return 'Nenhum item coletado na rodada. Deslize a cesta com rapidez e tente de novo!';
+  }, [score, totalCaught]);
+
+  const catcherReportContent = (
+    <div className={`w-full rounded-2xl border-2 p-3.5 sm:p-5 shadow-lg ${
+      isLightMode ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-800/90 border-white/15 text-white'
+    }`}>
+      <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10 text-xs sm:text-sm font-black uppercase tracking-wider">
+        <span className="flex items-center gap-1.5 text-amber-400">
+          <span>🧺</span>
+          <span>Itens Coletados</span>
+        </span>
+        <span className="font-mono text-emerald-400">
+          Total: {totalCaught} {totalCaught === 1 ? 'item' : 'itens'}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left">
+        {catcherItems.map((type, idx) => {
+          const stats = caughtStats[type.name] || { count: 0, points: type.points };
+          const isImg = isImageUrl(type.symbol);
+          const isNegative = type.type === 'hazard' || type.points < 0;
+
+          return (
+            <div
+              key={idx}
+              className={`flex items-center justify-between p-2 sm:p-2.5 rounded-xl border transition-all ${
+                stats.count > 0
+                  ? isNegative
+                    ? 'bg-rose-950/40 border-rose-500/40'
+                    : type.type === 'star'
+                    ? 'bg-amber-950/40 border-amber-500/40'
+                    : 'bg-white/5 border-white/10'
+                  : 'opacity-40 border-dashed border-white/10'
+              }`}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center shrink-0 border border-white/10 text-lg">
+                  {isImg ? (
+                    <img src={type.symbol} alt={type.name} className="w-6 h-6 object-contain" />
+                  ) : (
+                    <span>{type.symbol}</span>
+                  )}
+                </div>
+                <div className="truncate">
+                  <span className="font-bold text-xs sm:text-sm block truncate">{type.name}</span>
+                  <span className="text-[10px] text-slate-400">
+                    {type.points > 0 ? `+${type.points} pts` : `${type.points} pts`}
+                  </span>
+                </div>
+              </div>
+              <div className="text-right shrink-0 ml-2">
+                <span className={`font-mono font-black text-sm sm:text-base ${
+                  stats.count > 0 ? (isNegative ? 'text-rose-400' : 'text-emerald-400') : 'text-slate-500'
+                }`}>
+                  {stats.count}x
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {totalHazards > 0 && (
+        <div className="mt-2.5 pt-2 border-t border-rose-500/20 text-rose-300 text-xs font-bold text-center">
+          ⚠️ Penalidade: {totalHazards} {totalHazards === 1 ? 'bomba atingida' : 'bombas atingidas'} ({totalHazards * 200} pts perdidos)
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <GameContainer
@@ -240,6 +361,10 @@ export const CatcherGame: React.FC<CatcherGameProps> = (props) => {
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
+      gameType="action"
+      customFeedbackTitle={feedbackTitle}
+      customFeedbackSubtitle={feedbackSubtitle}
+      gameOverCustomContent={catcherReportContent}
       themePrimary={layoutPrimary}
       theme={theme}
       isLight={isLightMode}

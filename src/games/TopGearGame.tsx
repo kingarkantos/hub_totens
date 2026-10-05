@@ -1410,6 +1410,13 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
       correctAnswers={dodgedCount}
       customScoreLabel="Pontos"
+      gameType="action"
+      customFeedbackTitle={gameWon ? 'Piloto Campeão!' : 'Corrida Finalizada!'}
+      customFeedbackSubtitle={
+        gameWon
+          ? `Sensacional! Você cruzou a linha de chegada e conquistou incríveis ${score} pontos!`
+          : `Você desviou de ${dodgedCount} obstáculos e marcou ${score} pontos. Acelere e tente vencer a corrida!`
+      }
       themePrimary={layoutPrimary}
       theme={theme}
       customBgStyle={customBgStyle}

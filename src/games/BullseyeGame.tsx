@@ -166,6 +166,15 @@ export const BullseyeGame: React.FC<BullseyeGameProps> = (props) => {
       customScoreLabel="Pontos"
       correctAnswers={shots.filter((s) => s.points >= 300).length}
       totalQuestions={totalShots}
+      correctAnswersLabel="Disparos no Centro"
+      totalMetricLabel="tiros"
+      gameType="action"
+      customFeedbackTitle={score >= 1500 ? 'Mira de Elite!' : score >= 800 ? 'Muito bem!' : 'Valeu a tentativa!'}
+      customFeedbackSubtitle={
+        score >= 1500
+          ? `Precisão cirúrgica! Você acertou ${shots.filter((s) => s.points >= 300).length} vezes na mosca e fez ${score} pontos.`
+          : `Você realizou ${totalShots} disparos e alcançou ${score} pontos. Treine sua pontaria para acertar o centro!`
+      }
       themePrimary={layoutPrimary}
       theme={theme}
       customBgStyle={customBgStyle}

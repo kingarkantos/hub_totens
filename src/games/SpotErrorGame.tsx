@@ -221,6 +221,15 @@ export const SpotErrorGame: React.FC<SpotErrorGameProps> = (props) => {
       score={score}
       correctAnswers={foundErrorIds.length}
       totalQuestions={totalErrors}
+      correctAnswersLabel="Erros Encontrados"
+      totalMetricLabel="erros"
+      gameType="puzzle"
+      customFeedbackTitle={foundErrorIds.length === totalErrors ? 'Olhos de Lince!' : 'Boa Percepção!'}
+      customFeedbackSubtitle={
+        foundErrorIds.length === totalErrors
+          ? `Incrível! Você localizou todos os ${totalErrors} erros e conquistou ${score} pontos!`
+          : `Você localizou ${foundErrorIds.length} de ${totalErrors} erros e marcou ${score} pontos. Jogue de novo para encontrar todos!`
+      }
       timeRemaining={timeLeft}
       gameOver={gameOver}
       gameWon={foundErrorIds.length === totalErrors}

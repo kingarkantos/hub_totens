@@ -187,17 +187,40 @@ export const TargetGame: React.FC<TargetGameProps> = (props) => {
     return () => clearInterval(interval);
   }, [gameOver, targetTypes]);
 
+  const [hitStats, setHitStats] = useState<{ [name: string]: { count: number; points: number; symbol: string; isHazard: boolean; isBonus: boolean } }>({});
+  const [totalHits, setTotalHits] = useState(0);
+  const [totalHazards, setTotalHazards] = useState(0);
+
   const handleHit = (target: TargetItem) => {
+    setHitStats((prev) => {
+      const existing = prev[target.name] || {
+        count: 0,
+        points: target.points,
+        symbol: target.symbol,
+        isHazard: target.isHazard,
+        isBonus: target.isBonus,
+      };
+      return {
+        ...prev,
+        [target.name]: {
+          ...existing,
+          count: existing.count + 1,
+        },
+      };
+    });
+
     if (target.isHazard || target.points < 0) {
       sound.playError();
       const penalty = Math.abs(target.points || 150);
       setScore((s) => Math.max(0, s - penalty));
+      setTotalHazards((h) => h + 1);
     } else {
       sound.playClick();
       if (target.isBonus) {
         sound.playSuccess();
       }
       setScore((s) => s + (target.points || (target.isBonus ? 250 : 100)));
+      setTotalHits((h) => h + 1);
     }
     setTargets((prev) => prev.filter((t) => t.id !== target.id));
   };
@@ -206,9 +229,105 @@ export const TargetGame: React.FC<TargetGameProps> = (props) => {
     setScore(0);
     setTimeLeft(initialTime);
     setTargets([]);
+    setHitStats({});
+    setTotalHits(0);
+    setTotalHazards(0);
     spawnBagRef.current = [];
     setGameOver(false);
   };
+
+  const feedbackTitle = useMemo(() => {
+    if (score >= 4000) return 'Parabéns!';
+    if (score >= 2000) return 'Muito bem!';
+    if (score >= 800) return 'Bom resultado!';
+    if (score > 0) return 'Valeu a tentativa!';
+    return 'Não foi dessa vez!';
+  }, [score]);
+
+  const feedbackSubtitle = useMemo(() => {
+    if (score >= 4000) {
+      return `Reflexos incríveis! Você acertou ${totalHits} alvos e alcançou a excelente pontuação de ${score} pontos.`;
+    }
+    if (score >= 2000) {
+      return `Muito ágil! Você capturou ${totalHits} alvos e garantiu ${score} pontos.`;
+    }
+    if (score >= 800) {
+      return `Boa partida! Você acertou ${totalHits} alvos. Jogue novamente para superar sua pontuação.`;
+    }
+    if (score > 0) {
+      return `Você acertou ${totalHits} alvos e somou ${score} pontos. Treine seus reflexos para ir mais longe!`;
+    }
+    return 'Nenhum alvo acertado nesta rodada. Tente novamente para pontuar!';
+  }, [score, totalHits]);
+
+  const targetReportContent = (
+    <div className={`w-full rounded-2xl border-2 p-3.5 sm:p-5 shadow-lg ${
+      isLightMode ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-800/90 border-white/15 text-white'
+    }`}>
+      <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10 text-xs sm:text-sm font-black uppercase tracking-wider">
+        <span className="flex items-center gap-1.5 text-amber-400">
+          <span>🎯</span>
+          <span>Alvos Atingidos</span>
+        </span>
+        <span className="font-mono text-emerald-400">
+          Total: {totalHits} {totalHits === 1 ? 'alvo' : 'alvos'}
+        </span>
+      </div>
+
+      {/* Grade de Alvos */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left">
+        {targetTypes.map((type, idx) => {
+          const stats = hitStats[type.name] || { count: 0, points: type.points };
+          const isImg = isImageUrl(type.symbol);
+          const isNegative = type.isHazard || type.points < 0;
+
+          return (
+            <div
+              key={idx}
+              className={`flex items-center justify-between p-2 sm:p-2.5 rounded-xl border transition-all ${
+                stats.count > 0
+                  ? isNegative
+                    ? 'bg-rose-950/40 border-rose-500/40'
+                    : type.isBonus
+                    ? 'bg-amber-950/40 border-amber-500/40'
+                    : 'bg-white/5 border-white/10'
+                  : 'opacity-40 border-dashed border-white/10'
+              }`}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center shrink-0 border border-white/10 text-lg">
+                  {isImg ? (
+                    <img src={type.symbol} alt={type.name} className="w-6 h-6 object-contain" />
+                  ) : (
+                    <span>{type.symbol}</span>
+                  )}
+                </div>
+                <div className="truncate">
+                  <span className="font-bold text-xs sm:text-sm block truncate">{type.name}</span>
+                  <span className="text-[10px] text-slate-400">
+                    {type.points > 0 ? `+${type.points} pts` : `${type.points} pts`}
+                  </span>
+                </div>
+              </div>
+              <div className="text-right shrink-0 ml-2">
+                <span className={`font-mono font-black text-sm sm:text-base ${
+                  stats.count > 0 ? (isNegative ? 'text-rose-400' : 'text-emerald-400') : 'text-slate-500'
+                }`}>
+                  {stats.count}x
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {totalHazards > 0 && (
+        <div className="mt-2.5 pt-2 border-t border-rose-500/20 text-rose-300 text-xs font-bold text-center">
+          ⚠️ Penalidade: {totalHazards} {totalHazards === 1 ? 'bomba atingida' : 'bombas atingidas'} ({totalHazards * 150} pts perdidos)
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <GameContainer
@@ -222,6 +341,10 @@ export const TargetGame: React.FC<TargetGameProps> = (props) => {
       onExit={onExit}
       rankingEnabled={rankingEnabled}
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, score)}
+      gameType="reflex"
+      customFeedbackTitle={feedbackTitle}
+      customFeedbackSubtitle={feedbackSubtitle}
+      gameOverCustomContent={targetReportContent}
       themePrimary={layoutPrimary}
       theme={theme}
       isLight={isLightMode}

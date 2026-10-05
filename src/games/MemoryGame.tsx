@@ -196,6 +196,15 @@ export const MemoryGame: React.FC<MemoryGameProps> = (props) => {
       score={score}
       correctAnswers={cards.filter((c) => c.matched).length / 2}
       totalQuestions={cards.length / 2}
+      correctAnswersLabel="Pares Encontrados"
+      totalMetricLabel="pares"
+      gameType="memory"
+      customFeedbackTitle={won ? 'Memória Extraordinária!' : 'Valeu o Treino!'}
+      customFeedbackSubtitle={
+        won
+          ? `Fantástico! Você encontrou todos os ${cards.length / 2} pares e completou o jogo com ${score} pontos!`
+          : `Você encontrou ${cards.filter((c) => c.matched).length / 2} de ${cards.length / 2} pares e somou ${score} pontos. Jogue novamente para completar a tempo!`
+      }
       timeRemaining={timeLeft}
       gameOver={gameOver}
       gameWon={won}
