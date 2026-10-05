@@ -169,6 +169,10 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
     effectiveTimeOfDay,
     effectiveCarModel,
     stars,
+    matchTimeElapsed: 0,
+    lastViaductTime: -10, // allows first viaduct around 6-10s
+    trafficSpawnCooldown: 1.0,
+    hudTimer: 0,
   });
 
   // Keep stateRef synced with latest options
@@ -275,12 +279,31 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
       const width = canvas.width;
       const height = canvas.height;
 
-      // 1. Progressive Acceleration
+      // 1. Progressive Acceleration Based On Match Time Limit
       if (!state.gameOver) {
-        const speedRatio = Math.min(1, state.distance / 2500);
-        const targetSpeed = initialSpeed + (maxSpeed - initialSpeed) * speedRatio;
-        state.speed = Math.min(maxSpeed, state.speed + (targetSpeed - state.speed) * dt * 0.5);
+        state.matchTimeElapsed += dt;
+        const totalDuration = Math.max(10, duration);
+
+        // Progression reaches max speed in the final stretch (~82% of duration)
+        // Shorter duration = faster progression; Longer duration = slower, more gradual progression
+        const timeRatio = Math.min(1, state.matchTimeElapsed / (totalDuration * 0.82));
+        const speedCurve = Math.pow(timeRatio, 0.88);
+        const targetSpeed = initialSpeed + (maxSpeed - initialSpeed) * speedCurve;
+
+        // Acceleration rate inversely proportional to match duration
+        const accelRate = Math.max(0.65, 26 / totalDuration);
+        state.speed += (targetSpeed - state.speed) * Math.min(1, dt * accelRate);
+        state.speed = Math.min(maxSpeed, Math.max(initialSpeed * 0.5, state.speed));
+
         state.distance += (state.speed * 1000 / 3600) * dt;
+
+        // Throttled HUD update for Speedometer & Distance (every ~80ms)
+        state.hudTimer = (state.hudTimer || 0) + dt;
+        if (state.hudTimer >= 0.08) {
+          state.hudTimer = 0;
+          setSpeed(Math.round(state.speed));
+          setDistance(Math.round(state.distance));
+        }
 
         // Player smooth lane interpolation
         state.playerX += (state.targetX - state.playerX) * Math.min(1, dt * 14);
@@ -294,32 +317,83 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
         }
         state.curve += (state.curveTarget - state.curve) * dt * 0.8;
 
-        // Spawn traffic cars
-        if (Math.random() < dt * 0.95 && state.traffic.length < 5 && state.finishZ > 300) {
-          const spawnLane = Math.floor(Math.random() * 3);
-          const laneOccupied = state.traffic.some(t => t.lane === spawnLane && t.z > 800);
-          if (!laneOccupied) {
-            state.traffic.push({
-              id: state.nextTrafficId++,
-              lane: spawnLane,
-              z: 1000,
-              speed: state.speed * 0.55 + Math.random() * 20,
-              color: CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)],
-            });
+        // 2. Spawn Traffic Cars with Guaranteed Escape Corridor
+        state.trafficSpawnCooldown = (state.trafficSpawnCooldown || 0) - dt;
+
+        if (state.trafficSpawnCooldown <= 0 && state.traffic.length < 4 && state.finishZ > 450) {
+          // Check cars in incoming horizon cluster (z >= 550)
+          const incomingCars = state.traffic.filter(t => t.z >= 550);
+          const occupiedLanes = new Set(incomingCars.map(t => t.lane));
+
+          // ALGORITHM INVARIANT: NEVER block all 3 lanes!
+          // At most 2 lanes can have cars in any incoming cluster; at least ONE lane MUST ALWAYS be completely open!
+          if (occupiedLanes.size < 2) {
+            const allLanes = [0, 1, 2];
+            const freeLanes = allLanes.filter(l => !occupiedLanes.has(l));
+
+            // Extra safety: ensure no existing car in this lane within 350 units
+            const availableLanes = freeLanes.filter(l => !state.traffic.some(t => t.lane === l && t.z > 650));
+
+            if (availableLanes.length > 0) {
+              const chosenLane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
+
+              state.traffic.push({
+                id: state.nextTrafficId++,
+                lane: chosenLane,
+                z: 1000,
+                speed: state.speed * 0.52 + Math.random() * 15,
+                color: CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)],
+              });
+
+              // If 2 lanes are now occupied in this wave, enforce a substantial cooldown
+              // so the player can safely steer into the guaranteed open lane without another wave on top
+              const newOccupiedCount = occupiedLanes.size + 1;
+              if (newOccupiedCount >= 2) {
+                state.trafficSpawnCooldown = 1.7 + Math.random() * 0.9;
+              } else {
+                const shouldPair = Math.random() < 0.35;
+                if (shouldPair) {
+                  state.trafficSpawnCooldown = 0.7 + Math.random() * 0.4;
+                } else {
+                  state.trafficSpawnCooldown = 1.5 + Math.random() * 0.8;
+                }
+              }
+            } else {
+              state.trafficSpawnCooldown = 0.5;
+            }
+          } else {
+            // 2 lanes already occupied in this wave -> 3rd lane is strictly reserved for player escape!
+            state.trafficSpawnCooldown = 1.6 + Math.random() * 0.8;
           }
         }
 
-        // Spawn roadside scenery (trees, signs, viaducts)
-        if (Math.random() < dt * 1.8 && state.roadside.length < 8) {
-          const isViaduct = Math.random() < 0.12;
-          const isSign = Math.random() < 0.25;
-          state.roadside.push({
-            id: state.nextRoadsideId++,
-            type: isViaduct ? 'viaduct' : isSign ? 'sign' : 'tree',
-            side: Math.random() < 0.5 ? -1 : 1,
-            z: 1000,
-            text: isSign ? (Math.random() < 0.5 ? '240 KM/H' : 'CURVA ➔') : undefined,
-          });
+        // 3. Spawn Roadside Scenery (Trees, Side Signs, Rare Viaducts)
+        if (Math.random() < dt * 1.5 && state.roadside.length < 8) {
+          const hasActiveViaduct = state.roadside.some(o => o.type === 'viaduct');
+          const timeSinceLastViaduct = state.matchTimeElapsed - (state.lastViaductTime || 0);
+
+          // Viaducts appear as rare highway milestones (at most 1 active, at least 15s between them, not near finish)
+          const canSpawnViaduct = !hasActiveViaduct && timeSinceLastViaduct > 15 && state.finishZ > 800;
+          const isViaduct = canSpawnViaduct && Math.random() < 0.08;
+
+          if (isViaduct) {
+            state.lastViaductTime = state.matchTimeElapsed;
+            state.roadside.push({
+              id: state.nextRoadsideId++,
+              type: 'viaduct',
+              side: 1,
+              z: 1000,
+            });
+          } else {
+            const isSign = Math.random() < 0.20;
+            state.roadside.push({
+              id: state.nextRoadsideId++,
+              type: isSign ? 'sign' : 'tree',
+              side: Math.random() < 0.5 ? -1 : 1,
+              z: 1000,
+              text: isSign ? (Math.random() < 0.5 ? '240 KM/H' : 'CURVA ➔') : undefined,
+            });
+          }
         }
 
         // Move Traffic
@@ -334,11 +408,15 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
             // CRASH!
             sound.playError();
             state.invincibleUntil = now + 1600;
-            state.speed = Math.max(initialSpeed * 0.7, state.speed - 50);
+            state.speed = Math.max(initialSpeed * 0.65, state.speed - 50);
             state.combo = 1;
             setCombo(1);
             setScreenShake(14);
             setTimeout(() => setScreenShake(0), 400);
+
+            // Clear immediate danger cars to prevent unfair double-hit
+            state.traffic = state.traffic.filter(t => t.z > 220 || t.z < 0);
+            state.trafficSpawnCooldown = 2.0;
           }
 
           // Check Dodge Success
@@ -1391,6 +1469,10 @@ export const TopGearGame: React.FC<TopGearGameProps> = (props) => {
       effectiveTimeOfDay,
       effectiveCarModel,
       stars,
+      matchTimeElapsed: 0,
+      lastViaductTime: -10,
+      trafficSpawnCooldown: 1.0,
+      hudTimer: 0,
     };
   };
 
