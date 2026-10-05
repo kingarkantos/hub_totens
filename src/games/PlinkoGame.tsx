@@ -137,15 +137,21 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = (props) => {
   }, [layoutPrimary, layoutSecondary, darkPrimary, layoutGlow, layoutAccent, isLightMode]);
 
   // Drop Ball Action
-  const dropBall = useCallback(() => {
+  const dropBall = useCallback((explicitX?: number) => {
     if (stateRef.current.isDropping || stateRef.current.ballsRemaining <= 0 || stateRef.current.gameOver) return;
+
+    const chosenX = explicitX !== undefined ? explicitX : stateRef.current.dropperX;
+    const clampedX = Math.max(0.10, Math.min(0.90, chosenX));
+
+    setDropperX(clampedX);
+    stateRef.current.dropperX = clampedX;
 
     sound.playClick();
     setIsDropping(true);
     stateRef.current.isDropping = true;
 
     const width = stateRef.current.boardWidth;
-    const startX = width * Math.max(0.10, Math.min(0.90, stateRef.current.dropperX));
+    const startX = width * clampedX;
     const startY = 50;
 
     stateRef.current.ball = {
@@ -540,15 +546,51 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = (props) => {
     };
   }, []);
 
-  // Handle Dragging Dropper on Board
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>) => {
-    if (stateRef.current.isDropping) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+  // Calculate relative X ratio (0.10 to 0.90) from click or touch
+  const getClampedX = (clientX: number, target: HTMLElement) => {
+    const rect = target.getBoundingClientRect();
     const relX = (clientX - rect.left) / rect.width;
-    const clamped = Math.max(0.10, Math.min(0.90, relX));
-    setDropperX(clamped);
-    stateRef.current.dropperX = clamped;
+    return Math.max(0.10, Math.min(0.90, relX));
+  };
+
+  const isDraggingSliderRef = useRef(false);
+
+  // Slider Touch / Pointer Events: allows dragging to aim AND releasing or clicking to drop
+  const handleSliderPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (stateRef.current.isDropping || stateRef.current.ballsRemaining <= 0 || stateRef.current.gameOver) return;
+    const x = getClampedX(e.clientX, e.currentTarget);
+    setDropperX(x);
+    stateRef.current.dropperX = x;
+    isDraggingSliderRef.current = true;
+  };
+
+  const handleSliderPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingSliderRef.current || stateRef.current.isDropping) return;
+    const x = getClampedX(e.clientX, e.currentTarget);
+    setDropperX(x);
+    stateRef.current.dropperX = x;
+  };
+
+  const handleSliderPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingSliderRef.current) return;
+    isDraggingSliderRef.current = false;
+    if (stateRef.current.isDropping || stateRef.current.ballsRemaining <= 0 || stateRef.current.gameOver) return;
+    const x = getClampedX(e.clientX, e.currentTarget);
+    dropBall(x);
+  };
+
+  // Direct Click on the Slider area drops the ball immediately at that spot
+  const handleSliderClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (stateRef.current.isDropping || stateRef.current.ballsRemaining <= 0 || stateRef.current.gameOver) return;
+    const x = getClampedX(e.clientX, e.currentTarget);
+    dropBall(x);
+  };
+
+  // Click on the general board also positions and drops the ball
+  const handleBoardClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (stateRef.current.isDropping || stateRef.current.ballsRemaining <= 0 || stateRef.current.gameOver) return;
+    const x = getClampedX(e.clientX, e.currentTarget);
+    dropBall(x);
   };
 
   const restart = () => {
@@ -569,6 +611,34 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = (props) => {
     stateRef.current.ballsRemaining = totalBalls;
   };
 
+  const plinkoReportContent = (
+    <div className={`w-full rounded-2xl border-2 p-3.5 sm:p-5 shadow-lg ${
+      isLightMode ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-800/90 border-white/15 text-white'
+    }`}>
+      <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10 text-xs sm:text-sm font-black uppercase tracking-wider">
+        <span className="flex items-center gap-1.5 text-amber-400">
+          <span>🎰</span>
+          <span>Resultado das Bolinhas</span>
+        </span>
+        <span className="font-mono text-emerald-400">
+          Total: {currentScore} pts
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-left">
+        {ballHistory.map((pts, idx) => (
+          <div
+            key={idx}
+            className="flex items-center justify-between p-2.5 rounded-xl border border-white/10 bg-white/5"
+          >
+            <span className="text-xs font-bold text-slate-300">Bolinha {idx + 1}</span>
+            <span className="font-mono font-black text-sm text-amber-400">+{pts} pts</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <GameContainer
       title={gameTitle}
@@ -583,6 +653,10 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = (props) => {
       onSubmitScore={(name) => onSubmitScore && onSubmitScore(name, currentScore)}
       correctAnswers={ballHistory.length}
       customScoreLabel="Pontos"
+      gameType="arcade"
+      gameOverCustomContent={plinkoReportContent}
+      customFeedbackTitle={currentScore >= 1500 ? 'Sorte Grande!' : currentScore >= 700 ? 'Muito Bem!' : 'Valeu a Tentativa!'}
+      customFeedbackSubtitle={`Você lançou as ${totalBalls} bolinhas e faturou ${currentScore} pontos no Plinko da Sorte!`}
       themePrimary={layoutPrimary}
       theme={theme}
       customBgStyle={customBgStyle}
@@ -637,21 +711,33 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = (props) => {
 
         {/* Large Playable Canvas Board */}
         <div
-          className="relative w-full max-w-xl md:max-w-2xl flex-1 min-h-[460px] max-h-[76vh] aspect-[9/13.5] sm:aspect-[9/13] rounded-3xl overflow-hidden shadow-2xl border-4 touch-none flex items-center justify-center my-auto"
+          className="relative w-full max-w-xl md:max-w-2xl flex-1 min-h-[460px] max-h-[76vh] aspect-[9/13.5] sm:aspect-[9/13] rounded-3xl overflow-hidden shadow-2xl border-4 touch-none flex items-center justify-center my-auto cursor-pointer"
           style={{
             borderColor: layoutPrimary,
             boxShadow: `0 0 35px ${layoutGlow}`,
           }}
-          onMouseMove={handleTouchMove}
-          onTouchMove={handleTouchMove}
-          onClick={handleTouchMove}
+          onClick={handleBoardClick}
         >
           <canvas
             ref={canvasRef}
             width={640}
             height={900}
-            className="w-full h-full object-fill"
+            className="w-full h-full object-fill pointer-events-none"
           />
+
+          {/* Dedicated Touchable Top Slider Region (where the dropper ball & track are) */}
+          <div
+            className="absolute top-0 inset-x-0 h-28 sm:h-32 z-20 cursor-pointer touch-none flex flex-col items-center justify-start pt-2 select-none"
+            title="Toque ou arraste no trilho para soltar a bolinha"
+            onPointerDown={handleSliderPointerDown}
+            onPointerMove={handleSliderPointerMove}
+            onPointerUp={handleSliderPointerUp}
+            onClick={handleSliderClick}
+          >
+            <span className="text-[10px] sm:text-xs font-bold text-white/70 bg-black/50 border border-white/10 px-3 py-0.5 rounded-full pointer-events-none shadow-sm">
+              Toque no trilho para soltar 🎯
+            </span>
+          </div>
 
           {/* Floating Toast upon Landing */}
           {floatingToast && (
@@ -672,7 +758,7 @@ export const PlinkoGame: React.FC<PlinkoGameProps> = (props) => {
         <div className="w-full max-w-xl md:max-w-2xl pt-2 pb-1 px-2 z-20">
           <button
             type="button"
-            onClick={dropBall}
+            onClick={() => dropBall()}
             disabled={isDropping || ballsRemaining <= 0 || gameOver}
             className={`w-full py-3.5 sm:py-4 px-6 rounded-2xl font-black text-base sm:text-lg uppercase tracking-wider shadow-2xl flex items-center justify-center gap-3 transition-all active:scale-95 ${
               layoutDef.buttonClass
