@@ -33,7 +33,7 @@ export const SplashButtonRenderer: React.FC<SplashButtonRendererProps> = ({
     if (onClick) onClick();
   };
 
-  const resolvedStyleId = getSplashButtonStyleForLayout(styleId as GameLayoutId) || styleId;
+  const resolvedStyleId = getSplashButtonStyleForLayout(styleId);
 
   const textSizes = isSm
     ? 'text-xs tracking-wider'

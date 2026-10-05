@@ -195,3 +195,86 @@ export function getSplashOverlayStyle(
     primaryColor: primary,
   };
 }
+
+export const LAYOUT_DEFAULT_EFFECTS: Record<string, string> = {
+  cartoon_pop: 'bokeh',
+  cartoon_comic: 'bubbles',
+  neon_arcade: 'cyber_grid',
+  bento_tech: 'nanotech',
+  neumorphic_luxe: 'stars',
+  modern_glass: 'bokeh',
+  spatial_3d: 'cosmic_dust',
+  pixel_retro: 'cyber_grid',
+  cyber_matrix: 'matrix',
+  synthwave_grid: 'cyber_grid',
+  golden_casino: 'stars',
+  bubble_toon: 'bubbles',
+};
+
+/**
+ * Generates rich, dynamic theme background gradients tailored to each layout
+ * that smoothly shift colors as the background slider (hue) moves.
+ */
+export function getThemeBackgroundGradient(
+  layoutId?: string,
+  hue: number = 185,
+  mode: 'color' | 'original' | 'black' | 'white' = 'color',
+  opacity: number = 35,
+  isLight = false
+): string {
+  if (mode === 'black') {
+    return 'linear-gradient(135deg, #020617 0%, #0b0f19 50%, #000000 100%)';
+  }
+  if (mode === 'white') {
+    return 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%)';
+  }
+  if (mode === 'original' && opacity <= 0) {
+    return isLight
+      ? 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)'
+      : 'linear-gradient(135deg, #0f172a 0%, #020617 100%)';
+  }
+
+  const safeHue = ((Math.round(hue) % 360) + 360) % 360;
+
+  if (isLight) {
+    const lightPrimary = hslToHex(safeHue, 80, 92);
+    const lightSecondary = hslToHex((safeHue + 35) % 360, 75, 88);
+    const lightAccent = hslToHex((safeHue + 180) % 360, 65, 94);
+    return `linear-gradient(135deg, ${lightPrimary} 0%, ${lightSecondary} 50%, ${lightAccent} 100%)`;
+  }
+
+  // Dark vibrant mode tailored to each theme
+  const c1 = hslToHex(safeHue, 92, 20);
+  const c2 = hslToHex((safeHue + 32) % 360, 88, 13);
+  const c3 = hslToHex((safeHue + 60) % 360, 95, 8);
+  const deepDark = '#020617';
+
+  switch (layoutId) {
+    case 'neon_arcade':
+      return `radial-gradient(ellipse at 50% 15%, ${c1} 0%, ${c2} 50%, #030712 90%)`;
+    case 'synthwave_grid':
+      return `linear-gradient(180deg, ${c1} 0%, ${c2} 40%, ${c3} 70%, #050212 100%)`;
+    case 'cartoon_comic':
+      return `radial-gradient(circle at center, ${c1} 0%, ${c2} 60%, #000000 100%)`;
+    case 'cartoon_pop':
+      return `linear-gradient(135deg, ${c1} 0%, ${c2} 50%, #0f172a 100%)`;
+    case 'cyber_matrix':
+      return `linear-gradient(180deg, ${c1} 0%, #020617 70%, #000000 100%)`;
+    case 'spatial_3d':
+      return `radial-gradient(circle at 50% 30%, ${c1} 0%, ${c2} 55%, #050212 95%)`;
+    case 'golden_casino':
+      return `linear-gradient(135deg, #1c1917 0%, ${c1} 50%, #0c0a09 100%)`;
+    case 'pixel_retro':
+      return `linear-gradient(180deg, ${c1} 0%, #09090b 60%, #000000 100%)`;
+    case 'modern_glass':
+      return `radial-gradient(circle at top left, ${c1} 0%, ${c2} 50%, #030712 90%)`;
+    case 'bento_tech':
+      return `linear-gradient(135deg, ${c1} 0%, #020617 65%, #000000 100%)`;
+    case 'bubble_toon':
+      return `linear-gradient(135deg, ${c1} 0%, ${c2} 55%, #0f172a 100%)`;
+    case 'neumorphic_luxe':
+    default:
+      return `linear-gradient(135deg, ${c1} 0%, ${c2} 50%, ${deepDark} 100%)`;
+  }
+}
+

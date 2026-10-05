@@ -10,7 +10,7 @@ import { GameCardThumbnail } from '../components/GameCardThumbnail';
 import { GameLayoutProvider } from '../context/GameLayoutContext';
 import { BackgroundEffectOverlay, BackgroundEffectId } from '../components/BackgroundEffectOverlay';
 import { GameLayoutId } from '../types/gameLayouts';
-import { generateLayoutPalette, getSplashOverlayStyle, LayoutColorPalette, getDefaultHueForLayout, hexToRgba } from '../lib/colorHarmony';
+import { generateLayoutPalette, getSplashOverlayStyle, LayoutColorPalette, getDefaultHueForLayout, hexToRgba, getThemeBackgroundGradient } from '../lib/colorHarmony';
 import { getFontFamilyById } from '../lib/fonts';
 import { SplashButtonRenderer } from '../components/SplashButtonRenderer';
 import { ThemedGameCard } from '../components/ThemedGameCard';
@@ -636,6 +636,14 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
     splashOverlayBrightness
   );
 
+  const themeBgGradient = getThemeBackgroundGradient(
+    campaignLayout,
+    splashOverlayHue,
+    splashOverlayMode,
+    splashOverlayOpacity,
+    isLight
+  );
+
   const handleStartPlay = () => {
     sound.playSuccess();
     if (gamesList.length === 1) {
@@ -778,9 +786,10 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
     <div
       style={{
         '--glow-color': theme.glowColor,
+        background: themeBgGradient,
         ...customBgStyle,
       } as React.CSSProperties}
-      className={`fixed inset-0 w-full h-full overflow-hidden select-none ${inSplash ? 'bg-slate-950' : `bg-gradient-to-b ${theme.bgGradient}`} ${theme.textColor} ${theme.fontClass}`}
+      className={`fixed inset-0 w-full h-full overflow-hidden select-none ${theme.textColor} ${theme.fontClass}`}
     >
       {/* Floating Top Control Bar (Fullscreen Button only) */}
       <div className="absolute top-4 right-4 z-40 flex items-center gap-2">
@@ -803,14 +812,16 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
         >
           {/* Background image with custom color blend overlay */}
           <div className="absolute inset-0 z-0">
-            <img
-              src={campaign.splash_image_url}
-              alt={campaign.name}
-              style={{
-                filter: `brightness(${splashOverlayStyle.imageBrightness}) contrast(1.05)`,
-              }}
-              className="w-full h-full object-cover scale-105 transition-transform duration-10000 animate-float"
-            />
+            {campaign.splash_image_url ? (
+              <img
+                src={campaign.splash_image_url}
+                alt={campaign.name}
+                style={{
+                  filter: `brightness(${splashOverlayStyle.imageBrightness}) contrast(1.05)`,
+                }}
+                className="w-full h-full object-cover scale-105 transition-transform duration-10000 animate-float"
+              />
+            ) : null}
             {/* Camada Dinâmica de Mistura da Cor Personalizada */}
             <div
               style={{
@@ -973,6 +984,11 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
       ) : (
         /* 2. TOTEM GAMES SELECTION VIEW */
         <div className="relative w-full h-full flex flex-col animate-in fade-in duration-300">
+          {splashBgEffect && splashBgEffect !== 'none' && (
+            <div className="absolute inset-0 pointer-events-none opacity-40 z-0">
+              <BackgroundEffectOverlay effect={splashBgEffect} />
+            </div>
+          )}
           {/* Totem Header */}
           <header className={`flex items-center justify-between px-6 py-5 ${isLight ? 'bg-white/90 border-b border-slate-200/80 backdrop-blur-xl text-slate-900 shadow-xs' : 'bg-black/40 border-b border-white/10 backdrop-blur-xl text-white'} z-20`}>
             <div className="flex items-center gap-4">

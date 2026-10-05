@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Play, Sparkles, Gamepad2, Eye, LayoutGrid, Layers, Monitor, RotateCcw } from 'lucide-react';
 import { GameLayoutId, GAME_LAYOUTS } from '../types/gameLayouts';
-import { LayoutColorPalette } from '../lib/colorHarmony';
+import { LayoutColorPalette, getThemeBackgroundGradient } from '../lib/colorHarmony';
 import { SplashButtonRenderer } from './SplashButtonRenderer';
 import { ThemedGameCard } from './ThemedGameCard';
 import { ThemedGamePlayPreview } from './ThemedGamePlayPreview';
 import { getSplashButtonStyleForLayout } from '../types/splashCustomization';
+import { BackgroundEffectOverlay, BackgroundEffectId } from './BackgroundEffectOverlay';
 import { GameDefinition } from '../types';
 import { sound } from '../lib/audio';
 
@@ -23,6 +24,10 @@ interface UnifiedThemePreviewPanelProps {
     imageBrightness: number;
     primaryColor: string;
   };
+  splashOverlayHue?: number;
+  splashOverlayMode?: 'color' | 'original' | 'black' | 'white';
+  splashOverlayOpacity?: number;
+  splashBgEffect?: BackgroundEffectId;
 }
 
 const SAMPLE_GAME: GameDefinition = {
@@ -47,11 +52,23 @@ export const UnifiedThemePreviewPanel: React.FC<UnifiedThemePreviewPanelProps> =
   campaignName = 'Nome da Campanha',
   splashUrl,
   splashOverlayStyle,
+  splashOverlayHue,
+  splashOverlayMode = 'color',
+  splashOverlayOpacity = 35,
+  splashBgEffect,
 }) => {
   const [activePreviewTab, setActivePreviewTab] = useState<'button' | 'catalog' | 'gameplay' | 'all'>('button');
 
   const layoutDef = GAME_LAYOUTS.find((l) => l.id === layoutId) || GAME_LAYOUTS[0];
   const mappedButtonStyle = getSplashButtonStyleForLayout(layoutId);
+  const effectiveBgHue = splashOverlayHue !== undefined ? splashOverlayHue : palette.hue;
+  const themeBgGradient = getThemeBackgroundGradient(
+    layoutId,
+    effectiveBgHue,
+    splashOverlayMode,
+    splashOverlayOpacity,
+    isLight
+  );
 
   return (
     <div className="space-y-4">
@@ -150,7 +167,10 @@ export const UnifiedThemePreviewPanel: React.FC<UnifiedThemePreviewPanelProps> =
             <span className="text-amber-400">Toque no botão para testar som e clique tátil</span>
           </div>
 
-          <div className="relative rounded-2xl overflow-hidden border-2 border-slate-800 bg-slate-950 min-h-[220px] flex flex-col items-center justify-center p-6 text-center shadow-inner">
+          <div
+            style={{ background: themeBgGradient }}
+            className="relative rounded-2xl overflow-hidden border-2 border-slate-800 min-h-[220px] flex flex-col items-center justify-center p-6 text-center shadow-inner transition-all duration-300"
+          >
             {/* Background image preview if available */}
             {splashUrl && (
               <img
@@ -159,7 +179,7 @@ export const UnifiedThemePreviewPanel: React.FC<UnifiedThemePreviewPanelProps> =
                 style={{
                   filter: `brightness(${splashOverlayStyle.imageBrightness}) contrast(1.05)`,
                 }}
-                className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-40"
+                className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-40 transition-all duration-300"
               />
             )}
             {/* Dynamic Background Blend Layer */}
@@ -171,6 +191,13 @@ export const UnifiedThemePreviewPanel: React.FC<UnifiedThemePreviewPanelProps> =
               className="absolute inset-0 pointer-events-none transition-all duration-300"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/50 pointer-events-none" />
+
+            {/* Ambient Background Effect */}
+            {splashBgEffect && splashBgEffect !== 'none' && (
+              <div className="absolute inset-0 pointer-events-none">
+                <BackgroundEffectOverlay effect={splashBgEffect} />
+              </div>
+            )}
 
             {/* Splash Info */}
             <div className="relative z-10 mb-4 pointer-events-none">
@@ -206,16 +233,26 @@ export const UnifiedThemePreviewPanel: React.FC<UnifiedThemePreviewPanelProps> =
             <span className="text-amber-400">Estilo e botão correspondentes ao tema selecionado</span>
           </div>
 
-          <div className="p-3 sm:p-5 rounded-2xl bg-slate-950/80 border-2 border-slate-800 shadow-inner">
-            <ThemedGameCard
-              layoutId={layoutId}
-              palette={palette}
-              game={SAMPLE_GAME}
-              index={0}
-              isLight={isLight}
-              campaignFont={campaignFont}
-              isPreview={true}
-            />
+          <div
+            style={{ background: themeBgGradient }}
+            className="relative rounded-2xl overflow-hidden border-2 border-slate-800 p-3 sm:p-5 shadow-inner transition-all duration-300"
+          >
+            {splashBgEffect && splashBgEffect !== 'none' && (
+              <div className="absolute inset-0 pointer-events-none opacity-30">
+                <BackgroundEffectOverlay effect={splashBgEffect} />
+              </div>
+            )}
+            <div className="relative z-10">
+              <ThemedGameCard
+                layoutId={layoutId}
+                palette={palette}
+                game={SAMPLE_GAME}
+                index={0}
+                isLight={isLight}
+                campaignFont={campaignFont}
+                isPreview={true}
+              />
+            </div>
           </div>
         </div>
       )}
@@ -228,13 +265,23 @@ export const UnifiedThemePreviewPanel: React.FC<UnifiedThemePreviewPanelProps> =
             <span className="text-amber-400">Clique nas opções abaixo para testar a resposta táctil</span>
           </div>
 
-          <div className="p-3 sm:p-5 rounded-2xl bg-slate-950/80 border-2 border-slate-800 shadow-inner">
-            <ThemedGamePlayPreview
-              layoutId={layoutId}
-              palette={palette}
-              isLight={isLight}
-              campaignFont={campaignFont}
-            />
+          <div
+            style={{ background: themeBgGradient }}
+            className="relative rounded-2xl overflow-hidden border-2 border-slate-800 p-3 sm:p-5 shadow-inner transition-all duration-300"
+          >
+            {splashBgEffect && splashBgEffect !== 'none' && (
+              <div className="absolute inset-0 pointer-events-none opacity-30">
+                <BackgroundEffectOverlay effect={splashBgEffect} />
+              </div>
+            )}
+            <div className="relative z-10">
+              <ThemedGamePlayPreview
+                layoutId={layoutId}
+                palette={palette}
+                isLight={isLight}
+                campaignFont={campaignFont}
+              />
+            </div>
           </div>
         </div>
       )}
@@ -248,7 +295,33 @@ export const UnifiedThemePreviewPanel: React.FC<UnifiedThemePreviewPanelProps> =
               <span>1. 🔘 Botão de Toque para Jogar (Splash Screen):</span>
               <span className="text-[10px] text-slate-400">Estilo: {mappedButtonStyle}</span>
             </div>
-            <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 p-6 flex items-center justify-center">
+            <div
+              style={{ background: themeBgGradient }}
+              className="relative rounded-2xl overflow-hidden border border-slate-800 min-h-[170px] p-6 flex flex-col items-center justify-center transition-all duration-300"
+            >
+              {splashUrl && (
+                <img
+                  src={splashUrl}
+                  alt="Fundo Totem"
+                  style={{
+                    filter: `brightness(${splashOverlayStyle.imageBrightness}) contrast(1.05)`,
+                  }}
+                  className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-40 transition-all duration-300"
+                />
+              )}
+              <div
+                style={{
+                  background: splashOverlayStyle.overlayGradient,
+                  opacity: splashOverlayStyle.overlayOpacity,
+                }}
+                className="absolute inset-0 pointer-events-none transition-all duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/50 pointer-events-none" />
+              {splashBgEffect && splashBgEffect !== 'none' && (
+                <div className="absolute inset-0 pointer-events-none">
+                  <BackgroundEffectOverlay effect={splashBgEffect} />
+                </div>
+              )}
               <div className="relative z-20 scale-90 sm:scale-100">
                 <SplashButtonRenderer
                   styleId={mappedButtonStyle}
@@ -266,15 +339,27 @@ export const UnifiedThemePreviewPanel: React.FC<UnifiedThemePreviewPanelProps> =
               <span>2. 📋 Card na Escolha de Jogos (com Botão Jogar):</span>
               <span className="text-[10px] text-slate-400">Layout: {layoutDef.name}</span>
             </div>
-            <ThemedGameCard
-              layoutId={layoutId}
-              palette={palette}
-              game={SAMPLE_GAME}
-              index={0}
-              isLight={isLight}
-              campaignFont={campaignFont}
-              isPreview={true}
-            />
+            <div
+              style={{ background: themeBgGradient }}
+              className="relative rounded-2xl overflow-hidden border border-slate-800 p-2 sm:p-4 shadow-inner transition-all duration-300"
+            >
+              {splashBgEffect && splashBgEffect !== 'none' && (
+                <div className="absolute inset-0 pointer-events-none opacity-30">
+                  <BackgroundEffectOverlay effect={splashBgEffect} />
+                </div>
+              )}
+              <div className="relative z-10">
+                <ThemedGameCard
+                  layoutId={layoutId}
+                  palette={palette}
+                  game={SAMPLE_GAME}
+                  index={0}
+                  isLight={isLight}
+                  campaignFont={campaignFont}
+                  isPreview={true}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Section 3: Gameplay */}
@@ -283,12 +368,24 @@ export const UnifiedThemePreviewPanel: React.FC<UnifiedThemePreviewPanelProps> =
               <span>3. 🎮 Tela do Jogo em Andamento:</span>
               <span className="text-[10px] text-slate-400">Interface &amp; Alternativas</span>
             </div>
-            <ThemedGamePlayPreview
-              layoutId={layoutId}
-              palette={palette}
-              isLight={isLight}
-              campaignFont={campaignFont}
-            />
+            <div
+              style={{ background: themeBgGradient }}
+              className="relative rounded-2xl overflow-hidden border border-slate-800 p-2 sm:p-4 shadow-inner transition-all duration-300"
+            >
+              {splashBgEffect && splashBgEffect !== 'none' && (
+                <div className="absolute inset-0 pointer-events-none opacity-30">
+                  <BackgroundEffectOverlay effect={splashBgEffect} />
+                </div>
+              )}
+              <div className="relative z-10">
+                <ThemedGamePlayPreview
+                  layoutId={layoutId}
+                  palette={palette}
+                  isLight={isLight}
+                  campaignFont={campaignFont}
+                />
+              </div>
+            </div>
           </div>
         </div>
       )}

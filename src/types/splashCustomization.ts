@@ -34,11 +34,35 @@ export const GAME_LAYOUT_TO_BUTTON_STYLE: Record<GameLayoutId, SplashButtonStyle
   bubble_toon: 'candy_bubble',
 };
 
-export const getSplashButtonStyleForLayout = (layout?: GameLayoutId | string): SplashButtonStyleId => {
-  if (layout && layout in GAME_LAYOUT_TO_BUTTON_STYLE) {
+const VALID_SPLASH_BUTTON_STYLES = new Set<string>([
+  'default',
+  'cartoon_3d',
+  'neon_pulse',
+  'arcade_retro',
+  'cyber_tech',
+  'luxury_gold',
+  'glass_glow',
+  'comic_pop',
+  'pixel_8bit',
+  'synthwave_neon',
+  'royal_casino',
+  'candy_bubble',
+  'hologram_hud',
+  'fire_inferno',
+  'cyber_matrix',
+  'quantum_glow',
+  'brutalist_bold',
+]);
+
+export const getSplashButtonStyleForLayout = (layout?: GameLayoutId | SplashButtonStyleId | string): SplashButtonStyleId => {
+  if (!layout) return 'cartoon_3d';
+  if (layout in GAME_LAYOUT_TO_BUTTON_STYLE) {
     return GAME_LAYOUT_TO_BUTTON_STYLE[layout as GameLayoutId];
   }
-  return 'comic_pop';
+  if (VALID_SPLASH_BUTTON_STYLES.has(layout)) {
+    return layout as SplashButtonStyleId;
+  }
+  return 'cartoon_3d';
 };
 
 export interface SplashButtonStyleDefinition {

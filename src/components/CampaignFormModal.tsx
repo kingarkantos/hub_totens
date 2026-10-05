@@ -10,7 +10,7 @@ import { GameContentEditorModal, getContentCount } from './GameContentEditorModa
 import { sound } from '../lib/audio';
 import { supabase, TABLES, BUCKETS } from '../lib/supabase';
 import { resellersService } from '../lib/resellersService';
-import { QUICK_HUE_PRESETS, generateLayoutPalette, getDefaultHueForLayout, getSplashOverlayStyle } from '../lib/colorHarmony';
+import { QUICK_HUE_PRESETS, generateLayoutPalette, getDefaultHueForLayout, getSplashOverlayStyle, LAYOUT_DEFAULT_EFFECTS } from '../lib/colorHarmony';
 import { GAME_FONTS, getFontFamilyById } from '../lib/fonts';
 import { RealtimeLayoutPreviewCard } from './RealtimeLayoutPreviewCard';
 import { UnifiedThemePreviewPanel } from './UnifiedThemePreviewPanel';
@@ -1754,14 +1754,23 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                         setGameLayout(layoutDef.id);
                         const defHue = getDefaultHueForLayout(layoutDef.id);
                         setLayoutColorHue(defHue);
-                        setSplashButtonStyle(getSplashButtonStyleForLayout(layoutDef.id));
+                        const newBtnStyle = getSplashButtonStyleForLayout(layoutDef.id);
+                        setSplashButtonStyle(newBtnStyle);
                         setSplashButtonHue(defHue);
+                        setSplashOverlayHue(defHue);
+                        setSplashOverlayMode('color');
+                        if (splashOverlayOpacity === 0) setSplashOverlayOpacity(35);
+                        if (LAYOUT_DEFAULT_EFFECTS[layoutDef.id]) {
+                          setSplashBgEffect(LAYOUT_DEFAULT_EFFECTS[layoutDef.id] as BackgroundEffectId);
+                        }
                         setGamesConfig((prev) => {
                           const updated: Record<string, any> = {
                             ...prev,
                             game_layout: layoutDef.id,
-                            splash_button_style: getSplashButtonStyleForLayout(layoutDef.id),
+                            splash_button_style: newBtnStyle,
                             splash_button_hue: defHue,
+                            splash_overlay_hue: defHue,
+                            splash_bg_effect: LAYOUT_DEFAULT_EFFECTS[layoutDef.id] || prev?.splash_bg_effect || 'none',
                           };
                           GAMES_CATALOG.forEach((g) => {
                             updated[`${g.id}_layout`] = layoutDef.id;
@@ -1861,6 +1870,7 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                       const defHue = getDefaultHueForLayout(gameLayout);
                       setLayoutColorHue(defHue);
                       setSplashButtonHue(defHue);
+                      setSplashOverlayHue(defHue);
                     }}
                     className="self-start sm:self-auto px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 active:scale-95 text-xs font-bold text-slate-300 hover:text-white border border-white/15 flex items-center gap-1.5 transition-all"
                   >
@@ -1879,6 +1889,10 @@ export const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
                   campaignName={name}
                   splashUrl={splashUrl}
                   splashOverlayStyle={splashOverlayStyle}
+                  splashOverlayHue={splashOverlayHue}
+                  splashOverlayMode={splashOverlayMode}
+                  splashOverlayOpacity={splashOverlayOpacity}
+                  splashBgEffect={splashBgEffect}
                 />
 
                 {/* 2. BARRA DE VARIAÇÃO DE CORES DOS ELEMENTOS (BORDAS, BOTÕES, NEON E AURAS) */}
