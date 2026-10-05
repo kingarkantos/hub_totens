@@ -4,7 +4,16 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
+    color-scheme: light dark;
+  }
+  
+  /* Garantir que campos de formulários administrativos e modais tenham sempre fundo branco nítido e texto legível de alto contraste */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+  textarea,
+  select {
+    color-scheme: light;
+    background-color: #ffffff;
+    color: #0f172a;
   }
   
   html, body, #root {

@@ -3683,7 +3683,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                   value={config.title || 'Ordem Numérica Relâmpago'}
                   onChange={(e) => updateCfg({ title: e.target.value })}
                   placeholder="Ex: Ordem Numérica Relâmpago"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
                 />
               </div>
 
@@ -3698,7 +3698,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                   step="100"
                   value={config.bonusPoints ?? 1000}
                   onChange={(e) => updateCfg({ bonusPoints: Number(e.target.value) || 1000 })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-black text-emerald-600 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-black text-emerald-700 font-mono focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-xs"
                 />
               </div>
             </div>
@@ -3912,14 +3912,14 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                     step="10"
                     value={config.initialSpeed || 120}
                     onChange={(e) => updateCfg({ initialSpeed: Number(e.target.value) || 120 })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-black font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm font-black font-mono text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-xs"
                   />
-                  <span className="text-xs font-bold text-slate-400">KM/H</span>
+                  <span className="text-xs font-bold text-slate-500">KM/H</span>
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl border border-slate-200 bg-white">
-                <label className="block text-xs font-bold uppercase text-slate-600 mb-1.5 flex items-center gap-1.5">
+              <div className="p-4 rounded-2xl border border-slate-200 bg-white shadow-xs">
+                <label className="block text-xs font-bold uppercase text-slate-700 mb-1.5 flex items-center gap-1.5">
                   <Flame className="w-3.5 h-3.5 text-red-600" />
                   <span>Velocidade Máxima</span>
                 </label>
@@ -3931,14 +3931,14 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                     step="10"
                     value={config.maxSpeed || 240}
                     onChange={(e) => updateCfg({ maxSpeed: Number(e.target.value) || 240 })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-black font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm font-black font-mono text-slate-900 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 shadow-xs"
                   />
-                  <span className="text-xs font-bold text-slate-400">KM/H</span>
+                  <span className="text-xs font-bold text-slate-500">KM/H</span>
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl border border-slate-200 bg-white">
-                <label className="block text-xs font-bold uppercase text-slate-600 mb-1.5 flex items-center gap-1.5">
+              <div className="p-4 rounded-2xl border border-slate-200 bg-white shadow-xs">
+                <label className="block text-xs font-bold uppercase text-slate-700 mb-1.5 flex items-center gap-1.5">
                   <Flag className="w-3.5 h-3.5 text-amber-600" />
                   <span>Nome do Circuito / Pista</span>
                 </label>
@@ -3947,7 +3947,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                   value={config.trackName || 'Autódromo Top Gear'}
                   onChange={(e) => updateCfg({ trackName: e.target.value })}
                   placeholder="Ex: Autódromo Top Gear"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
                 />
               </div>
             </div>
@@ -4037,8 +4037,8 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                 </div>
               </div>
 
-              <div className="p-5 rounded-2xl border border-slate-200 bg-white space-y-2">
-                <label className="block text-xs font-black uppercase text-slate-700 tracking-wider">
+              <div className="p-5 rounded-2xl border border-slate-200 bg-white space-y-2 shadow-xs">
+                <label className="block text-xs font-black uppercase text-slate-800 tracking-wider">
                   Título do Jogo na Tela
                 </label>
                 <input
@@ -4046,16 +4046,16 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                   value={config.title || 'Plinko da Sorte'}
                   onChange={(e) => updateCfg({ title: e.target.value })}
                   placeholder="Ex: Plinko Premiado"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-2xs"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-xs transition-all"
                 />
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-slate-500 font-medium">
                   Exibido no cabeçalho do jogo e na tela de premiação final.
                 </p>
               </div>
             </div>
 
             {/* CONFIGURAÇÃO DAS CANALETAS / SLOTS INFERIORES */}
-            <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-4">
+            <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-4 shadow-xs">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
                   <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider">
@@ -4120,7 +4120,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center gap-2">
                         <div className="flex-1">
-                          <label className="block text-[9px] uppercase font-bold text-slate-400">Rótulo</label>
+                          <label className="block text-[10px] uppercase font-bold text-slate-600 mb-0.5">Rótulo</label>
                           <input
                             type="text"
                             value={slot.label}
@@ -4129,11 +4129,11 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                               copy[idx] = { ...copy[idx], label: e.target.value };
                               updateCfg({ slots: copy });
                             }}
-                            className="w-full px-2 py-1 rounded-lg border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-500"
+                            className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-xs transition-all"
                           />
                         </div>
-                        <div className="w-20">
-                          <label className="block text-[9px] uppercase font-bold text-slate-400">Pontos</label>
+                        <div className="w-24">
+                          <label className="block text-[10px] uppercase font-bold text-slate-600 mb-0.5">Pontos</label>
                           <input
                             type="number"
                             min="0"
@@ -4145,7 +4145,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                               copy[idx] = { ...copy[idx], points: Number(e.target.value) || 0 };
                               updateCfg({ slots: copy });
                             }}
-                            className="w-full px-2 py-1 rounded-lg border border-slate-200 text-xs font-black text-emerald-600 font-mono focus:outline-none focus:border-emerald-500"
+                            className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-black text-emerald-700 font-mono focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-xs transition-all"
                           />
                         </div>
                       </div>
