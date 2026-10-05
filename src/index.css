@@ -65,3 +65,20 @@
 .animate-totem-pulse {
   animation: totem-pulse 2.2s infinite ease-in-out;
 }
+
+/* Forçar fundo branco e texto escuro em todos os campos de formulários administrativos */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+textarea,
+select {
+  color-scheme: light !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+/* Permitir inputs escuros apenas onde explicitamente especificado */
+input.bg-slate-800, input.bg-slate-900, input.bg-slate-950, input.bg-neutral-900, input.bg-black {
+  background-color: inherit !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}

@@ -375,6 +375,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
 
   const currentCount = getContentCount(content);
   const hasExistingContent = currentCount > 0;
+  const isConfigGame = ['top_gear', 'plinko', 'genius', 'speed', 'safe', 'reaction_time', 'bullseye'].includes(game.id);
 
   // Main tabs: 1. Conteúdo do Jogo, 2. Tempo & Sorteio, 3. Visual & Tipografia
   const [mainGameTab, setMainGameTab] = useState<'content' | 'rules' | 'appearance'>('content');
@@ -3912,9 +3913,10 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                     step="10"
                     value={config.initialSpeed || 120}
                     onChange={(e) => updateCfg({ initialSpeed: Number(e.target.value) || 120 })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm font-black font-mono text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-xs"
+                    style={{ backgroundColor: '#ffffff', color: '#0f172a' }}
+                    className="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 bg-white text-sm font-black font-mono text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-xs"
                   />
-                  <span className="text-xs font-bold text-slate-500">KM/H</span>
+                  <span className="text-xs font-bold text-slate-600">KM/H</span>
                 </div>
               </div>
 
@@ -3931,9 +3933,10 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                     step="10"
                     value={config.maxSpeed || 240}
                     onChange={(e) => updateCfg({ maxSpeed: Number(e.target.value) || 240 })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm font-black font-mono text-slate-900 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 shadow-xs"
+                    style={{ backgroundColor: '#ffffff', color: '#0f172a' }}
+                    className="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 bg-white text-sm font-black font-mono text-slate-900 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 shadow-xs"
                   />
-                  <span className="text-xs font-bold text-slate-500">KM/H</span>
+                  <span className="text-xs font-bold text-slate-600">KM/H</span>
                 </div>
               </div>
 
@@ -3947,7 +3950,8 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                   value={config.trackName || 'Autódromo Top Gear'}
                   onChange={(e) => updateCfg({ trackName: e.target.value })}
                   placeholder="Ex: Autódromo Top Gear"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
+                  style={{ backgroundColor: '#ffffff', color: '#0f172a' }}
+                  className="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 bg-white text-sm font-bold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
                 />
               </div>
             </div>
@@ -4046,7 +4050,8 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                   value={config.title || 'Plinko da Sorte'}
                   onChange={(e) => updateCfg({ title: e.target.value })}
                   placeholder="Ex: Plinko Premiado"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-xs transition-all"
+                  style={{ backgroundColor: '#ffffff', color: '#0f172a' }}
+                  className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-300 bg-white text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-xs transition-all"
                 />
                 <p className="text-[11px] text-slate-500 font-medium">
                   Exibido no cabeçalho do jogo e na tela de premiação final.
@@ -4129,7 +4134,8 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                               copy[idx] = { ...copy[idx], label: e.target.value };
                               updateCfg({ slots: copy });
                             }}
-                            className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-xs transition-all"
+                            style={{ backgroundColor: '#ffffff', color: '#0f172a' }}
+                            className="w-full px-2.5 py-1.5 rounded-lg border-2 border-slate-300 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-xs transition-all"
                           />
                         </div>
                         <div className="w-24">
@@ -4145,7 +4151,8 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                               copy[idx] = { ...copy[idx], points: Number(e.target.value) || 0 };
                               updateCfg({ slots: copy });
                             }}
-                            className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-black text-emerald-700 font-mono focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-xs transition-all"
+                            style={{ backgroundColor: '#ffffff', color: '#047857' }}
+                            className="w-full px-2.5 py-1.5 rounded-lg border-2 border-slate-300 bg-white text-xs font-black text-emerald-700 font-mono focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-xs transition-all"
                           />
                         </div>
                       </div>
@@ -4291,7 +4298,10 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-5 animate-in fade-in duration-200">
-      <div className="w-full max-w-[1550px] w-[96vw] bg-white border border-slate-200 rounded-3xl overflow-hidden flex flex-col h-[94vh] max-h-[94vh] shadow-2xl text-slate-800">
+      <div 
+        className="w-full max-w-[1550px] w-[96vw] bg-white border border-slate-200 rounded-3xl overflow-hidden flex flex-col h-[94vh] max-h-[94vh] shadow-2xl text-slate-800"
+        style={{ colorScheme: 'light' }}
+      >
         {/* Top Header */}
         <div className="flex items-center justify-between p-5 sm:p-6 bg-slate-50 border-b border-slate-200">
           <div>
@@ -4300,9 +4310,14 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                 Alimentar Conteúdo
               </span>
               <h3 className="text-xl sm:text-2xl font-black text-slate-900">{game.name}</h3>
-              {currentCount > 0 && (
+              {!isConfigGame && currentCount > 0 && (
                 <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
                   {currentCount} {currentCount === 1 ? 'registro' : 'registros'}
+                </span>
+              )}
+              {isConfigGame && (
+                <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-300">
+                  Ajustes Customizados
                 </span>
               )}
             </div>
@@ -4330,12 +4345,21 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                 : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-            <span>1. Perguntas &amp; Conteúdo</span>
-            {currentCount > 0 && (
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
-                {currentCount}
-              </span>
+            {isConfigGame ? (
+              <>
+                <Sliders className="w-4 h-4 text-emerald-600" />
+                <span>1. Configurações do Jogo</span>
+              </>
+            ) : (
+              <>
+                <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                <span>1. Perguntas &amp; Conteúdo</span>
+                {currentCount > 0 && (
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    {currentCount}
+                  </span>
+                )}
+              </>
             )}
           </button>
 
@@ -4375,8 +4399,8 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
           </button>
         </div>
 
-        {/* 3 Modality Sub-tabs for Content */}
-        {mainGameTab === 'content' && (
+        {/* 3 Modality Sub-tabs for Content: ONLY for games with content lists/questions */}
+        {mainGameTab === 'content' && !isConfigGame && (
           <div className="flex border-b border-slate-200 bg-slate-50 px-6 py-2.5 gap-2 flex-wrap items-center">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">
               Método de Inserção:
@@ -4951,7 +4975,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
           {mainGameTab === 'content' && (
             <div className="space-y-6 animate-in fade-in duration-200">
               {/* TAB 1: CSV */}
-              {activeTab === 'csv' && (
+              {!isConfigGame && activeTab === 'csv' && (
             <div className="space-y-5">
               {currentCount > 0 && (
                 <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-900">
@@ -5074,10 +5098,10 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
           )}
 
           {/* TAB 2: MANUAL FORM */}
-          {activeTab === 'form' && renderManualForm()}
+          {(activeTab === 'form' || isConfigGame) && renderManualForm()}
 
           {/* TAB 3: GEMINI AI GENERATOR */}
-          {activeTab === 'ai' && (
+          {!isConfigGame && activeTab === 'ai' && (
             <div className="space-y-5">
               {currentCount > 0 && (
                 <div className="p-3.5 rounded-2xl bg-purple-50 border border-purple-200 flex items-center justify-between text-xs text-purple-900">
@@ -5216,7 +5240,12 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
         {/* Footer */}
         <div className="p-6 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
           <div className="text-xs text-slate-500">
-            {currentCount > 0 ? (
+            {isConfigGame ? (
+              <span className="text-blue-700 font-bold flex items-center gap-1.5">
+                <Check className="w-4 h-4 text-blue-600" />
+                <span>Configurações prontas para serem salvas</span>
+              </span>
+            ) : currentCount > 0 ? (
               <span className="text-emerald-700 font-bold flex items-center gap-1.5">
                 <Check className="w-4 h-4 text-emerald-600" />
                 <span>{currentCount} {currentCount === 1 ? 'item pronto' : 'itens prontos'} para ser salvo</span>
@@ -5238,7 +5267,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
             <button
               type="button"
               onClick={handleSave}
-              disabled={currentCount === 0}
+              disabled={!isConfigGame && currentCount === 0}
               className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-black text-xs uppercase tracking-wide shadow-md active:scale-95 disabled:opacity-50"
             >
               Aplicar Conteúdo ao Jogo
