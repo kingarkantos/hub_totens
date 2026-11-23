@@ -164,6 +164,44 @@ export interface SpotErrorCustomItem {
   safePractices?: SpotHazardItem[];
 }
 
+export type TrafficXrayInteractionType =
+  | 'direct_tap'
+  | 'scratch_glass'
+  | 'xray_scanner'
+  | 'tire_gauge';
+
+export interface TrafficXrayHotspot {
+  id: string;
+  label: string;
+  explanation: string;
+  x: number; // 0 to 100 (%)
+  y: number; // 0 to 100 (%)
+  radius: number; // 8 to 26 (%)
+  severity?: 'high' | 'medium';
+}
+
+export interface TrafficXrayFogArea {
+  x: number; // center X (%)
+  y: number; // center Y (%)
+  width: number; // width (%)
+  height: number; // height (%)
+}
+
+export interface TrafficXrayScenario {
+  id: string;
+  title: string;
+  vehicleType: 'car' | 'moto' | 'pickup' | 'suv';
+  plate?: string;
+  imageUrl: string;
+  interactionType: TrafficXrayInteractionType;
+  instruction: string;
+  isRegular: boolean;
+  regularFeedback?: string;
+  hotspots: TrafficXrayHotspot[];
+  fogArea?: TrafficXrayFogArea;
+  toolLabel?: string;
+}
+
 
 export type GamesConfigMap = {
   wheel?: WheelItem[];
@@ -178,6 +216,7 @@ export type GamesConfigMap = {
   balloon?: BalloonCustomItem[];
   top_gear?: TopGearCustomConfig;
   plinko?: PlinkoCustomConfig;
+  traffic_xray?: TrafficXrayScenario[];
   [key: string]: any;
 };
 
@@ -528,6 +567,26 @@ Autódromo Top Gear,#DC2626,120,240`,
 SUPER 1000,1000,#DC2626
 250 pts,250,#10B981
 100 pts,100,#3B82F6`,
+  },
+
+  traffic_xray: {
+    gameId: 'traffic_xray',
+    gameName: 'Raio-X do Perigo',
+    description: 'Blitz educativa vertical de segurança no trânsito: configure os veículos, interações táteis (limpar vidro, scanner, calibrador ou toque direto) e posicione os erros diretamente na imagem.',
+    csvColumns: [
+      { name: 'title', description: 'Nome do veículo/cenário', example: 'Sedan Prata na Blitz' },
+      { name: 'vehicle_type', description: 'Tipo: car, moto, pickup ou suv', example: 'car' },
+      { name: 'interaction_type', description: 'Interação: direct_tap, scratch_glass, xray_scanner ou tire_gauge', example: 'scratch_glass' },
+      { name: 'is_regular', description: 'true se veículo está regular (Liberar), false se tem infração (Reter)', example: 'false' },
+      { name: 'error_label', description: 'Nome da infração (se is_regular=false)', example: 'Uso de celular ao volante' },
+      { name: 'error_explanation', description: 'Explicação educativa da norma de trânsito', example: 'Usar celular ao dirigir multiplica o risco de sinistros.' },
+      { name: 'error_x', description: 'Posição horizontal X do erro na imagem (0 a 100)', example: '52' },
+      { name: 'error_y', description: 'Posição vertical Y do erro na imagem (0 a 100)', example: '42' },
+      { name: 'image_url', description: 'URL ou caminho da imagem vertical do cenário', example: '/games/traffic-xray/01_celular_vidro.jpg' },
+    ],
+    sampleCsv: `title,vehicle_type,interaction_type,is_regular,error_label,error_explanation,error_x,error_y,image_url
+Sedan Prata na Blitz,car,scratch_glass,false,Uso de celular ao volante,Manusear o celular ao dirigir é infração gravíssima e tira a atenção da via.,61,44,/games/traffic-xray/01_celular_vidro.jpg
+Carro Regular Exemplar,car,scratch_glass,true,,,50,50,/games/traffic-xray/11_carro_regular_ok.jpg`,
   },
 };
 

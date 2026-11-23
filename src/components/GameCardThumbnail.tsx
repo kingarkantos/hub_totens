@@ -319,6 +319,28 @@ export const GameCardThumbnail: React.FC<GameCardThumbnailProps> = ({
           </div>
         );
 
+      case 'traffic_xray':
+        return (
+          <div className="relative w-full h-full flex flex-col items-center justify-center p-1 overflow-hidden">
+            <div className="relative w-20 h-16 bg-slate-950/90 border-2 border-cyan-400/70 rounded-xl flex items-center justify-center overflow-hidden shadow-[0_0_16px_rgba(34,211,238,0.35)]">
+              <div className="absolute inset-x-0 top-1/2 h-0.5 bg-cyan-400/90 shadow-[0_0_10px_#22d3ee] animate-pulse" />
+              <div className="flex flex-col items-center">
+                <Search className="w-6 h-6 text-cyan-300 drop-shadow-md" />
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                </div>
+              </div>
+              <span className="absolute top-1 right-1 text-[7px] font-black bg-amber-400 text-slate-950 px-1 rounded-xs">
+                BLITZ
+              </span>
+            </div>
+            <span className="text-[8px] font-black text-cyan-300 font-mono mt-1 tracking-tight">
+              RAIO-X 60S
+            </span>
+          </div>
+        );
+
       default:
         return (
           <div className="relative w-full h-full flex flex-col items-center justify-center">

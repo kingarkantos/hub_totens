@@ -30,6 +30,7 @@ import { ReactionTimeGame } from './ReactionTimeGame';
 import { BullseyeGame } from './BullseyeGame';
 import { TopGearGame } from './TopGearGame';
 import { PlinkoGame } from './PlinkoGame';
+import { TrafficXrayGame } from './TrafficXrayGame';
 
 interface GamePreviewModalProps {
   game: GameDefinition | null;
@@ -170,6 +171,8 @@ export const GamePreviewModal: React.FC<GamePreviewModalProps> = ({
         return <TopGearGame {...commonProps} />;
       case 'plinko':
         return <PlinkoGame {...commonProps} />;
+      case 'traffic_xray':
+        return <TrafficXrayGame {...commonProps} />;
       default:
         return (
           <div className="p-12 text-center text-slate-400">

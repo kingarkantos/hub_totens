@@ -28,7 +28,10 @@ import {
   TopGearCustomConfig,
   PlinkoCustomConfig,
   PlinkoSlotItem,
+  TrafficXrayScenario,
+  TrafficXrayInteractionType,
 } from '../types/gameContent';
+import { DEFAULT_TRAFFIC_XRAY_SCENARIOS } from '../lib/trafficXrayScenarios';
 import { parseGameCSV, downloadSampleCsv } from '../lib/csvParser';
 import { generateGameContentWithAI, generateImageWithAI, generateTransparentIconWithAI, IconAIStyle, CampaignAIContext } from '../lib/gemini';
 import { removeSolidBackgroundToPngBlob } from '../lib/backgroundRemoval';
@@ -58,6 +61,7 @@ export const getDefaultTimeForGame = (id: string): number => {
     case 'reaction_time': return 30;
     case 'bullseye': return 40;
     case 'top_gear': return 45;
+    case 'traffic_xray': return 60;
     case 'plinko': return 0;
     case 'wheel': return 0;
     case 'genius': return 0;
@@ -266,6 +270,12 @@ export const getStarterContentForGame = (gameId: string): any => {
           { id: 5, label: '100 pts', points: 100, color: '#3B82F6' },
         ],
       };
+    case 'traffic_xray':
+      return DEFAULT_TRAFFIC_XRAY_SCENARIOS.map((s) => ({
+        ...s,
+        hotspots: s.hotspots.map((h) => ({ ...h })),
+        fogArea: s.fogArea ? { ...s.fogArea } : undefined,
+      }));
     default:
       return [];
   }
@@ -330,7 +340,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
 }) => {
   const meta = GAME_CONTENT_SCHEMAS[game.id];
   const isQuestionGame = ['quiz', 'truefalse', 'speed_trivia', 'complete_phrase'].includes(game.id);
-  const isPoolGame = isQuestionGame || ['hangman', 'wordsearch', 'connect_pairs', 'memory'].includes(game.id);
+  const isPoolGame = isQuestionGame || ['hangman', 'wordsearch', 'connect_pairs', 'memory', 'traffic_xray'].includes(game.id);
   const defaultTime = getDefaultTimeForGame(game.id);
 
   // Layout choice for this game
@@ -396,6 +406,8 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
   const [aiImgPrompt, setAiImgPrompt] = useState('');
   const [aiIconStyle, setAiIconStyle] = useState<IconAIStyle>('3d');
   const [previewModalImg, setPreviewModalImg] = useState<string | null>(null);
+  const [selectedXrayIdx, setSelectedXrayIdx] = useState<number>(0);
+  const [selectedXrayHotspotId, setSelectedXrayHotspotId] = useState<string | null>(null);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiCustomPrompt, setAiCustomPrompt] = useState('');
 
@@ -544,6 +556,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
       case 'spot_error': return 4;
       case 'balloon': return 5;
       case 'correct_order': return 4;
+      case 'traffic_xray': return 6;
       default: return 5;
     }
   };
@@ -4907,7 +4920,617 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
         );
       }
 
-      // 22. DEFAULT GENÉRICO
+      // 22. RAIO-X DO PERIGO (BLITZ EDUCATIVA DE SEGURANÇA NO TRÂNSITO)
+      case 'traffic_xray': {
+        const scenarios: TrafficXrayScenario[] = Array.isArray(content) ? content : [];
+        const safeIdx = scenarios.length > 0 ? Math.min(selectedXrayIdx, scenarios.length - 1) : 0;
+        const activeScenario = scenarios[safeIdx];
+
+        const updateScenarioAt = (idx: number, patch: Partial<TrafficXrayScenario>) => {
+          setContent(scenarios.map((sc, i) => (i === idx ? { ...sc, ...patch } : sc)));
+          setHasCustomEdits(true);
+        };
+
+        const interactionLabels: Record<TrafficXrayInteractionType, string> = {
+          scratch_glass: '💧 Limpar Vidro Embaçado',
+          xray_scanner: '🔍 Lupa / Scanner Raio-X',
+          tire_gauge: '🔧 Arrastar Calibrador / Testador',
+          direct_tap: '👆 Toque Direto na Infração',
+        };
+
+        return (
+          <div className="space-y-4">
+            {/* Banner informativo */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-cyan-50 via-blue-50 to-indigo-50 border border-cyan-200 text-slate-900 flex items-start gap-3 shadow-xs">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-600 to-blue-700 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                <Target className="w-4 h-4 text-amber-300" />
+              </div>
+              <div className="text-xs leading-relaxed">
+                <strong className="block text-sm font-black text-slate-900 mb-0.5">
+                  Raio-X do Perigo — Editor Visual de Cenários Verticais ({scenarios.length} cenários)
+                </strong>
+                Selecione um cenário abaixo e <strong>clique diretamente na imagem vertical</strong> para posicionar ou mover onde está cada irregularidade! Para definir <strong>quantos cenários aparecem por partida (aleatórios)</strong> e o cronômetro (padrão 60s), acesse a aba <strong>2. Tempo &amp; Regras</strong>.
+              </div>
+            </div>
+
+            {/* Ações da barra superior */}
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <span className="text-xs font-black text-slate-800 uppercase tracking-wide">
+                  Cenários da Blitz Cadastrados ({scenarios.length})
+                </span>
+                <p className="text-[11px] text-slate-500">
+                  Clique em um card para editar a imagem, o tipo de interação tátil e a posição exata dos erros.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setContent(getStarterContentForGame('traffic_xray'));
+                    setSelectedXrayIdx(0);
+                    setSelectedXrayHotspotId(null);
+                    setHasCustomEdits(false);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-200 active:scale-95 transition-all"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Restaurar 12 Padrão</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    const newSc: TrafficXrayScenario = {
+                      id: `custom_xray_${Date.now()}`,
+                      title: `Novo Cenário #${scenarios.length + 1}`,
+                      vehicleType: 'car',
+                      plate: `BLZ-${2000 + scenarios.length}`,
+                      imageUrl: '/games/traffic-xray/01_celular_vidro.jpg',
+                      interactionType: 'direct_tap',
+                      instruction: 'Toque diretamente na irregularidade visível na imagem!',
+                      isRegular: false,
+                      regularFeedback: 'Veículo 100% regularizado!',
+                      hotspots: [
+                        {
+                          id: `hs_${Date.now()}`,
+                          label: 'Nova Infração',
+                          explanation: 'Explique aqui a norma de segurança no trânsito.',
+                          x: 50,
+                          y: 50,
+                          radius: 14,
+                          severity: 'high',
+                        },
+                      ],
+                    };
+                    setContent([...scenarios, newSc]);
+                    setSelectedXrayIdx(scenarios.length);
+                    setSelectedXrayHotspotId(newSc.hotspots[0].id);
+                    setHasCustomEdits(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Adicionar Cenário</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Galeria de Seleção dos Cenários */}
+            {scenarios.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto pb-2 pt-0.5">
+                {scenarios.map((sc, idx) => {
+                  const isSelected = idx === safeIdx;
+                  return (
+                    <button
+                      key={sc.id || idx}
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setSelectedXrayIdx(idx);
+                        setSelectedXrayHotspotId(sc.hotspots?.[0]?.id || null);
+                      }}
+                      className={`shrink-0 w-28 rounded-2xl border-2 p-1.5 text-left transition-all ${
+                        isSelected
+                          ? 'border-cyan-600 bg-cyan-50 ring-2 ring-cyan-200 shadow-sm'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-slate-900 mb-1.5">
+                        <img
+                          src={sc.imageUrl}
+                          alt={sc.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <span
+                          className={`absolute top-1 left-1 px-1.5 py-0.5 rounded-md text-[9px] font-black text-white ${
+                            sc.isRegular ? 'bg-emerald-600' : 'bg-rose-600'
+                          }`}
+                        >
+                          {sc.isRegular ? '✓ OK' : `${sc.hotspots?.length || 0} erro(s)`}
+                        </span>
+                        <span className="absolute bottom-1 right-1 px-1 py-0.5 rounded bg-black/75 text-[9px] font-mono font-bold text-white">
+                          #{idx + 1}
+                        </span>
+                      </div>
+                      <div className="text-[10px] font-black text-slate-900 truncate">{sc.title}</div>
+                      <div className="text-[9px] font-bold text-slate-500 truncate">
+                        {interactionLabels[sc.interactionType] || sc.interactionType}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Editor Visual do Cenário Ativo */}
+            {activeScenario && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200 shadow-xs">
+                {/* Coluna Esquerda: Preview Vertical 3:4 Clicável para Posicionar Erros */}
+                <div className="lg:col-span-5 flex flex-col items-center gap-2.5">
+                  <div className="w-full flex items-center justify-between text-[11px] font-black text-slate-700">
+                    <span>📍 Clique na imagem para posicionar o erro</span>
+                    {!activeScenario.isRegular && (
+                      <span className="text-[10px] text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
+                        {activeScenario.hotspots.length} ponto(s)
+                      </span>
+                    )}
+                  </div>
+
+                  <div
+                    onClick={(e) => {
+                      if (activeScenario.isRegular) return;
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const clickX = Math.round(Math.max(4, Math.min(96, ((e.clientX - rect.left) / rect.width) * 100)));
+                      const clickY = Math.round(Math.max(4, Math.min(96, ((e.clientY - rect.top) / rect.height) * 100)));
+                      sound.playClick();
+
+                      const activeHsId =
+                        selectedXrayHotspotId && activeScenario.hotspots.some((h) => h.id === selectedXrayHotspotId)
+                          ? selectedXrayHotspotId
+                          : activeScenario.hotspots[0]?.id;
+
+                      if (activeHsId) {
+                        updateScenarioAt(safeIdx, {
+                          hotspots: activeScenario.hotspots.map((h) =>
+                            h.id === activeHsId ? { ...h, x: clickX, y: clickY } : h
+                          ),
+                        });
+                      } else {
+                        const newId = `hs_${Date.now()}`;
+                        updateScenarioAt(safeIdx, {
+                          hotspots: [
+                            ...activeScenario.hotspots,
+                            {
+                              id: newId,
+                              label: 'Irregularidade',
+                              explanation: 'Infração detectada na blitz.',
+                              x: clickX,
+                              y: clickY,
+                              radius: 14,
+                              severity: 'high',
+                            },
+                          ],
+                        });
+                        setSelectedXrayHotspotId(newId);
+                      }
+                    }}
+                    className={`relative w-full max-w-[290px] aspect-[3/4] rounded-2xl overflow-hidden border-2 shadow-md bg-slate-900 select-none ${
+                      activeScenario.isRegular ? 'border-emerald-400 cursor-default' : 'border-cyan-500 cursor-crosshair'
+                    }`}
+                  >
+                    <img
+                      src={activeScenario.imageUrl}
+                      alt={activeScenario.title}
+                      className="w-full h-full object-cover pointer-events-none"
+                    />
+
+                    {/* Retângulo de área do vidro embaçado */}
+                    {activeScenario.interactionType === 'scratch_glass' && activeScenario.fogArea && (
+                      <div
+                        style={{
+                          left: `${activeScenario.fogArea.x - activeScenario.fogArea.width / 2}%`,
+                          top: `${activeScenario.fogArea.y - activeScenario.fogArea.height / 2}%`,
+                          width: `${activeScenario.fogArea.width}%`,
+                          height: `${activeScenario.fogArea.height}%`,
+                        }}
+                        className="pointer-events-none absolute border-2 border-dashed border-sky-300 bg-sky-300/20 rounded-xl flex items-start justify-end p-1"
+                      >
+                        <span className="text-[8px] font-black bg-sky-700/90 text-white px-1.5 py-0.5 rounded">
+                          VIDRO
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Marcadores de Hotspots sobre a foto */}
+                    {!activeScenario.isRegular &&
+                      activeScenario.hotspots.map((h, hIdx) => {
+                        const isHsSelected =
+                          (selectedXrayHotspotId || activeScenario.hotspots[0]?.id) === h.id;
+                        return (
+                          <div
+                            key={h.id}
+                            onClick={(ev) => {
+                              ev.stopPropagation();
+                              sound.playClick();
+                              setSelectedXrayHotspotId(h.id);
+                            }}
+                            style={{
+                              left: `${h.x}%`,
+                              top: `${h.y}%`,
+                              width: `${h.radius * 2}%`,
+                              aspectRatio: '1 / 1',
+                              transform: 'translate(-50%, -50%)',
+                            }}
+                            className={`absolute rounded-full border-2 flex items-center justify-center cursor-pointer transition-all ${
+                              isHsSelected
+                                ? 'border-amber-300 bg-rose-600/40 ring-4 ring-amber-400/50 z-20'
+                                : 'border-white bg-rose-600/25 hover:bg-rose-600/40 z-10'
+                            }`}
+                            title={`${h.label} (${h.x}%, ${h.y}%)`}
+                          >
+                            <span className="w-5 h-5 rounded-full bg-rose-600 text-white text-[10px] font-black flex items-center justify-center border border-white shadow">
+                              {hIdx + 1}
+                            </span>
+                          </div>
+                        );
+                      })}
+                  </div>
+
+                  {/* Upload de imagem personalizada ou URL */}
+                  <div className="w-full max-w-[290px] flex items-center gap-1.5">
+                    <label className="cursor-pointer px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-[11px] font-bold flex items-center gap-1.5 shrink-0">
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        className="hidden"
+                        disabled={uploadingImgIdx === safeIdx}
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setUploadingImgIdx(safeIdx);
+                          try {
+                            const ext = file.name.split('.').pop() || 'jpg';
+                            const filePath = `traffic_xray/sc_${Date.now()}_${Math.random().toString(36).slice(2, 6)}.${ext}`;
+                            const { error } = await supabase.storage
+                              .from(BUCKETS.SPLASHES)
+                              .upload(filePath, file, { contentType: file.type || 'image/jpeg', upsert: true });
+
+                            if (error) {
+                              const reader = new FileReader();
+                              reader.onload = () => {
+                                updateScenarioAt(safeIdx, { imageUrl: reader.result as string });
+                                sound.playSuccess();
+                              };
+                              reader.readAsDataURL(file);
+                            } else {
+                              const { data: pub } = supabase.storage.from(BUCKETS.SPLASHES).getPublicUrl(filePath);
+                              updateScenarioAt(safeIdx, { imageUrl: pub?.publicUrl || '' });
+                              sound.playSuccess();
+                            }
+                          } catch {
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                              updateScenarioAt(safeIdx, { imageUrl: reader.result as string });
+                              sound.playSuccess();
+                            };
+                            reader.readAsDataURL(file);
+                          } finally {
+                            setUploadingImgIdx(null);
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+                      {uploadingImgIdx === safeIdx ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                      ) : (
+                        <Upload className="w-3.5 h-3.5 text-blue-600" />
+                      )}
+                      <span>Subir Foto</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={activeScenario.imageUrl}
+                      placeholder="URL da imagem vertical..."
+                      onChange={(e) => updateScenarioAt(safeIdx, { imageUrl: e.target.value.trim() })}
+                      className="flex-1 min-w-0 px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-[10px] text-slate-700"
+                    />
+                  </div>
+                </div>
+
+                {/* Coluna Direita: Dados do Cenário e Lista de Erros */}
+                <div className="lg:col-span-7 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-black text-cyan-700 bg-cyan-100 px-2.5 py-0.5 rounded-full">
+                      Editando Cenário #{safeIdx + 1}
+                    </span>
+                    {scenarios.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick();
+                          const nextList = scenarios.filter((_, i) => i !== safeIdx);
+                          setContent(nextList);
+                          setSelectedXrayIdx(Math.max(0, safeIdx - 1));
+                          setHasCustomEdits(true);
+                        }}
+                        className="text-xs font-bold text-rose-600 hover:underline flex items-center gap-1"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Excluir Cenário</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                    <div className="sm:col-span-8">
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">
+                        Título do Cenário / Veículo
+                      </label>
+                      <input
+                        type="text"
+                        value={activeScenario.title}
+                        onChange={(e) => updateScenarioAt(safeIdx, { title: e.target.value })}
+                        className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
+                      />
+                    </div>
+                    <div className="sm:col-span-4">
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">
+                        Placa Fictícia
+                      </label>
+                      <input
+                        type="text"
+                        value={activeScenario.plate || ''}
+                        onChange={(e) => updateScenarioAt(safeIdx, { plate: e.target.value })}
+                        className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 uppercase"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">
+                        Tipo de Interação Tátil
+                      </label>
+                      <select
+                        value={activeScenario.interactionType}
+                        onChange={(e) => {
+                          const val = e.target.value as TrafficXrayInteractionType;
+                          updateScenarioAt(safeIdx, {
+                            interactionType: val,
+                            ...(val === 'scratch_glass' && !activeScenario.fogArea
+                              ? { fogArea: { x: 55, y: 42, width: 64, height: 26 } }
+                              : {}),
+                          });
+                        }}
+                        className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
+                      >
+                        <option value="direct_tap">👆 Toque Direto na Infração</option>
+                        <option value="scratch_glass">💧 Arrastar para Limpar Vidro Embaçado</option>
+                        <option value="xray_scanner">🔍 Arrastar Lupa / Scanner Raio-X</option>
+                        <option value="tire_gauge">🔧 Arrastar Calibrador / Testador</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">
+                        Situação do Veículo na Blitz
+                      </label>
+                      <div className="flex rounded-xl overflow-hidden border border-slate-300 p-0.5 bg-white">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sound.playClick();
+                            updateScenarioAt(safeIdx, {
+                              isRegular: false,
+                              hotspots:
+                                activeScenario.hotspots.length > 0
+                                  ? activeScenario.hotspots
+                                  : [
+                                      {
+                                        id: `hs_${Date.now()}`,
+                                        label: 'Irregularidade',
+                                        explanation: 'Infração de segurança no trânsito.',
+                                        x: 50,
+                                        y: 50,
+                                        radius: 14,
+                                        severity: 'high',
+                                      },
+                                    ],
+                            });
+                          }}
+                          className={`flex-1 py-1 text-[11px] font-black rounded-lg transition-all ${
+                            !activeScenario.isRegular
+                              ? 'bg-rose-600 text-white shadow-xs'
+                              : 'text-slate-600 hover:bg-slate-100'
+                          }`}
+                        >
+                          ⚠️ Irregular (Reter)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sound.playClick();
+                            updateScenarioAt(safeIdx, { isRegular: true, hotspots: [] });
+                          }}
+                          className={`flex-1 py-1 text-[11px] font-black rounded-lg transition-all ${
+                            activeScenario.isRegular
+                              ? 'bg-emerald-600 text-white shadow-xs'
+                              : 'text-slate-600 hover:bg-slate-100'
+                          }`}
+                        >
+                          ✓ Regular (Liberar)
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">
+                      Instrução Tátil no Topo da Tela
+                    </label>
+                    <input
+                      type="text"
+                      value={activeScenario.instruction}
+                      onChange={(e) => updateScenarioAt(safeIdx, { instruction: e.target.value })}
+                      className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-900"
+                    />
+                  </div>
+
+                  {/* Lista de Hotspots / Erros Posicionados */}
+                  {activeScenario.isRegular ? (
+                    <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 space-y-2">
+                      <span className="text-xs font-black text-emerald-900 block">
+                        ✓ Veículo 100% Regular — O jogador deve deslizar para CIMA (Liberar)
+                      </span>
+                      <textarea
+                        rows={2}
+                        value={activeScenario.regularFeedback || ''}
+                        placeholder="Feedback educativo ao liberar corretamente..."
+                        onChange={(e) => updateScenarioAt(safeIdx, { regularFeedback: e.target.value })}
+                        className="w-full px-2.5 py-1.5 bg-white border border-emerald-300 rounded-xl text-xs text-slate-800"
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-black text-slate-800 uppercase">
+                          Pontos de Infração na Imagem ({activeScenario.hotspots.length})
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sound.playClick();
+                            const newId = `hs_${Date.now()}`;
+                            updateScenarioAt(safeIdx, {
+                              hotspots: [
+                                ...activeScenario.hotspots,
+                                {
+                                  id: newId,
+                                  label: `Infração #${activeScenario.hotspots.length + 1}`,
+                                  explanation: 'Descreva a orientação educativa para o condutor.',
+                                  x: 50,
+                                  y: 50,
+                                  radius: 14,
+                                  severity: 'high',
+                                },
+                              ],
+                            });
+                            setSelectedXrayHotspotId(newId);
+                          }}
+                          className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Adicionar Erro</span>
+                        </button>
+                      </div>
+
+                      <div className="space-y-2 max-h-[250px] overflow-y-auto pr-1">
+                        {activeScenario.hotspots.map((h, hIdx) => {
+                          const isHsSelected =
+                            (selectedXrayHotspotId || activeScenario.hotspots[0]?.id) === h.id;
+                          return (
+                            <div
+                              key={h.id}
+                              onClick={() => setSelectedXrayHotspotId(h.id)}
+                              className={`p-2.5 rounded-xl border space-y-2 cursor-pointer transition-all ${
+                                isHsSelected
+                                  ? 'bg-white border-amber-400 ring-2 ring-amber-200 shadow-xs'
+                                  : 'bg-white/70 border-slate-200 hover:border-slate-300'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="w-5 h-5 rounded-full bg-rose-600 text-white text-[10px] font-black flex items-center justify-center">
+                                    {hIdx + 1}
+                                  </span>
+                                  <span className="text-[10px] font-mono font-bold text-slate-500">
+                                    X:{h.x}% • Y:{h.y}%
+                                  </span>
+                                  {isHsSelected && (
+                                    <span className="text-[9px] font-black bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full">
+                                      Clique na foto p/ mover
+                                    </span>
+                                  )}
+                                </div>
+                                {activeScenario.hotspots.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={(ev) => {
+                                      ev.stopPropagation();
+                                      sound.playClick();
+                                      updateScenarioAt(safeIdx, {
+                                        hotspots: activeScenario.hotspots.filter((item) => item.id !== h.id),
+                                      });
+                                    }}
+                                    className="text-rose-500 hover:text-rose-700 p-1"
+                                    title="Remover erro"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
+
+                              <input
+                                type="text"
+                                value={h.label}
+                                placeholder="Nome curto do erro (ex: Viseira levantada)"
+                                onChange={(e) =>
+                                  updateScenarioAt(safeIdx, {
+                                    hotspots: activeScenario.hotspots.map((item) =>
+                                      item.id === h.id ? { ...item, label: e.target.value } : item
+                                    ),
+                                  })
+                                }
+                                className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-900"
+                              />
+
+                              <input
+                                type="text"
+                                value={h.explanation}
+                                placeholder="Orientação educativa exibida após reter..."
+                                onChange={(e) =>
+                                  updateScenarioAt(safeIdx, {
+                                    hotspots: activeScenario.hotspots.map((item) =>
+                                      item.id === h.id ? { ...item, explanation: e.target.value } : item
+                                    ),
+                                  })
+                                }
+                                className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-700"
+                              />
+
+                              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
+                                <span>Raio de toque: {h.radius}%</span>
+                                <input
+                                  type="range"
+                                  min={8}
+                                  max={26}
+                                  value={h.radius}
+                                  onChange={(e) =>
+                                    updateScenarioAt(safeIdx, {
+                                      hotspots: activeScenario.hotspots.map((item) =>
+                                        item.id === h.id ? { ...item, radius: Number(e.target.value) } : item
+                                      ),
+                                    })
+                                  }
+                                  className="flex-1 accent-rose-600"
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      // 23. DEFAULT GENÉRICO
       default: {
         const items = Array.isArray(content) ? content : [];
         return (
@@ -5371,6 +5994,8 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
               ? 'palavras'
               : ['connect_pairs', 'memory'].includes(game.id)
               ? 'pares'
+              : game.id === 'traffic_xray'
+              ? 'cenários'
               : 'itens';
             const itemLabelSingular = isQuestionGame
               ? 'pergunta'
@@ -5378,6 +6003,8 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
               ? 'palavra'
               : ['connect_pairs', 'memory'].includes(game.id)
               ? 'par'
+              : game.id === 'traffic_xray'
+              ? 'cenário'
               : 'item';
             const titleCapitalized = itemLabelPlural.charAt(0).toUpperCase() + itemLabelPlural.slice(1);
 
@@ -5484,7 +6111,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
 
                   {/* Quick shortcuts */}
                   <div className="flex items-center gap-1">
-                    {[5, 10, 15].map((qty) => (
+                    {(game.id === 'traffic_xray' ? [4, 6, 8, 10] : [5, 10, 15]).map((qty) => (
                       <button
                         key={qty}
                         type="button"

@@ -224,6 +224,26 @@ Retorne um objeto JSON no formato:
     { "name": "Prática Conforme 4", "description": "EPI obrigatório em uso correto", "icon": "🧤" }
   ]
 }`,
+
+    traffic_xray: `Gere exatamente ${count || 6} cenários educativos de blitz de segurança no trânsito para o jogo "Raio-X do Perigo" (estilo Papers, Please).
+Retorne um array JSON no formato:
+[
+  {
+    "id": "ai_xray_1",
+    "title": "Sedan Prata na Blitz",
+    "vehicleType": "car",
+    "plate": "SEG-2026",
+    "imageUrl": "/games/traffic-xray/01_celular_vidro.jpg",
+    "interactionType": "scratch_glass",
+    "instruction": "Arraste o dedo para limpar o vidro embaçado e verifique o motorista.",
+    "isRegular": false,
+    "regularFeedback": "Veículo 100% regular e seguro.",
+    "hotspots": [
+      { "id": "h1", "label": "Uso de celular ao volante", "explanation": "Dirigir manuseando celular é infração gravíssima e reduz drasticamente o tempo de reação.", "x": 61, "y": 44, "radius": 13, "severity": "high" }
+    ]
+  }
+]
+Use vehicleType entre "car", "moto", "pickup" ou "suv", interactionType entre "direct_tap", "scratch_glass", "xray_scanner" ou "tire_gauge", inclua pelo menos 1 veículo regular (isRegular: true, hotspots: []) e reutilize caminhos válidos em /games/traffic-xray/01_celular_vidro.jpg até 12_moto_regular_ok.jpg.`,
   };
 
   const specificPrompt = gamePrompts[gameId] || 'Gere conteúdo relevante para o jogo em formato JSON.';

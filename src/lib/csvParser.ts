@@ -334,6 +334,71 @@ export function parseGameCSV(gameId: string, csvText: string): any {
         ],
       };
 
+    case 'traffic_xray':
+      return rows.map((r, idx) => {
+        const title = getVal(r, ['title', 'titulo', 'veiculo', 'cenario'], 0) || `Veículo #${idx + 1}`;
+        const rawVehicle = getVal(r, ['vehicle_type', 'tipo_veiculo', 'tipo'], 1).toLowerCase();
+        const vehicleType: 'car' | 'moto' | 'pickup' | 'suv' =
+          rawVehicle === 'moto' || rawVehicle === 'motocicleta'
+            ? 'moto'
+            : rawVehicle === 'pickup' || rawVehicle === 'caminhonete'
+            ? 'pickup'
+            : rawVehicle === 'suv'
+            ? 'suv'
+            : 'car';
+        const rawInteraction = getVal(r, ['interaction_type', 'interacao', 'modo'], 2).toLowerCase();
+        const interactionType: 'direct_tap' | 'scratch_glass' | 'xray_scanner' | 'tire_gauge' =
+          rawInteraction === 'scratch_glass' || rawInteraction === 'vidro'
+            ? 'scratch_glass'
+            : rawInteraction === 'xray_scanner' || rawInteraction === 'scanner' || rawInteraction === 'lupa'
+            ? 'xray_scanner'
+            : rawInteraction === 'tire_gauge' || rawInteraction === 'calibrador'
+            ? 'tire_gauge'
+            : 'direct_tap';
+        const rawRegular = getVal(r, ['is_regular', 'regular', 'liberado'], 3).toLowerCase();
+        const isRegular = rawRegular === 'true' || rawRegular === 'sim' || rawRegular === '1' || rawRegular === 's';
+        const errorLabel = getVal(r, ['error_label', 'erro', 'infracao'], 4);
+        const errorExplanation = getVal(r, ['error_explanation', 'explicacao', 'orientacao'], 5) || 'Irregularidade identificada na blitz educativa.';
+        const errorX = Math.max(8, Math.min(92, parseFloat(getVal(r, ['error_x', 'x'], 6) || '50') || 50));
+        const errorY = Math.max(8, Math.min(92, parseFloat(getVal(r, ['error_y', 'y'], 7) || '50') || 50));
+        const imageUrl = getVal(r, ['image_url', 'imagem', 'url'], 8) || '/games/traffic-xray/01_celular_vidro.jpg';
+
+        return {
+          id: `csv_xray_${idx + 1}_${Date.now()}`,
+          title,
+          vehicleType,
+          plate: `BLZ-${1000 + idx}`,
+          imageUrl,
+          interactionType,
+          instruction:
+            interactionType === 'scratch_glass'
+              ? 'Arraste o dedo para limpar o vidro embaçado e inspecione o interior!'
+              : interactionType === 'xray_scanner'
+              ? 'Arraste o scanner Raio-X sobre o veículo para localizar a irregularidade!'
+              : interactionType === 'tire_gauge'
+              ? 'Arraste o calibrador até o ponto suspeito para realizar a medição!'
+              : 'Toque diretamente na irregularidade visível ou libere se estiver tudo certo!',
+          isRegular,
+          regularFeedback: 'Veículo 100% regularizado! Motorista e equipamentos em conformidade com a segurança no trânsito.',
+          hotspots: isRegular
+            ? []
+            : [
+                {
+                  id: `hs_${idx + 1}_1`,
+                  label: errorLabel || 'Irregularidade de Trânsito',
+                  explanation: errorExplanation,
+                  x: errorX,
+                  y: errorY,
+                  radius: 14,
+                  severity: 'high' as const,
+                },
+              ],
+          ...(interactionType === 'scratch_glass'
+            ? { fogArea: { x: 50, y: 40, width: 68, height: 34 } }
+            : {}),
+        };
+      });
+
     default:
       return rows;
   }

@@ -325,6 +325,18 @@ export const GAMES_CATALOG: GameDefinition[] = [
     difficulty: 'Médio',
     previewBg: 'from-teal-500 via-emerald-600 to-cyan-700',
   },
+  {
+    id: 'traffic_xray',
+    slug: 'raio-x-do-perigo',
+    name: 'Raio-X do Perigo',
+    category: 'Segurança & Treinamento',
+    categoryId: 'safety',
+    description: 'Blitz educativa interativa na vertical: limpe vidros embaçados, passe o scanner Raio-X, use o calibrador e toque nas infrações antes de liberar ou reter cada veículo!',
+    icon: 'Search',
+    estimatedTime: '1 min',
+    difficulty: 'Médio',
+    previewBg: 'from-cyan-600 via-blue-700 to-slate-900',
+  },
 
   // 7. [NOVA] Cálculo & Lógica Numérica
   {

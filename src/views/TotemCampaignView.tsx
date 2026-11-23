@@ -42,6 +42,7 @@ import { ReactionTimeGame } from '../games/ReactionTimeGame';
 import { BullseyeGame } from '../games/BullseyeGame';
 import { TopGearGame } from '../games/TopGearGame';
 import { PlinkoGame } from '../games/PlinkoGame';
+import { TrafficXrayGame } from '../games/TrafficXrayGame';
 
 interface ScrollableDescriptionProps {
   description: string;
@@ -817,6 +818,8 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
           return <TopGearGame {...commonProps} />;
         case 'plinko':
           return <PlinkoGame {...commonProps} />;
+        case 'traffic_xray':
+          return <TrafficXrayGame {...commonProps} />;
         default:
           return null;
       }
