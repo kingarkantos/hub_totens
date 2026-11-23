@@ -18,6 +18,7 @@ interface TargetItem {
   isHazard: boolean;
   spawnTime: number;
   symbol: string;
+  imageUrl?: string;
   name: string;
   points: number;
 }
@@ -105,11 +106,17 @@ export const TargetGame: React.FC<TargetGameProps> = (props) => {
         ? parsedPoints
         : (isHazard ? -150 : isBonus ? 250 : 100);
 
+      const rawImage = (item.imageUrl || item.image_url || '').trim();
+      const rawSymbol = (item.symbol !== undefined && item.symbol !== null && String(item.symbol).trim() !== '')
+        ? String(item.symbol).trim()
+        : (isHazard ? '💣' : isBonus ? '★' : '◎');
+      const resolvedImageUrl = rawImage || (isImageUrl(rawSymbol) ? rawSymbol : undefined);
+
       return {
         name: item.name || (isHazard ? `Perigo ${idx + 1}` : isBonus ? `Bônus ${idx + 1}` : `Alvo ${idx + 1}`),
-        symbol: (item.symbol !== undefined && item.symbol !== null && String(item.symbol).trim() !== '')
-          ? String(item.symbol).trim()
-          : (isHazard ? '💣' : isBonus ? '★' : '◎'),
+        symbol: rawSymbol,
+        imageUrl: resolvedImageUrl,
+        image_url: resolvedImageUrl,
         points,
         isBonus: !isHazard && isBonus,
         isHazard,
@@ -167,16 +174,20 @@ export const TargetGame: React.FC<TargetGameProps> = (props) => {
         const chosenType = spawnBagRef.current.pop() || targetTypes[0];
         const isBonus = Boolean(chosenType.isBonus);
         const isHazard = Boolean(chosenType.isHazard || chosenType.points < 0);
+        const chosenImage = chosenType.imageUrl || chosenType.image_url || (isImageUrl(chosenType.symbol) ? chosenType.symbol : undefined);
 
         const newTarget: TargetItem = {
           id: nextId.current++,
           x: 12 + Math.random() * 76,
           y: 12 + Math.random() * 76,
-          size: isHazard ? 88 : isBonus ? 75 : 95,
+          size: chosenImage
+            ? (isHazard ? 96 : isBonus ? 86 : 104)
+            : (isHazard ? 88 : isBonus ? 75 : 95),
           isBonus,
           isHazard,
           spawnTime: now,
           symbol: chosenType.symbol,
+          imageUrl: chosenImage,
           name: chosenType.name,
           points: chosenType.points,
         };
@@ -278,7 +289,7 @@ export const TargetGame: React.FC<TargetGameProps> = (props) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left">
         {targetTypes.map((type, idx) => {
           const stats = hitStats[type.name] || { count: 0, points: type.points };
-          const isImg = isImageUrl(type.symbol);
+          const imgSrc = type.imageUrl || type.image_url || (isImageUrl(type.symbol) ? type.symbol : undefined);
           const isNegative = type.isHazard || type.points < 0;
 
           return (
@@ -295,9 +306,9 @@ export const TargetGame: React.FC<TargetGameProps> = (props) => {
               }`}
             >
               <div className="flex items-center gap-2 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center shrink-0 border border-white/10 text-lg">
-                  {isImg ? (
-                    <img src={type.symbol} alt={type.name} className="w-6 h-6 object-contain" />
+                <div className="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center shrink-0 border border-white/10 text-lg overflow-hidden">
+                  {imgSrc ? (
+                    <img src={imgSrc} alt={type.name} className="w-7 h-7 object-contain drop-shadow-sm" />
                   ) : (
                     <span>{type.symbol}</span>
                   )}
@@ -378,7 +389,7 @@ export const TargetGame: React.FC<TargetGameProps> = (props) => {
 
         {/* Active targets */}
         {targets.map((t) => {
-          const isImg = isImageUrl(t.symbol);
+          const imgSrc = t.imageUrl || (isImageUrl(t.symbol) ? t.symbol : undefined);
           const isHazard = t.isHazard || t.points < 0;
 
           return (
@@ -421,11 +432,11 @@ export const TargetGame: React.FC<TargetGameProps> = (props) => {
               title={`${t.name} (${t.points > 0 ? `+${t.points}` : t.points} pts)`}
             >
               <span className="text-2xl sm:text-4xl drop-shadow-md select-none leading-none flex items-center justify-center">
-                {isImg ? (
+                {imgSrc ? (
                   <img
-                    src={t.symbol}
+                    src={imgSrc}
                     alt={t.name}
-                    className="w-8 h-8 sm:w-12 sm:h-12 object-contain pointer-events-none drop-shadow-md"
+                    className="w-12 h-12 sm:w-14 sm:h-14 object-contain pointer-events-none drop-shadow-[0_3px_6px_rgba(0,0,0,0.45)]"
                   />
                 ) : (
                   t.symbol

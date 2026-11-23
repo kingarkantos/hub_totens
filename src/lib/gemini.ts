@@ -1,4 +1,5 @@
 import { supabase, BUCKETS } from './supabase';
+import { removeSolidBackgroundToPngBlob } from './backgroundRemoval';
 
 export interface CampaignAIContext {
   campaignName: string;
@@ -360,4 +361,114 @@ Style: Bright, pristine, corporate commercial quality, photorealistic or sleek 3
 
   return dataUrl;
 }
+
+export type IconAIStyle = '3d' | 'sticker' | 'flat';
+
+/**
+ * Gera um ícone/alvo com IA (Gemini Image) e remove o fundo automaticamente no cliente,
+ * devolvendo um PNG com fundo transparente real (canal alfa) hospedado no Supabase Storage.
+ */
+export async function generateTransparentIconWithAI(
+  userPrompt: string,
+  context?: Partial<CampaignAIContext>,
+  options?: { style?: IconAIStyle; apiKey?: string }
+): Promise<string> {
+  const effectiveKey = await getEffectiveGeminiKey(options?.apiKey);
+  if (!effectiveKey) {
+    throw new Error('Chave da API Gemini não configurada. Configure em Configurações do Hub.');
+  }
+
+  const style = options?.style || '3d';
+  const styleDescription =
+    style === 'sticker'
+      ? 'Vibrant die-cut cartoon game sticker / vector badge with bold saturated colors, smooth glossy highlights, and a crisp clean dark-tinted outer edge.'
+      : style === 'flat'
+      ? 'Clean modern flat vector app icon, bold geometric shapes, vibrant colors, crisp razor-sharp edges, professional UI icon design.'
+      : 'Sleek glossy 3D arcade game icon render (like modern mobile game assets), vibrant rich colors, studio rim lighting, smooth clean silhouette.';
+
+  const mentionsWhiteObject = /\b(branc[oa]s?|white|nuvem|nuvens|cloud|neve|snow|dente|tooth|leite|milk|ovo|egg|papel|paper|fantasma|ghost|ovelha|sheep|algod[aã]o|cotton|cisne|swan|pomb[oa]|dove|perola|p[eé]rola|pearl)\b/i.test(
+    userPrompt
+  );
+
+  const edgeContrastRule = mentionsWhiteObject
+    ? 'Because the subject contains white or very light tones, give the subject a clean, crisp dark or colored outer contour/shading so its entire silhouette contrasts clearly against the solid #FFFFFF background.'
+    : 'Give the object crisp, well-defined edges that contrast sharply against the solid white background.';
+
+  // IMPORTANTE: Nunca usar a palavra "transparent" ou "PNG" no prompt de geração para o modelo
+  // não desenhar um fundo quadriculado falso. Pedimos fundo branco 100% chapado e removemos via Canvas.
+  const promptText = `Create ONE single isolated game icon representing: "${userPrompt.trim()}".
+Campaign/Brand reference (optional inspiration only, do NOT write any text): ${context?.clientName || 'General'} - ${context?.campaignName || 'Arcade Game'}.
+Visual Style: ${styleDescription}
+Strict Composition Rules:
+- Single centered object occupying ~72% of the square frame, with generous empty pure white margin on ALL four sides so nothing touches the borders.
+- Background MUST be 100% PURE SOLID FLAT WHITE (#FFFFFF) everywhere outside the object.
+- NO drop shadow, NO cast shadow, NO floor reflection, NO gradient background, NO glow bleeding into the background, NO scenery, NO frame, NO circle badge behind it, NO checkerboard grid.
+- NO text, NO letters, NO numbers, NO watermarks.
+- ${edgeContrastRule}`;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${effectiveKey}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [{ text: promptText }],
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Erro ao gerar ícone com Gemini (${response.status}): ${errText}`);
+  }
+
+  const data = await response.json();
+  const inlinePart = data.candidates?.[0]?.content?.parts?.find(
+    (p: any) => p.inlineData && p.inlineData.data
+  );
+
+  if (!inlinePart?.inlineData?.data) {
+    throw new Error('A IA não retornou uma imagem para esta descrição. Tente descrever o objeto de forma mais simples.');
+  }
+
+  const mimeType = inlinePart.inlineData.mimeType || 'image/png';
+  const rawDataUrl = `data:${mimeType};base64,${inlinePart.inlineData.data}`;
+
+  // Remove o fundo sólido e centraliza em um PNG 512x512 com canal alfa real
+  const processed = await removeSolidBackgroundToPngBlob(rawDataUrl, {
+    tolerance: 42,
+    feather: 26,
+    removeInnerHoles: true,
+    outputSize: 512,
+    paddingRatio: 0.06,
+  });
+
+  // Faz upload do PNG sem fundo para o Supabase Storage
+  try {
+    const fileName = `target_ai_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.png`;
+    const filePath = `target_icons/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKETS.SPLASHES)
+      .upload(filePath, processed.blob, { contentType: 'image/png', upsert: true });
+
+    if (!uploadError) {
+      const { data: publicData } = supabase.storage
+        .from(BUCKETS.SPLASHES)
+        .getPublicUrl(filePath);
+
+      if (publicData?.publicUrl) {
+        return publicData.publicUrl;
+      }
+    }
+  } catch (err) {
+    console.warn('Não foi possível enviar ícone transparente ao Supabase, usando Data URL:', err);
+  }
+
+  return processed.dataUrl;
+}
+
 

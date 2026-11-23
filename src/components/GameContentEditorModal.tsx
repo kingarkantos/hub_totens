@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw, Image as ImageIcon, Loader2, Wand2, Eye, ZoomIn, ExternalLink, Shuffle, Type, Palette, FileSpreadsheet, Zap, Car, Gauge, Flag, Flame, CircleDot, MousePointerClick } from 'lucide-react';
+import { X, FileText, Download, Upload, Sparkles, Plus, Trash2, Check, AlertCircle, Bot, Sliders, Clock, HelpCircle, Layers, CheckCircle2, ListOrdered, Link, PenTool, Target, Shield, AlertTriangle, RotateCcw, Image as ImageIcon, Loader2, Wand2, Eye, ZoomIn, ExternalLink, Shuffle, Type, Palette, FileSpreadsheet, Zap, Car, Gauge, Flag, Flame, CircleDot, MousePointerClick, Eraser } from 'lucide-react';
 import { supabase, BUCKETS } from '../lib/supabase';
 import { GameDefinition } from '../types';
 import { GameLayoutId, GAME_LAYOUTS } from '../types/gameLayouts';
@@ -30,7 +30,8 @@ import {
   PlinkoSlotItem,
 } from '../types/gameContent';
 import { parseGameCSV, downloadSampleCsv } from '../lib/csvParser';
-import { generateGameContentWithAI, generateImageWithAI, CampaignAIContext } from '../lib/gemini';
+import { generateGameContentWithAI, generateImageWithAI, generateTransparentIconWithAI, IconAIStyle, CampaignAIContext } from '../lib/gemini';
+import { removeSolidBackgroundToPngBlob } from '../lib/backgroundRemoval';
 import { sound } from '../lib/audio';
 
 export const getDefaultTimeForGame = (id: string): number => {
@@ -390,8 +391,10 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
   const [successMsg, setSuccessMsg] = useState('');
   const [uploadingImgIdx, setUploadingImgIdx] = useState<number | null>(null);
   const [generatingImgIdx, setGeneratingImgIdx] = useState<number | null>(null);
+  const [removingBgIdx, setRemovingBgIdx] = useState<number | null>(null);
   const [activeAiImgModalIdx, setActiveAiImgModalIdx] = useState<number | null>(null);
   const [aiImgPrompt, setAiImgPrompt] = useState('');
+  const [aiIconStyle, setAiIconStyle] = useState<IconAIStyle>('3d');
   const [previewModalImg, setPreviewModalImg] = useState<string | null>(null);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiCustomPrompt, setAiCustomPrompt] = useState('');
@@ -428,6 +431,100 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
       setErrorMsg(err.message || 'Erro ao gerar imagem com IA. Tente novamente.');
     } finally {
       setGeneratingImgIdx(null);
+    }
+  };
+
+  const handleGenerateIconForTarget = async (tIdx: number, promptText: string) => {
+    const targetsList = (Array.isArray(content) ? content : []) as TargetCustomItem[];
+    const targetItem = targetsList[tIdx];
+    const finalPrompt = promptText.trim() || targetItem?.name || 'alvo brilhante de jogo';
+    setGeneratingImgIdx(tIdx);
+    setErrorMsg('');
+    setSuccessMsg('');
+    sound.playEngineRev();
+
+    try {
+      const transparentIconUrl = await generateTransparentIconWithAI(finalPrompt, campaignContext, {
+        style: aiIconStyle,
+      });
+      if (transparentIconUrl) {
+        setContent(
+          targetsList.map((it: TargetCustomItem, i: number) =>
+            i === tIdx
+              ? { ...it, imageUrl: transparentIconUrl, image_url: transparentIconUrl }
+              : it
+          )
+        );
+        setHasCustomEdits(true);
+        setActiveAiImgModalIdx(null);
+        sound.playSuccess();
+        setSuccessMsg(`Ícone sem fundo gerado com IA para "${targetItem?.name || `Alvo #${tIdx + 1}`}"!`);
+      }
+    } catch (err: any) {
+      console.error('Erro ao gerar ícone transparente com IA:', err);
+      sound.playError();
+      setErrorMsg(err.message || 'Erro ao gerar ícone sem fundo com IA. Tente novamente.');
+    } finally {
+      setGeneratingImgIdx(null);
+    }
+  };
+
+  const handleRemoveBgFromTargetImage = async (tIdx: number) => {
+    const targetsList = (Array.isArray(content) ? content : []) as TargetCustomItem[];
+    const targetItem = targetsList[tIdx];
+    const currentUrl = targetItem?.imageUrl || targetItem?.image_url;
+    if (!currentUrl) return;
+
+    setRemovingBgIdx(tIdx);
+    setErrorMsg('');
+    setSuccessMsg('');
+    sound.playClick();
+
+    try {
+      const processed = await removeSolidBackgroundToPngBlob(currentUrl, {
+        tolerance: 42,
+        feather: 26,
+        removeInnerHoles: true,
+        outputSize: 512,
+        paddingRatio: 0.06,
+      });
+
+      let finalUrl = processed.dataUrl;
+      try {
+        const fileName = `target_nobg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}.png`;
+        const filePath = `target_icons/${fileName}`;
+        const { error: uploadError } = await supabase.storage
+          .from(BUCKETS.SPLASHES)
+          .upload(filePath, processed.blob, { contentType: 'image/png', upsert: true });
+
+        if (!uploadError) {
+          const { data: publicUrlData } = supabase.storage
+            .from(BUCKETS.SPLASHES)
+            .getPublicUrl(filePath);
+          if (publicUrlData?.publicUrl) {
+            finalUrl = publicUrlData.publicUrl;
+          }
+        }
+      } catch (uploadErr) {
+        console.warn('Fallback para Data URL ao salvar PNG sem fundo:', uploadErr);
+      }
+
+      setContent(
+        targetsList.map((it: TargetCustomItem, i: number) =>
+          i === tIdx ? { ...it, imageUrl: finalUrl, image_url: finalUrl } : it
+        )
+      );
+      setHasCustomEdits(true);
+      sound.playSuccess();
+      setSuccessMsg(`Fundo removido com sucesso do alvo "${targetItem.name}"!`);
+    } catch (err: any) {
+      console.error('Erro ao remover fundo da imagem:', err);
+      sound.playError();
+      setErrorMsg(
+        'Não foi possível remover o fundo desta URL (pode haver bloqueio de CORS). Tente subir o arquivo pelo botão "Subir Imagem PNG".'
+      );
+    } finally {
+      setRemovingBgIdx(null);
     }
   };
 
@@ -2985,23 +3082,66 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
       // 14. CAÇA AOS ALVOS (TARGET)
       case 'target': {
         const items: TargetCustomItem[] = Array.isArray(content) ? content : [];
+        const isDirectImgUrl = (val?: string) =>
+          Boolean(
+            val &&
+              (val.startsWith('http://') ||
+                val.startsWith('https://') ||
+                val.startsWith('data:image/') ||
+                val.startsWith('/') ||
+                /\.(png|jpe?g|svg|webp|gif)$/i.test(val.trim()))
+          );
+
         return (
           <div className="space-y-4">
+            {/* Banner de Personalização: Emojis, Upload PNG ou Ícone IA Sem Fundo */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-50 via-indigo-50 to-emerald-50 border border-indigo-200 text-slate-900 flex items-start gap-3 shadow-xs">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                <Sparkles className="w-4 h-4 text-amber-300" />
+              </div>
+              <div className="text-xs leading-relaxed">
+                <strong className="block text-sm font-black text-indigo-950 mb-0.5">
+                  Personalização dos Alvos (Emojis, Imagens PNG ou Ícones IA Sem Fundo)
+                </strong>
+                Use <strong>Emojis</strong>, suba suas <strong>Imagens/Logos em PNG</strong> ou clique em{' '}
+                <strong className="text-purple-700">Criar Ícone IA</strong> para digitar o que deseja e receber o ícone{' '}
+                <strong>já recortado sem fundo</strong> pronto para o jogo!
+              </div>
+            </div>
+
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
                 <span className="text-xs font-black text-slate-800 uppercase tracking-wide">
                   Tipos de Alvos Cadastrados ({items.length})
                 </span>
                 <p className="text-[11px] text-slate-500">
-                  Edite os alvos que surgem na tela (pontos positivos e negativos/perigo que tiram pontos).
+                  Edite os alvos que surgem na tela (pontos positivos, bônus e negativos/perigo que tiram pontos).
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                {items.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      if (window.confirm('Deseja limpar todos os alvos da lista?')) {
+                        setContent([]);
+                        setHasCustomEdits(true);
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 text-xs font-bold border border-slate-200 active:scale-95 transition-all"
+                    title="Limpar tudo para começar do zero"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Limpar Tudo</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
                     sound.playClick();
                     setContent([...items, { name: 'Novo Alvo', symbol: '🎯', points: 100, isBonus: false, isHazard: false }]);
+                    setHasCustomEdits(true);
                   }}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
                 >
@@ -3013,6 +3153,7 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
                   onClick={() => {
                     sound.playClick();
                     setContent([...items, { name: 'Alvo Perigo', symbol: '💣', points: -150, isBonus: false, isHazard: true }]);
+                    setHasCustomEdits(true);
                   }}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
                 >
@@ -3022,132 +3163,494 @@ export const GameContentEditorModal: React.FC<GameContentEditorModalProps> = ({
               </div>
             </div>
 
-            <div className="space-y-3 max-h-[440px] overflow-y-auto pr-1">
-              {items.map((item, idx) => {
-                const isHazard = Boolean(item.isHazard || item.isNegative || (Number(item.points) < 0));
-                return (
-                  <div 
-                    key={idx} 
-                    className={`p-3.5 rounded-2xl border flex items-center gap-3 shadow-xs flex-wrap transition-colors ${
-                      isHazard 
-                        ? 'bg-rose-50/70 border-rose-300 ring-1 ring-rose-200' 
-                        : item.isBonus 
-                        ? 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-200' 
-                        : 'bg-slate-50 border-slate-200'
-                    }`}
+            {items.length === 0 ? (
+              <div className="p-8 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                <p className="text-xs text-slate-500 mb-3">Nenhum alvo cadastrado ainda.</p>
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setContent(getStarterContentForGame(game.id));
+                      setHasCustomEdits(false);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-slate-300 shadow-xs flex items-center gap-1.5"
                   >
-                    <div className="w-16">
-                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Símbolo</label>
-                      <input
-                        type="text"
-                        value={item.symbol}
-                        onChange={(e) => {
-                          const copy = [...items];
-                          copy[idx].symbol = e.target.value;
-                          setContent(copy);
-                        }}
-                        className="w-full text-center py-1.5 bg-white border border-slate-300 rounded-xl text-sm"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-[140px]">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <label className="block text-[10px] text-slate-500 font-bold uppercase">Nome do Alvo</label>
-                        {isHazard && (
-                          <span className="text-[9px] font-black text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded-full">
-                            ⚠️ Penalidade (Tira Pontos)
-                          </span>
-                        )}
-                        {!isHazard && item.isBonus && (
-                          <span className="text-[9px] font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
-                            ★ Bônus
-                          </span>
-                        )}
-                      </div>
-                      <input
-                        type="text"
-                        value={item.name}
-                        onChange={(e) => {
-                          const copy = [...items];
-                          copy[idx].name = e.target.value;
-                          setContent(copy);
-                        }}
-                        className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
-                      />
-                    </div>
-                    <div className="w-36">
-                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">Tipo de Alvo</label>
-                      <select
-                        value={isHazard ? 'hazard' : item.isBonus ? 'bonus' : 'normal'}
-                        onChange={(e) => {
-                          const copy = [...items];
-                          const val = e.target.value;
-                          if (val === 'hazard') {
-                            copy[idx].isHazard = true;
-                            copy[idx].isBonus = false;
-                            const cur = Number(copy[idx].points) || 100;
-                            copy[idx].points = cur > 0 ? -cur : cur;
-                            if (copy[idx].symbol === '🎯' || copy[idx].symbol === '◎') copy[idx].symbol = '💣';
-                            if (copy[idx].name === 'Novo Alvo') copy[idx].name = 'Alvo Perigo';
-                          } else if (val === 'bonus') {
-                            copy[idx].isHazard = false;
-                            copy[idx].isBonus = true;
-                            const cur = Number(copy[idx].points) || -100;
-                            copy[idx].points = Math.abs(cur) || 250;
-                            if (copy[idx].symbol === '💣') copy[idx].symbol = '★';
-                            if (copy[idx].name === 'Alvo Perigo') copy[idx].name = 'Super Bônus';
-                          } else {
-                            copy[idx].isHazard = false;
-                            copy[idx].isBonus = false;
-                            const cur = Number(copy[idx].points) || -100;
-                            copy[idx].points = Math.abs(cur) || 100;
-                            if (copy[idx].symbol === '💣') copy[idx].symbol = '🎯';
-                            if (copy[idx].name === 'Alvo Perigo') copy[idx].name = 'Alvo Normal';
-                          }
-                          setContent(copy);
-                        }}
-                        className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
-                      >
-                        <option value="normal">🎯 Normal (+)</option>
-                        <option value="bonus">⭐ Bônus (+)</option>
-                        <option value="hazard">💣 Perigo (- pts)</option>
-                      </select>
-                    </div>
-                    <div className="w-28">
-                      <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">
-                        {isHazard ? 'Tira Pontos (-)' : 'Ganha Pontos (+)'}
-                      </label>
-                      <input
-                        type="number"
-                        value={item.points}
-                        onChange={(e) => {
-                          const copy = [...items];
-                          copy[idx].points = Number(e.target.value);
-                          if (copy[idx].points < 0) {
-                            copy[idx].isHazard = true;
-                            copy[idx].isBonus = false;
-                          }
-                          setContent(copy);
-                        }}
-                        className={`w-full px-3 py-1.5 bg-white border rounded-xl text-xs font-black ${
-                          isHazard ? 'border-rose-300 text-rose-600' : 'border-slate-300 text-emerald-600'
-                        }`}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        sound.playClick();
-                        setContent(items.filter((_, i) => i !== idx));
-                      }}
-                      className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl mt-3 ml-auto"
-                      title="Excluir alvo"
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Restaurar Exemplos</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      sound.playClick();
+                      setContent([{ name: 'Novo Alvo', symbol: '🎯', points: 100, isBonus: false, isHazard: false }]);
+                      setHasCustomEdits(true);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase shadow-xs flex items-center gap-1.5"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Adicionar Alvo</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
+                {items.map((item, idx) => {
+                  const isHazard = Boolean(item.isHazard || item.isNegative || Number(item.points) < 0);
+                  const activeImgUrl = item.image_url || item.imageUrl || (isDirectImgUrl(item.symbol) ? item.symbol : '');
+                  const hasImage = Boolean(activeImgUrl);
+                  const isAiOpen = activeAiImgModalIdx === idx;
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`p-3.5 rounded-2xl border shadow-xs transition-colors space-y-3 ${
+                        isHazard
+                          ? 'bg-rose-50/70 border-rose-300 ring-1 ring-rose-200'
+                          : item.isBonus
+                          ? 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-200'
+                          : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                      }`}
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                        {/* Caixa de Preview Visual (com fundo quadriculado para evidenciar transparência) */}
+                        <div
+                          style={
+                            hasImage
+                              ? {
+                                  backgroundImage:
+                                    'linear-gradient(45deg, #e2e8f0 25%, transparent 25%), linear-gradient(-45deg, #e2e8f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e2e8f0 75%), linear-gradient(-45deg, transparent 75%, #e2e8f0 75%)',
+                                  backgroundSize: '12px 12px',
+                                  backgroundPosition: '0 0, 0 6px, 6px -6px, -6px 0px',
+                                  backgroundColor: '#ffffff',
+                                }
+                              : undefined
+                          }
+                          className="relative w-16 h-16 rounded-2xl bg-white border-2 border-slate-200 flex items-center justify-center shrink-0 shadow-2xs overflow-hidden group"
+                        >
+                          {generatingImgIdx === idx || removingBgIdx === idx ? (
+                            <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
+                          ) : hasImage ? (
+                            <img
+                              src={activeImgUrl}
+                              alt={item.name}
+                              className="w-13 h-13 max-w-[52px] max-h-[52px] object-contain pointer-events-none drop-shadow-xs"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <span className="text-3xl select-none">{item.symbol || '🎯'}</span>
+                          )}
+
+                          {hasImage && generatingImgIdx !== idx && removingBgIdx !== idx && (
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1.5 transition-opacity">
+                              <button
+                                type="button"
+                                onClick={() => setPreviewModalImg(activeImgUrl)}
+                                title="Ampliar imagem"
+                                className="p-1.5 rounded-lg bg-white/20 hover:bg-white/35 text-white"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  sound.playClick();
+                                  const copy = [...items];
+                                  delete copy[idx].image_url;
+                                  delete copy[idx].imageUrl;
+                                  if (isDirectImgUrl(copy[idx].symbol)) {
+                                    copy[idx].symbol = isHazard ? '💣' : copy[idx].isBonus ? '★' : '🎯';
+                                  }
+                                  setContent(copy);
+                                  setHasCustomEdits(true);
+                                }}
+                                title="Remover imagem e usar emoji"
+                                className="p-1.5 rounded-lg bg-rose-500/80 hover:bg-rose-600 text-white"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Controles Principais */}
+                        <div className="flex-1 w-full space-y-2.5">
+                          {/* Linha 1: Nome, Tipo, Pontos e Excluir */}
+                          <div className="flex items-end gap-2.5 flex-wrap">
+                            <div className="flex-1 min-w-[150px]">
+                              <div className="flex items-center justify-between mb-0.5">
+                                <label className="block text-[10px] text-slate-500 font-bold uppercase">
+                                  Nome do Alvo
+                                </label>
+                                {isHazard && (
+                                  <span className="text-[9px] font-black text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded-full">
+                                    ⚠️ Penalidade
+                                  </span>
+                                )}
+                                {!isHazard && item.isBonus && (
+                                  <span className="text-[9px] font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
+                                    ★ Bônus
+                                  </span>
+                                )}
+                              </div>
+                              <input
+                                type="text"
+                                value={item.name}
+                                placeholder="Ex: Troféu Dourado, Logo Marca..."
+                                onChange={(e) => {
+                                  const copy = [...items];
+                                  copy[idx] = { ...copy[idx], name: e.target.value };
+                                  setContent(copy);
+                                  setHasCustomEdits(true);
+                                }}
+                                className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-red-500"
+                              />
+                            </div>
+
+                            <div className="w-36">
+                              <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">
+                                Tipo de Alvo
+                              </label>
+                              <select
+                                value={isHazard ? 'hazard' : item.isBonus ? 'bonus' : 'normal'}
+                                onChange={(e) => {
+                                  const copy = [...items];
+                                  const val = e.target.value;
+                                  const updated = { ...copy[idx] };
+                                  if (val === 'hazard') {
+                                    updated.isHazard = true;
+                                    updated.isBonus = false;
+                                    const cur = Number(updated.points) || 100;
+                                    updated.points = cur > 0 ? -cur : cur;
+                                    if (updated.symbol === '🎯' || updated.symbol === '◎') updated.symbol = '💣';
+                                    if (updated.name === 'Novo Alvo') updated.name = 'Alvo Perigo';
+                                  } else if (val === 'bonus') {
+                                    updated.isHazard = false;
+                                    updated.isBonus = true;
+                                    const cur = Number(updated.points) || -100;
+                                    updated.points = Math.abs(cur) || 250;
+                                    if (updated.symbol === '💣') updated.symbol = '★';
+                                    if (updated.name === 'Alvo Perigo') updated.name = 'Super Bônus';
+                                  } else {
+                                    updated.isHazard = false;
+                                    updated.isBonus = false;
+                                    const cur = Number(updated.points) || -100;
+                                    updated.points = Math.abs(cur) || 100;
+                                    if (updated.symbol === '💣') updated.symbol = '🎯';
+                                    if (updated.name === 'Alvo Perigo') updated.name = 'Alvo Normal';
+                                  }
+                                  copy[idx] = updated;
+                                  setContent(copy);
+                                  setHasCustomEdits(true);
+                                }}
+                                className="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
+                              >
+                                <option value="normal">🎯 Normal (+)</option>
+                                <option value="bonus">⭐ Bônus (+)</option>
+                                <option value="hazard">💣 Perigo (- pts)</option>
+                              </select>
+                            </div>
+
+                            <div className="w-28">
+                              <label className="block text-[10px] text-slate-500 font-bold uppercase mb-0.5">
+                                {isHazard ? 'Tira Pontos (-)' : 'Ganha Pontos (+)'}
+                              </label>
+                              <input
+                                type="number"
+                                value={item.points}
+                                onChange={(e) => {
+                                  const copy = [...items];
+                                  const pts = Number(e.target.value);
+                                  copy[idx] = {
+                                    ...copy[idx],
+                                    points: pts,
+                                    ...(pts < 0 ? { isHazard: true, isBonus: false } : {}),
+                                  };
+                                  setContent(copy);
+                                  setHasCustomEdits(true);
+                                }}
+                                className={`w-full px-3 py-1.5 bg-white border rounded-xl text-xs font-black ${
+                                  isHazard ? 'border-rose-300 text-rose-600' : 'border-slate-300 text-emerald-600'
+                                }`}
+                              />
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                sound.playClick();
+                                if (activeAiImgModalIdx === idx) setActiveAiImgModalIdx(null);
+                                setContent(items.filter((_, i) => i !== idx));
+                                setHasCustomEdits(true);
+                              }}
+                              className="p-2 text-rose-600 hover:bg-rose-100/70 rounded-xl active:scale-95"
+                              title="Excluir alvo"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          {/* Linha 2: Emoji, Subir Imagem PNG, Criar Ícone IA (Sem Fundo), Tirar Fundo e URL */}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {/* Input de Emoji */}
+                            <div className="w-16">
+                              <input
+                                type="text"
+                                value={isDirectImgUrl(item.symbol) ? '' : item.symbol}
+                                placeholder="🎯"
+                                title="Digite ou cole um Emoji"
+                                onChange={(e) => {
+                                  const copy = [...items];
+                                  copy[idx] = { ...copy[idx], symbol: e.target.value };
+                                  setContent(copy);
+                                  setHasCustomEdits(true);
+                                }}
+                                className="w-full text-center py-1 bg-white border border-slate-300 rounded-xl text-xs font-bold focus:outline-none focus:border-red-500"
+                              />
+                            </div>
+
+                            {/* Botão Subir Imagem PNG */}
+                            <label
+                              className={`cursor-pointer px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1.5 border transition-all ${
+                                hasImage
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'
+                                  : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300'
+                              }`}
+                            >
+                              <input
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                                className="hidden"
+                                disabled={uploadingImgIdx === idx || generatingImgIdx === idx}
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  setUploadingImgIdx(idx);
+                                  setErrorMsg('');
+                                  sound.playClick();
+                                  try {
+                                    const fileExt = file.name.split('.').pop() || 'png';
+                                    const fileName = `target_${Date.now()}_${Math.random().toString(36).substring(2, 6)}.${fileExt}`;
+                                    const filePath = `target_icons/${fileName}`;
+
+                                    const { error } = await supabase.storage
+                                      .from(BUCKETS.SPLASHES)
+                                      .upload(filePath, file, { contentType: file.type || 'image/png', upsert: true });
+
+                                    if (error) {
+                                      const reader = new FileReader();
+                                      reader.onload = () => {
+                                        const base64Url = reader.result as string;
+                                        const copy = [...items];
+                                        copy[idx] = { ...copy[idx], image_url: base64Url, imageUrl: base64Url };
+                                        setContent(copy);
+                                        setHasCustomEdits(true);
+                                        sound.playSuccess();
+                                      };
+                                      reader.readAsDataURL(file);
+                                    } else {
+                                      const { data: publicUrlData } = supabase.storage
+                                        .from(BUCKETS.SPLASHES)
+                                        .getPublicUrl(filePath);
+                                      const url = publicUrlData?.publicUrl || '';
+                                      const copy = [...items];
+                                      copy[idx] = { ...copy[idx], image_url: url, imageUrl: url };
+                                      setContent(copy);
+                                      setHasCustomEdits(true);
+                                      sound.playSuccess();
+                                    }
+                                  } catch {
+                                    const reader = new FileReader();
+                                    reader.onload = () => {
+                                      const base64Url = reader.result as string;
+                                      const copy = [...items];
+                                      copy[idx] = { ...copy[idx], image_url: base64Url, imageUrl: base64Url };
+                                      setContent(copy);
+                                      setHasCustomEdits(true);
+                                      sound.playSuccess();
+                                    };
+                                    reader.readAsDataURL(file);
+                                  } finally {
+                                    setUploadingImgIdx(null);
+                                    e.target.value = '';
+                                  }
+                                }}
+                              />
+                              {uploadingImgIdx === idx ? (
+                                <>
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+                                  <span>Enviando...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="w-3.5 h-3.5 text-blue-600" />
+                                  <span>{hasImage ? 'Trocar Imagem' : 'Subir Imagem PNG'}</span>
+                                </>
+                              )}
+                            </label>
+
+                            {/* Botão Criar Ícone com IA (Sem Fundo) */}
+                            <button
+                              type="button"
+                              disabled={generatingImgIdx === idx || uploadingImgIdx === idx || removingBgIdx === idx}
+                              onClick={() => handleOpenAIGeneratePrompt(idx, item.name)}
+                              className={`px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1.5 shadow-xs active:scale-95 transition-all ${
+                                isAiOpen
+                                  ? 'bg-purple-800 text-white ring-2 ring-purple-300'
+                                  : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white'
+                              }`}
+                            >
+                              {generatingImgIdx === idx ? (
+                                <>
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  <span>Criando...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                                  <span>Criar Ícone IA</span>
+                                </>
+                              )}
+                            </button>
+
+                            {/* Botão Remover Fundo da imagem enviada manualmente */}
+                            {hasImage && (
+                              <button
+                                type="button"
+                                disabled={removingBgIdx === idx || generatingImgIdx === idx}
+                                onClick={() => handleRemoveBgFromTargetImage(idx)}
+                                title="Remover automaticamente o fundo sólido desta imagem"
+                                className="px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 active:scale-95 transition-all disabled:opacity-50"
+                              >
+                                {removingBgIdx === idx ? (
+                                  <>
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    <span>Recortando...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Eraser className="w-3.5 h-3.5" />
+                                    <span>Tirar Fundo</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
+
+                            {/* URL Direta da Imagem */}
+                            <div className="flex-1 min-w-[140px]">
+                              <input
+                                type="text"
+                                value={item.image_url || item.imageUrl || ''}
+                                placeholder="Ou cole URL da foto..."
+                                onChange={(e) => {
+                                  const val = e.target.value.trim();
+                                  const copy = [...items];
+                                  copy[idx] = {
+                                    ...copy[idx],
+                                    image_url: val || undefined,
+                                    imageUrl: val || undefined,
+                                  };
+                                  setContent(copy);
+                                  setHasCustomEdits(true);
+                                }}
+                                className="w-full px-2.5 py-1 bg-white border border-slate-300 rounded-xl text-[11px] text-slate-700 placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Caixa Interativa do Gerador de Ícone IA Sem Fundo */}
+                      {isAiOpen && (
+                        <div className="p-3 bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl space-y-2.5 animate-in fade-in zoom-in-95 duration-200 shadow-sm">
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <span className="flex items-center gap-1.5 text-xs font-black text-purple-950">
+                              <Sparkles className="w-4 h-4 text-purple-600" />
+                              <span>Criar Ícone Sem Fundo com IA</span>
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              {/* Seletor de Estilo do Ícone */}
+                              <div className="flex items-center bg-white rounded-lg p-0.5 border border-purple-200 text-[10px] font-bold">
+                                {(
+                                  [
+                                    { id: '3d', label: '✨ 3D' },
+                                    { id: 'sticker', label: '🎨 Sticker' },
+                                    { id: 'flat', label: '🔷 Flat' },
+                                  ] as { id: IconAIStyle; label: string }[]
+                                ).map((st) => (
+                                  <button
+                                    key={st.id}
+                                    type="button"
+                                    onClick={() => {
+                                      sound.playClick();
+                                      setAiIconStyle(st.id);
+                                    }}
+                                    className={`px-2 py-0.5 rounded-md transition-all ${
+                                      aiIconStyle === st.id
+                                        ? 'bg-purple-600 text-white shadow-2xs'
+                                        : 'text-slate-600 hover:bg-purple-50'
+                                    }`}
+                                  >
+                                    {st.label}
+                                  </button>
+                                ))}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setActiveAiImgModalIdx(null)}
+                                className="text-xs font-bold text-slate-400 hover:text-slate-600 px-1.5 py-0.5 rounded-md hover:bg-white"
+                              >
+                                ✕ Fechar
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <input
+                              type="text"
+                              value={aiImgPrompt}
+                              onChange={(e) => setAiImgPrompt(e.target.value)}
+                              placeholder="Digite o que deseja criar (ex: capacete amarelo, carro vermelho, troféu dourado, bomba)..."
+                              className="flex-1 px-3 py-2 bg-white border border-purple-300 rounded-xl text-xs text-slate-900 font-medium placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleGenerateIconForTarget(idx, aiImgPrompt);
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              disabled={generatingImgIdx === idx}
+                              onClick={() => handleGenerateIconForTarget(idx, aiImgPrompt)}
+                              className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-95 text-white font-black text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md transition-all flex-shrink-0 disabled:opacity-50"
+                            >
+                              {generatingImgIdx === idx ? (
+                                <>
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  <span>Criando sem fundo...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Wand2 className="w-3.5 h-3.5" />
+                                  <span>Gerar Ícone Sem Fundo</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+
+                          <p className="text-[10px] text-purple-800/85 leading-normal">
+                            💡 <strong>Recorte Automático:</strong> A IA gera o objeto isolado e remove o fundo automaticamente, trazendo um <strong>PNG transparente</strong> pronto para aparecer como ícone no Caça aos Alvos!
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         );
       }

@@ -21,6 +21,8 @@ export interface TargetCustomItem {
   isBonus: boolean;
   isHazard?: boolean;
   isNegative?: boolean;
+  imageUrl?: string;
+  image_url?: string;
 }
 
 export interface MemoryCustomPair {
@@ -238,20 +240,21 @@ No painel digital touchscreen o que você pode conectar?,Somente fita cassete,Ap
   target: {
     gameId: 'target',
     gameName: 'Caça aos Alvos',
-    description: 'Cadastre os tipos de alvos que surgem na tela para o jogador tocar (incluindo bônus e alvos de perigo que tiram pontos).',
+    description: 'Cadastre os tipos de alvos que surgem na tela para o jogador tocar (com emojis, imagens PNG sem fundo ou ícones gerados por IA).',
     csvColumns: [
       { name: 'name', description: 'Nome do alvo', example: 'Alvo Padrão' },
-      { name: 'symbol', description: 'Símbolo ou emoji do alvo', example: '🎯' },
+      { name: 'symbol', description: 'Símbolo ou emoji do alvo (opcional se houver imagem)', example: '🎯' },
       { name: 'points', description: 'Pontos ganhos ou tirados por toque (ex: 100 ou -150)', example: '100' },
       { name: 'is_bonus', description: 'Se é um alvo especial bônus (true ou false)', example: 'false' },
       { name: 'is_hazard', description: 'Se é um alvo negativo/perigo que tira pontos (true ou false)', example: 'false' },
+      { name: 'image_url', description: 'URL da imagem/ícone PNG do alvo (opcional)', example: 'https://exemplo.com/icone.png' },
     ],
-    sampleCsv: `name,symbol,points,is_bonus,is_hazard
-Alvo Tradicional,◎,100,false,false
-Estrela Dourada,★,250,true,false
-Logotipo Especial,🚗,150,false,false
-Bomba Perigo,💣,-150,false,true
-Troféu Relâmpago,🏆,300,true,false`,
+    sampleCsv: `name,symbol,points,is_bonus,is_hazard,image_url
+Alvo Tradicional,◎,100,false,false,
+Estrela Dourada,★,250,true,false,
+Logotipo Especial,🚗,150,false,false,
+Bomba Perigo,💣,-150,false,true,
+Troféu Relâmpago,🏆,300,true,false,`,
   },
 
   memory: {

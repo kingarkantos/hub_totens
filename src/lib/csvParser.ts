@@ -176,7 +176,8 @@ export function parseGameCSV(gameId: string, csvText: string): any {
         const isBonus = bonusRaw === 'true' || bonusRaw === 'sim' || bonusRaw === '1' || bonusRaw === 's';
         const hazardRaw = getVal(r, ['is_hazard', 'hazard', 'perigo', 'negativo'], 4).toLowerCase();
         const isHazard = hazardRaw === 'true' || hazardRaw === 'sim' || hazardRaw === '1' || hazardRaw === 's' || points < 0;
-        return { name, symbol, points, isBonus, isHazard };
+        const imageUrl = getVal(r, ['image_url', 'imagem', 'foto', 'icone_url', 'url'], 5) || undefined;
+        return { name, symbol, points, isBonus, isHazard, imageUrl, image_url: imageUrl };
       });
 
     case 'memory':
