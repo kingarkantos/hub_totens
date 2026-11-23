@@ -1,6 +1,18 @@
 {
   "rewrites": [
     {
+      "source": "/portfolio/:slug",
+      "destination": "/api/og?type=portfolio&slug=:slug"
+    },
+    {
+      "source": "/revendedor/:slug",
+      "destination": "/api/og?type=portfolio&slug=:slug"
+    },
+    {
+      "source": "/:slug((?!api(?:/|$)|assets(?:/|$)|games(?:/|$)|admin(?:/|$)|index\\.html$|[^/]+\\.[^/]+$)[^/]+)",
+      "destination": "/api/og?type=campaign&slug=:slug"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

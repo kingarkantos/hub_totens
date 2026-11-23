@@ -347,6 +347,52 @@ export const TotemCampaignView: React.FC<TotemCampaignViewProps> = ({ slug }) =>
   const [isSplashOverflowing, setIsSplashOverflowing] = useState(false);
   const splashContainerRef = useRef<HTMLDivElement>(null);
 
+  // Atualiza título da aba, favicon e meta tags Open Graph dinamicamente ao abrir a campanha
+  useEffect(() => {
+    if (!campaign) return;
+    const campName = (campaign.name || '').trim();
+    const clientName = (campaign.client_name || '').trim();
+    const fullTitle =
+      campName && clientName && campName.toLowerCase() !== clientName.toLowerCase()
+        ? `${campName} — ${clientName}`
+        : campName || clientName || 'Hub de Jogos para Totens';
+
+    document.title = fullTitle;
+
+    const logoUrl =
+      campaign.description_image_url ||
+      campaign.games_config?.description_image_url ||
+      campaign.splash_image_url ||
+      '';
+
+    if (logoUrl) {
+      const existingIcon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+      if (existingIcon) existingIcon.href = logoUrl;
+    }
+
+    const setMeta = (selector: string, attr: 'property' | 'name', key: string, content: string) => {
+      if (!content) return;
+      let tag = document.querySelector<HTMLMetaElement>(selector);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute(attr, key);
+        document.head.appendChild(tag);
+      }
+      tag.content = content;
+    };
+
+    const desc =
+      (campaign.description || '').trim() ||
+      `Participe dos jogos interativos da campanha ${campName || fullTitle}!`;
+    setMeta('meta[property="og:title"]', 'property', 'og:title', fullTitle);
+    setMeta('meta[property="og:description"]', 'property', 'og:description', desc);
+    setMeta('meta[name="description"]', 'name', 'description', desc);
+    if (logoUrl && (logoUrl.startsWith('http://') || logoUrl.startsWith('https://'))) {
+      setMeta('meta[property="og:image"]', 'property', 'og:image', logoUrl);
+      setMeta('meta[name="twitter:image"]', 'name', 'twitter:image', logoUrl);
+    }
+  }, [campaign]);
+
   useEffect(() => {
     if (!inSplash) return;
     const el = splashContainerRef.current;
